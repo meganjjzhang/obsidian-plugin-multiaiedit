@@ -1,4 +1,4 @@
-import { App, Modal, Setting } from "obsidian";
+import { App, Modal } from "obsidian";
 import {
 	DiffBlock,
 	computeDiff,
@@ -8,19 +8,64 @@ import {
 
 export interface DiffModalResult {
 	action: "accept-all" | "accept-partial" | "reject";
-	/** Only meaningful when action === "accept-partial" */
 	mergedText?: string;
 }
 
+interface Hunk {
+	header: string;         // e.g. "@@ -23,3 +23,5 @@"
+	context: string;        // section name hint
+	blocks: DiffBlock[];    // all blocks in this hunk (context + changed)
+	changeIndices: number[];// block.index values that are added/removed
+}
+
 /**
- * Modal that shows a unified diff view with accept/reject controls.
- *
- * - Unified view: removed lines have red bg, added lines have green bg.
- * - Each changed hunk can be individually toggled.
- * - "全部接受" / "逐块选择" / "回滚" buttons at the bottom.
+ * Group flat DiffBlocks into hunks.
+ * Each hunk = a group of changed lines with 2-line context above/below.
  */
+function groupIntoHunks(blocks: DiffBlock[], ctxLines = 2): Hunk[] {
+	const n = blocks.length;
+	// Mark changed positions
+	const changed = new Set<number>();
+	blocks.forEach((b, i) => { if (b.type !== "unchanged") changed.add(i); });
+
+	if (changed.size === 0) return [];
+
+	// Build index ranges for each hunk
+	const ranges: Array<{ start: number; end: number }> = [];
+	let curStart = -1;
+	let curEnd = -1;
+
+	const changedArr = [...changed].sort((a, b) => a - b);
+	for (const idx of changedArr) {
+		const s = Math.max(0, idx - ctxLines);
+		const e = Math.min(n - 1, idx + ctxLines);
+		if (curStart === -1) {
+			curStart = s; curEnd = e;
+		} else if (s <= curEnd + 1) {
+			curEnd = Math.max(curEnd, e);
+		} else {
+			ranges.push({ start: curStart, end: curEnd });
+			curStart = s; curEnd = e;
+		}
+	}
+	if (curStart !== -1) ranges.push({ start: curStart, end: curEnd });
+
+	return ranges.map(({ start, end }, i) => {
+		const slice = blocks.slice(start, end + 1);
+		const changeIndices = slice.filter(b => b.type !== "unchanged").map(b => b.index);
+		const firstChanged = slice.find(b => b.type !== "unchanged");
+		const oldStart = slice[0]?.oldLineNumber ?? (firstChanged?.oldLineNumber ?? 0);
+		const newStart = slice[0]?.newLineNumber ?? (firstChanged?.newLineNumber ?? 0);
+		const oldCount = slice.filter(b => b.type === "removed" || b.type === "unchanged").length;
+		const newCount = slice.filter(b => b.type === "added"   || b.type === "unchanged").length;
+		const header = `@@ -${oldStart},${oldCount} +${newStart},${newCount} @@`;
+		return { header, context: `section ${i + 1}`, blocks: slice, changeIndices };
+	});
+}
+
 export class DiffModal extends Modal {
 	private blocks: DiffBlock[];
+	private hunks: Hunk[];
 	private acceptMap: Map<number, boolean> = new Map();
 	private result: DiffModalResult | null = null;
 	private resolve: ((result: DiffModalResult) => void) | null = null;
@@ -33,17 +78,12 @@ export class DiffModal extends Modal {
 	) {
 		super(app);
 		this.blocks = computeDiff(originalText, modifiedText);
-		// Default: accept all changes
+		this.hunks = groupIntoHunks(this.blocks);
 		for (const b of this.blocks) {
-			if (b.type === "added" || b.type === "removed") {
-				this.acceptMap.set(b.index, true);
-			}
+			if (b.type !== "unchanged") this.acceptMap.set(b.index, true);
 		}
 	}
 
-	/**
-	 * Open the modal and return a promise that resolves with the user's choice.
-	 */
 	openForResult(): Promise<DiffModalResult> {
 		return new Promise((resolve) => {
 			this.resolve = resolve;
@@ -52,184 +92,156 @@ export class DiffModal extends Modal {
 	}
 
 	onOpen(): void {
-		const { containerEl } = this;
-		containerEl.empty();
-		containerEl.addClass("mae-diff-modal");
+		const { modalEl } = this;
+		modalEl.empty();
+		modalEl.addClass("mae-diff-modal");
 
 		const { added, removed } = countChangedLines(this.blocks);
 
-		// Header
-		containerEl.createEl("h2", {
-			text: `Diff 预览 — ${this.fileName}`,
-		});
-		containerEl.createEl("p", {
-			cls: "mae-diff-summary",
-			text: `+${added} 行添加 / -${removed} 行删除`,
-		});
-
-		// Diff view
-		const diffContainer = containerEl.createDiv({
-			cls: "mae-diff-container",
+		// ── Header ──
+		const header = modalEl.createDiv({ cls: "mae-dm-header" });
+		const headerLeft = header.createDiv({ cls: "mae-dm-header-left" });
+		const iconWrap = headerLeft.createDiv({ cls: "mae-dm-icon" });
+		iconWrap.setText("⇄");
+		const titleWrap = headerLeft.createDiv();
+		titleWrap.createDiv({ cls: "mae-dm-title", text: "Diff Preview" });
+		titleWrap.createDiv({
+			cls: "mae-dm-subtitle",
+			text: `${this.fileName} — ${this.hunks.length} changes proposed`,
 		});
 
-		// Virtual scroll threshold: if >500 changed blocks, use a
-		// simple windowed approach.
-		const changedCount = this.blocks.filter(
-			(b) => b.type !== "unchanged",
-		).length;
-		const useVirtual = changedCount > 500;
+		const headerRight = header.createDiv({ cls: "mae-dm-header-right" });
+		headerRight.createSpan({ cls: "mae-dm-hunk-badge", text: `${this.hunks.length} hunks` });
+		const closeBtn = headerRight.createEl("button", { cls: "mae-dm-close", text: "✕" });
+		closeBtn.onclick = () => {
+			this.result = { action: "reject" };
+			this.close();
+		};
 
-		if (useVirtual) {
-			this.renderVirtualDiff(diffContainer);
+		// ── Hunk list ──
+		const content = modalEl.createDiv({ cls: "mae-dm-content" });
+
+		if (this.hunks.length === 0) {
+			content.createDiv({ cls: "mae-dm-empty", text: "No changes detected." });
 		} else {
-			this.renderFullDiff(diffContainer);
+			for (const hunk of this.hunks) {
+				this.renderHunk(content, hunk);
+			}
 		}
 
-		// Action buttons
-		const actions = containerEl.createDiv({ cls: "mae-diff-actions" });
+		// ── Footer ──
+		const footer = modalEl.createDiv({ cls: "mae-dm-footer" });
 
-		new Setting(actions)
-			.addButton((b) =>
-				b
-					.setButtonText("回滚（不应用任何修改）")
-					.onClick(() => {
-						this.result = { action: "reject" };
-						this.close();
-					}),
-			)
-			.addButton((b) =>
-				b
-					.setButtonText("逐块确认")
-					.setWarning()
-					.onClick(() => {
-						const merged = applyPartialDiff(
-							this.originalText,
-							this.blocks,
-							this.acceptMap,
-						);
-						this.result = {
-							action: "accept-partial",
-							mergedText: merged,
-						};
-						this.close();
-					}),
-			)
-			.addButton((b) =>
-				b
-					.setButtonText("全部接受")
-					.setCta()
-					.onClick(() => {
-						this.result = { action: "accept-all" };
-						this.close();
-					}),
-			);
+		const statsEl = footer.createDiv({ cls: "mae-dm-stats" });
+		statsEl.createSpan({ cls: "mae-dm-stat-label", text: "Changes: " });
+		statsEl.createSpan({ cls: "mae-dm-stat-add", text: `+${added} lines` });
+		statsEl.createSpan({ cls: "mae-dm-stat-del", text: `-${removed} lines` });
+
+		const btns = footer.createDiv({ cls: "mae-dm-btns" });
+
+		const rollbackBtn = btns.createEl("button", { cls: "mae-dm-btn-rollback" });
+		rollbackBtn.innerHTML = `<span class="mae-dm-btn-icon">↺</span> Rollback all`;
+		rollbackBtn.onclick = () => {
+			this.result = { action: "reject" };
+			this.close();
+		};
+
+		const acceptBtn = btns.createEl("button", { cls: "mae-dm-btn-accept" });
+		acceptBtn.innerHTML = `<span class="mae-dm-btn-icon">✓✓</span> Accept all`;
+		acceptBtn.onclick = () => {
+			this.result = { action: "accept-all" };
+			this.close();
+		};
 	}
 
 	onClose(): void {
 		if (this.resolve) {
-			this.resolve(
-				this.result ?? { action: "reject" },
-			);
+			// If user didn't click a button, build partial from current acceptMap
+			if (!this.result) {
+				const allAccepted = [...this.acceptMap.values()].every(v => v);
+				const allRejected = [...this.acceptMap.values()].every(v => !v);
+				if (allRejected) {
+					this.result = { action: "reject" };
+				} else {
+					const merged = applyPartialDiff(this.originalText, this.blocks, this.acceptMap);
+					this.result = { action: "accept-partial", mergedText: merged };
+				}
+			}
+			this.resolve(this.result);
 			this.resolve = null;
 		}
 	}
 
-	// ---------- full render (small diffs) ----------
+	private renderHunk(parent: HTMLElement, hunk: Hunk): void {
+		const wrap = parent.createDiv({ cls: "mae-dm-hunk" });
 
-	private renderFullDiff(container: HTMLElement): void {
-		for (const block of this.blocks) {
-			const row = container.createDiv({
-				cls: `mae-diff-row mae-diff-${block.type}`,
+		// Hunk header row
+		const hunkHeader = wrap.createDiv({ cls: "mae-dm-hunk-header" });
+		const hunkLeft = hunkHeader.createDiv({ cls: "mae-dm-hunk-header-left" });
+		hunkLeft.createSpan({ cls: "mae-dm-hunk-pos", text: hunk.header });
+		hunkLeft.createSpan({ cls: "mae-dm-hunk-ctx", text: hunk.context });
+
+		const hunkActions = hunkHeader.createDiv({ cls: "mae-dm-hunk-actions" });
+
+		const acceptHunkBtn = hunkActions.createEl("button", { cls: "mae-dm-hunk-btn accept" });
+		acceptHunkBtn.innerHTML = `<span>✓</span> Accept`;
+		const rejectHunkBtn = hunkActions.createEl("button", { cls: "mae-dm-hunk-btn reject" });
+		rejectHunkBtn.innerHTML = `<span>✕</span> Reject`;
+
+		// Wire hunk-level accept/reject
+		acceptHunkBtn.onclick = () => {
+			hunk.changeIndices.forEach(i => this.acceptMap.set(i, true));
+			rows.forEach((row, i) => {
+				const b = hunk.blocks[i];
+				if (b.type !== "unchanged") {
+					row.removeClass("mae-dm-line-rejected");
+					row.addClass("mae-dm-line-accepted");
+				}
 			});
-
-			// Line numbers
-			const nums = row.createDiv({ cls: "mae-diff-nums" });
-			if (block.type === "removed" || block.type === "unchanged") {
-				nums.createSpan({ text: String(block.oldLineNumber ?? "") });
-			} else {
-				nums.createSpan({ text: "" });
-			}
-			if (block.type === "added" || block.type === "unchanged") {
-				nums.createSpan({ text: String(block.newLineNumber ?? "") });
-			}
-
-			// Content
-			const content = row.createDiv({ cls: "mae-diff-content" });
-			const prefix = block.type === "added" ? "+" : block.type === "removed" ? "-" : " ";
-			content.createSpan({ cls: "mae-diff-prefix", text: prefix });
-			content.createSpan({ text: block.content });
-
-			// Toggle for changed lines
-			if (block.type !== "unchanged") {
-				const toggle = row.createDiv({ cls: "mae-diff-toggle" });
-				const accepted = this.acceptMap.get(block.index) ?? true;
-				const checkbox = toggle.createEl("input", {
-					type: "checkbox",
-				});
-				checkbox.checked = accepted;
-				checkbox.onchange = () => {
-					this.acceptMap.set(block.index, checkbox.checked);
-					row.toggleClass("rejected", !checkbox.checked);
-				};
-				if (!accepted) row.addClass("rejected");
-			}
-		}
-	}
-
-	// ---------- virtual scroll render (large diffs) ----------
-
-	private renderVirtualDiff(container: HTMLElement): void {
-		const LINE_HEIGHT = 24;
-		const BUFFER = 50;
-		const visibleBlocks = this.blocks;
-		const totalHeight = visibleBlocks.length * LINE_HEIGHT;
-
-		const scrollContainer = container.createDiv({
-			cls: "mae-diff-virtual-scroll",
-		});
-		scrollContainer.style.height = "400px";
-		scrollContainer.style.overflowY = "auto";
-		scrollContainer.style.position = "relative";
-
-		const inner = scrollContainer.createDiv();
-		inner.style.height = `${totalHeight}px`;
-		inner.style.position = "relative";
-
-		const renderViewport = (): void => {
-			const scrollTop = scrollContainer.scrollTop;
-			const viewportHeight = scrollContainer.clientHeight;
-			const startIdx = Math.max(
-				0,
-				Math.floor(scrollTop / LINE_HEIGHT) - BUFFER,
-			);
-			const endIdx = Math.min(
-				visibleBlocks.length,
-				Math.ceil((scrollTop + viewportHeight) / LINE_HEIGHT) + BUFFER,
-			);
-
-			inner.empty();
-			for (let i = startIdx; i < endIdx; i++) {
-				const block = visibleBlocks[i];
-				const row = inner.createDiv({
-					cls: `mae-diff-row mae-diff-${block.type}`,
-				});
-				row.style.position = "absolute";
-				row.style.top = `${i * LINE_HEIGHT}px`;
-				row.style.width = "100%";
-
-				const content = row.createDiv({ cls: "mae-diff-content" });
-				const prefix =
-					block.type === "added"
-						? "+"
-						: block.type === "removed"
-							? "-"
-							: " ";
-				content.createSpan({ cls: "mae-diff-prefix", text: prefix });
-				content.createSpan({ text: block.content });
-			}
+			acceptHunkBtn.addClass("active");
+			rejectHunkBtn.removeClass("active");
+		};
+		rejectHunkBtn.onclick = () => {
+			hunk.changeIndices.forEach(i => this.acceptMap.set(i, false));
+			rows.forEach((row, i) => {
+				const b = hunk.blocks[i];
+				if (b.type !== "unchanged") {
+					row.removeClass("mae-dm-line-accepted");
+					row.addClass("mae-dm-line-rejected");
+				}
+			});
+			rejectHunkBtn.addClass("active");
+			acceptHunkBtn.removeClass("active");
 		};
 
-		scrollContainer.addEventListener("scroll", () => renderViewport());
-		renderViewport();
+		// Default: all accepted
+		acceptHunkBtn.addClass("active");
+
+		// Diff lines
+		const linesWrap = wrap.createDiv({ cls: "mae-dm-lines" });
+		const rows: HTMLElement[] = [];
+
+		for (const block of hunk.blocks) {
+			const row = linesWrap.createDiv({
+				cls: "mae-dm-line mae-dm-line-" + block.type,
+			});
+			rows.push(row);
+
+			if (block.type !== "unchanged") row.addClass("mae-dm-line-accepted");
+
+			// Line number
+			const lineNum = row.createSpan({ cls: "mae-dm-linenum" });
+			const n = block.type === "removed" ? block.oldLineNumber
+				: block.type === "added" ? block.newLineNumber
+				: (block.oldLineNumber ?? "");
+			lineNum.setText(String(n ?? ""));
+
+			// Prefix
+			const prefix = row.createSpan({ cls: "mae-dm-prefix" });
+			prefix.setText(block.type === "added" ? "+" : block.type === "removed" ? "-" : " ");
+
+			// Content
+			row.createSpan({ cls: "mae-dm-text", text: block.content });
+		}
 	}
 }

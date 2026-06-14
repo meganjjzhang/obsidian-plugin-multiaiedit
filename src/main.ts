@@ -60,11 +60,8 @@ import {
   TerminalApp,
 } from "./agent/TerminalLauncher";
 import { CommandConfirmModal } from "./agent/CommandConfirmModal";
+import { AgentSelectModal } from "./agent/AgentSelectModal";
 import { DiffModal, DiffModalResult } from "./diff/DiffModal";
-
-// v0.4 Cursor direct
-import { launchCursor, cleanupCursorRules } from "./agent/CursorLauncher";
-import { CursorConfirmModal } from "./agent/CursorConfirmModal";
 
 // v0.4 API Key direct call
 import {
@@ -200,12 +197,7 @@ export default class MultiAIEditPlugin extends Plugin {
     // v0.2: Agent commands
     this.registerAgentCommands();
 
-    // v0.4: Cursor and API commands
-    this.addCommand({
-      id: "cursor-launch",
-      name: "Cursor 直调执行",
-      callback: () => this.runCursor(),
-    });
+    // v0.4: API command
     this.addCommand({
       id: "api-execute",
       name: "API Key 直调执行",
@@ -269,79 +261,6 @@ export default class MultiAIEditPlugin extends Plugin {
   /** Invalidate agent cache (e.g. after settings change) */
   invalidateAgentCache(): void {
     this.agentCache = null;
-  }
-
-  // ---------- v0.4: Cursor direct launch ----------
-
-  async runCursor(): Promise<void> {
-    if (isMobile()) {
-      new Notice("移动端暂不支持 Cursor 直调");
-      return;
-    }
-
-    const targetPath = this.resolveTargetMarkdownPath();
-    if (!targetPath) {
-      new Notice("请先打开一个 Markdown 文件");
-      return;
-    }
-
-    await this.store.flushAll();
-    const data = await this.store.getFile(targetPath);
-    if (data.annotations.filter((a) => a.type === "review").length === 0) {
-      new Notice("当前文件没有批阅意见");
-      return;
-    }
-
-    const file = this.app.vault.getAbstractFileByPath(targetPath);
-    if (!(file instanceof TFile)) {
-      new Notice("找不到原文件");
-      return;
-    }
-
-    const vaultPath = (this.app.vault.adapter as unknown as { basePath?: string }).basePath
-      ?? this.app.vault.getRoot().path;
-
-    // Generate instruction file
-    const originalText = await this.app.vault.read(file);
-    const fileName = file.basename;
-    const instructionFilePath = `${this.settings.exportDir}/${fileName}-cursor-instruction.md`;
-    const instructionContent = buildReviewMarkdown(
-      fileName,
-      `${vaultPath}/${targetPath}`,
-      data,
-      { includeReadingNotes: this.settings.includeReadingNotesInExport },
-      originalText,
-    );
-
-    const adapter = this.app.vault.adapter;
-    if (!(await adapter.exists(this.settings.exportDir))) {
-      await adapter.mkdir(this.settings.exportDir);
-    }
-    await adapter.write(instructionFilePath, instructionContent);
-
-    // Show confirmation modal
-    const result = await new CursorConfirmModal(
-      this.app,
-      instructionFilePath,
-      vaultPath,
-    ).openForResult();
-
-    if (!result.confirmed && !result.copyOnly) return;
-    if (result.copyOnly) return; // clipboard already handled in modal
-
-    // Save original for diff (Cursor edits the file in-place, monitor changes)
-    this.originalTextBeforeAgent = originalText;
-
-    await launchCursor({
-      app: this.app,
-      vaultPath,
-      instructionFilePath,
-      injectMode: this.settings.cursorInjectMode,
-      cleanupAfter: this.settings.cursorCleanupAfter,
-    });
-
-    // Start monitoring for file changes (same as CLI flow)
-    this.startFileMonitoring(targetPath);
   }
 
   // ---------- v0.4: API Key direct call ----------
@@ -559,6 +478,21 @@ export default class MultiAIEditPlugin extends Plugin {
     });
   }
 
+  /**
+   * Show AgentSelectModal and run the chosen agent.
+   * Called from sidebar when user clicks the Agent 执行 CTA.
+   */
+  async runAgentWithSelect(): Promise<void> {
+    if (isMobile()) {
+      new Notice("移动端暂不支持 Agent 执行，请使用「复制 Prompt」");
+      return;
+    }
+    const agents = this.getAgentInfo();
+    const { rule } = await new AgentSelectModal(this.app, agents).openForResult();
+    if (!rule) return;
+    await this.runAgent(rule.id);
+  }
+
   /** Copy the full command to clipboard without executing */
   async runCopyAgentCommand(): Promise<void> {
     const targetPath = this.resolveTargetMarkdownPath();
@@ -682,7 +616,6 @@ export default class MultiAIEditPlugin extends Plugin {
         // File already has the new content — re-anchor then update baseline
         const finalText = modified;
         await this.reanchorAndConfirm(filePath, original, finalText);
-        if (this.settings.cursorCleanupAfter) await cleanupCursorRules(this.app);
         new Notice("已接受所有修改");
         break;
       }
@@ -691,7 +624,6 @@ export default class MultiAIEditPlugin extends Plugin {
           await this.app.vault.modify(file, result.mergedText);
           const finalText = result.mergedText;
           await this.reanchorAndConfirm(filePath, original, finalText);
-          if (this.settings.cursorCleanupAfter) await cleanupCursorRules(this.app);
           new Notice("已应用选中的修改");
         }
         break;

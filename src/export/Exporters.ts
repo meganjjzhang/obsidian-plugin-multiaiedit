@@ -22,7 +22,6 @@ export function buildReviewMarkdown(
   filePath: string,
   data: AnnotationFile,
   opts: { includeReadingNotes: boolean },
-  originalText?: string,
 ): string {
   const reviews = data.annotations.filter((a) => a.type === "review");
   const notes = data.annotations.filter((a) => a.type === "note");
@@ -67,14 +66,6 @@ export function buildReviewMarkdown(
   }
 
   md += "---\n\n";
-
-  // Include the full original text so the exported file is self-contained
-  // and AI tools can execute modifications without needing the source vault.
-  if (originalText) {
-    md += "## 原文\n\n";
-    md += "```markdown\n" + originalText + "\n```\n\n";
-    md += "---\n\n";
-  }
 
   md += "## 执行要求\n";
   md += "1. 根据每条批阅意见修改原文。\n";
@@ -164,8 +155,7 @@ export class ReviewExporter {
       return null;
     }
     const fileName = file.basename;
-    const originalText = await this.app.vault.read(file);
-    const md = buildReviewMarkdown(fileName, filePath, data, opts, originalText);
+    const md = buildReviewMarkdown(fileName, filePath, data, opts);
 
     const adapter = this.app.vault.adapter;
     if (!(await adapter.exists(this.exportDir))) {

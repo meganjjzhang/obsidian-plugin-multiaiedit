@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://unpkg.com" />
+  <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  <script src="https://unpkg.com/@fortawesome/fontawesome-free@6.7.2/js/all.min.js"></script>
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    * {
+      scrollbar-width: none;
+      scrollbar-color: rgba(0, 0, 0, 0.12) transparent;
+    }
+  </style>
+</head>
+
+<body class="bg-[#eae8e4] min-h-screen flex items-center justify-center p-6">
+<link href="https://fonts.googleapis.cn/css2?family=JetBrains+Mono:wght@400;500;600&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+<style type="text/tailwindcss">
+  @theme {
+    --color-surface: #fefefe;
+    --color-surface-hover: #f5f3f0;
+    --color-border: #e5e2de;
+    --color-border-subtle: #ece9e5;
+    --color-text-primary: #1c1917;
+    --color-text-secondary: #44403c;
+    --color-text-muted: #78716c;
+    --color-bg-base: #faf9f7;
+    --color-hl-yellow: rgba(180, 138, 0, 0.16);
+    --color-hl-blue: rgba(47, 100, 190, 0.14);
+    --color-hl-green: rgba(28, 120, 65, 0.14);
+    --color-hl-purple: rgba(110, 65, 185, 0.14);
+    --color-quote-bg: #f5f3f0;
+    --color-review-orange: rgba(194, 88, 12, 0.45);
+    --color-accent: #6d5acd;
+    --color-accent-hover: #5b49bd;
+    --color-accent-soft: rgba(109, 90, 205, 0.08);
+  }
+</style>
+
+<style>
+  body { font-family: 'DM Sans', sans-serif; }
+  .mono { font-family: 'JetBrains Mono', monospace; }
+  .scrollbar-thin::-webkit-scrollbar { width: 3px; }
+  .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+  .scrollbar-thin::-webkit-scrollbar-thumb { background: #d6d3ce; border-radius: 2px; }
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #c4c0ba; }
+
+  .card-shadow {
+    box-shadow: 0 1px 2px rgba(28, 25, 23, 0.04), 0 0 0 1px rgba(28, 25, 23, 0.03);
+  }
+  .card-shadow:hover {
+    box-shadow: 0 2px 8px rgba(28, 25, 23, 0.06), 0 0 0 1px rgba(28, 25, 23, 0.05);
+  }
+</style>
+
+<!-- Sidebar Panel -->
+<div class="w-[300px] h-[680px] bg-bg-base border border-border/60 flex flex-col rounded-xl overflow-hidden shadow-xl shadow-black/5">
+
+  <!-- Header -->
+  <div class="px-4 pt-4 pb-3 border-b border-border-subtle">
+    <div class="flex items-center justify-between mb-3.5">
+      <div class="flex items-center gap-2">
+        <div class="w-5 h-5 rounded-md bg-accent-soft flex items-center justify-center">
+          <i data-lucide="highlighter" class="w-2.5 h-2.5 text-accent"></i>
+        </div>
+        <span class="text-text-primary text-xs font-semibold tracking-tight">MultiAIEdit</span>
+      </div>
+      <button class="text-text-muted/60 hover:text-text-primary transition-colors p-0.5 rounded hover:bg-surface-hover">
+        <i data-lucide="settings" class="w-3.5 h-3.5"></i>
+      </button>
+    </div>
+
+    <!-- Tab Navigation -->
+    <div class="flex bg-border-subtle/80 rounded-lg p-[3px] gap-[3px]">
+      <button class="flex-1 text-[11px] font-medium py-1.5 px-2 rounded-md text-text-muted hover:text-text-secondary transition-colors mono">Reading</button>
+      <button class="flex-1 text-[11px] font-medium py-1.5 px-2 rounded-md text-text-muted hover:text-text-secondary transition-colors mono">Reviewing</button>
+      <button class="flex-1 text-[11px] font-medium py-1.5 px-2 rounded-md bg-surface text-text-primary shadow-sm mono">All</button>
+    </div>
+  </div>
+
+  <!-- Content List -->
+  <div class="flex-1 overflow-y-auto scrollbar-thin px-3 py-3 space-y-2.5">
+
+    <!-- Reading Card - Yellow Highlight (note type) -->
+    <div class="group bg-surface rounded-lg p-3 card-shadow hover:shadow-md transition-all duration-150 relative cursor-pointer">
+      <!-- Type badge -->
+      <div class="absolute top-2 right-2">
+        <span class="text-[8px] mono px-1.5 py-0.5 rounded-md bg-yellow-50 text-yellow-800/60 border border-yellow-200/60">note</span>
+      </div>
+      <div class="flex items-start gap-3">
+        <div class="w-[3px] self-stretch rounded-full bg-yellow-500/60 shrink-0 mt-0.5"></div>
+        <div class="flex-1 min-w-0 pr-8">
+          <!-- Quoted source text -->
+          <div class="bg-quote-bg rounded-md px-2.5 py-1.5 mb-2">
+            <p class="text-text-secondary/75 text-[10.5px] leading-relaxed mono">
+              bidirectional linking and graph-based representations
+            </p>
+          </div>
+          <!-- User note -->
+          <div class="rounded-md px-2.5 py-1.5 mb-2">
+            <p class="text-text-primary text-[11px] leading-relaxed">
+              <i data-lucide="pen-line" class="w-2.5 h-2.5 inline-block mr-1 -mt-px text-yellow-600/70"></i>
+              Compare with Luhmann's Zettelkasten numbering system
+            </p>
+          </div>
+          <div class="flex items-center gap-1.5 text-text-muted/60">
+            <i data-lucide="file-text" class="w-2.5 h-2.5"></i>
+            <span class="text-[9px] mono truncate">Knowledge Systems.md</span>
+            <span class="text-[9px] mono">· L.14</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Card -->
+    <div class="group bg-surface rounded-lg p-3 card-shadow hover:shadow-md transition-all duration-150 relative cursor-pointer">
+      <!-- Type badge -->
+      <div class="absolute top-2 right-2">
+        <span class="text-[8px] mono px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-800/60 border border-orange-200/60">review</span>
+      </div>
+      <div class="flex items-start gap-3">
+        <div class="w-[3px] self-stretch rounded-full bg-review-orange shrink-0 mt-0.5"></div>
+        <div class="flex-1 min-w-0 pr-8">
+          <div class="bg-quote-bg rounded-md px-2.5 py-1.5 mb-2">
+            <p class="text-text-muted text-[10.5px] leading-relaxed mono line-through decoration-orange-400/60 decoration-1">
+              suffer from poor error handling
+            </p>
+          </div>
+          <div class="rounded-md px-2.5 py-1.5 mb-2">
+            <p class="text-text-primary text-[11px] leading-relaxed">
+              <i data-lucide="message-circle" class="w-2.5 h-2.5 inline-block mr-1 -mt-px text-orange-500/70"></i>
+              Needs retry logic with exponential backoff
+            </p>
+          </div>
+          <div class="flex items-center gap-1.5 text-text-muted/60">
+            <i data-lucide="file-text" class="w-2.5 h-2.5"></i>
+            <span class="text-[9px] mono truncate">Plugin Architecture.md</span>
+            <span class="text-[9px] mono">· L.23</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reading Card - Blue Highlight only -->
+    <div class="group bg-surface rounded-lg p-3 card-shadow hover:shadow-md transition-all duration-150 relative cursor-pointer">
+      <div class="absolute top-2 right-2">
+        <span class="text-[8px] mono px-1.5 py-0.5 rounded-md bg-blue-50 text-blue-800/55 border border-blue-200/50">read</span>
+      </div>
+      <div class="flex items-start gap-3">
+        <div class="w-[3px] self-stretch rounded-full bg-blue-500/55 shrink-0 mt-0.5"></div>
+        <div class="flex-1 min-w-0 pr-8">
+          <div class="bg-quote-bg rounded-md px-2.5 py-1.5 mb-2">
+            <p class="text-text-secondary/75 text-[10.5px] leading-relaxed mono">
+              connections between disparate ideas that would otherwise remain hidden
+            </p>
+          </div>
+          <div class="flex items-center gap-1.5 text-text-muted/60">
+            <i data-lucide="file-text" class="w-2.5 h-2.5"></i>
+            <span class="text-[9px] mono truncate">Knowledge Systems.md</span>
+            <span class="text-[9px] mono">· L.17</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reading Card - Green Note -->
+    <div class="group bg-surface rounded-lg p-3 card-shadow hover:shadow-md transition-all duration-150 relative cursor-pointer">
+      <div class="absolute top-2 right-2">
+        <span class="text-[8px] mono px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-800/55 border border-emerald-200/50">note</span>
+      </div>
+      <div class="flex items-start gap-3">
+        <div class="w-[3px] self-stretch rounded-full bg-emerald-500/55 shrink-0 mt-0.5"></div>
+        <div class="flex-1 min-w-0 pr-8">
+          <div class="bg-quote-bg rounded-md px-2.5 py-1.5 mb-2">
+            <p class="text-text-secondary/75 text-[10.5px] leading-relaxed mono">
+              retrieval-first model
+            </p>
+          </div>
+          <div class="rounded-md px-2.5 py-1.5 mb-2">
+            <p class="text-text-primary text-[11px] leading-relaxed">
+              <i data-lucide="pen-line" class="w-2.5 h-2.5 inline-block mr-1 -mt-px text-emerald-600/70"></i>
+              Contradicts the "folder-first" approach in PARA method
+            </p>
+          </div>
+          <div class="flex items-center gap-1.5 text-text-muted/60">
+            <i data-lucide="file-text" class="w-2.5 h-2.5"></i>
+            <span class="text-[9px] mono truncate">Knowledge Systems.md</span>
+            <span class="text-[9px] mono">· L.22</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Review Card 2 -->
+    <div class="group bg-surface rounded-lg p-3 card-shadow hover:shadow-md transition-all duration-150 relative cursor-pointer">
+      <div class="absolute top-2 right-2">
+        <span class="text-[8px] mono px-1.5 py-0.5 rounded-md bg-orange-50 text-orange-800/60 border border-orange-200/60">review</span>
+      </div>
+      <div class="flex items-start gap-3">
+        <div class="w-[3px] self-stretch rounded-full bg-review-orange shrink-0 mt-0.5"></div>
+        <div class="flex-1 min-w-0 pr-8">
+          <div class="bg-quote-bg rounded-md px-2.5 py-1.5 mb-2">
+            <p class="text-text-muted text-[10.5px] leading-relaxed mono line-through decoration-orange-400/60 decoration-1">
+              simple key-value store
+            </p>
+          </div>
+          <div class="rounded-md px-2.5 py-1.5 mb-2">
+            <p class="text-text-primary text-[11px] leading-relaxed">
+              <i data-lucide="message-circle" class="w-2.5 h-2.5 inline-block mr-1 -mt-px text-orange-500/70"></i>
+              Use typed config schema with Zod validation
+            </p>
+          </div>
+          <div class="flex items-center gap-1.5 text-text-muted/60">
+            <i data-lucide="file-text" class="w-2.5 h-2.5"></i>
+            <span class="text-[9px] mono truncate">Plugin Architecture.md</span>
+            <span class="text-[9px] mono">· L.38</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Reading Card - Purple -->
+    <div class="group bg-surface rounded-lg p-3 card-shadow hover:shadow-md transition-all duration-150 relative cursor-pointer">
+      <div class="absolute top-2 right-2">
+        <span class="text-[8px] mono px-1.5 py-0.5 rounded-md bg-violet-50 text-violet-800/55 border border-violet-200/50">read</span>
+      </div>
+      <div class="flex items-start gap-3">
+        <div class="w-[3px] self-stretch rounded-full bg-violet-500/55 shrink-0 mt-0.5"></div>
+        <div class="flex-1 min-w-0 pr-8">
+          <div class="bg-quote-bg rounded-md px-2.5 py-1.5 mb-2">
+            <p class="text-text-secondary/75 text-[10.5px] leading-relaxed mono">
+              emergent structure arises from consistent linking
+            </p>
+          </div>
+          <div class="flex items-center gap-1.5 text-text-muted/60">
+            <i data-lucide="file-text" class="w-2.5 h-2.5"></i>
+            <span class="text-[9px] mono truncate">Knowledge Systems.md</span>
+            <span class="text-[9px] mono">· L.31</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Summary footer -->
+  <div class="px-4 py-2.5 border-t border-border-subtle">
+    <div class="flex items-center justify-between text-text-muted">
+      <span class="text-[9px] mono">6 items total</span>
+      <div class="flex items-center gap-2">
+        <span class="text-[8px] mono px-1.5 py-0.5 rounded-md bg-border-subtle/70 text-text-muted/70">4 read</span>
+        <span class="text-[8px] mono px-1.5 py-0.5 rounded-md bg-border-subtle/70 text-text-muted/70">2 review</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bottom Action Bar -->
+  <div class="px-4 py-3.5 border-t border-border-subtle bg-surface/60 backdrop-blur-sm">
+    <div class="flex gap-2 mb-2.5">
+      <button class="flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg border border-border text-text-muted text-[11px] font-medium mono hover:bg-surface-hover hover:text-text-primary hover:border-border/80 transition-all duration-150">
+        <i data-lucide="download" class="w-3 h-3"></i>
+        Export
+      </button>
+      <button class="flex-1 flex items-center justify-center gap-1.5 py-2 px-2.5 rounded-lg border border-border text-text-muted text-[11px] font-medium mono hover:bg-surface-hover hover:text-text-primary hover:border-border/80 transition-all duration-150">
+        <i data-lucide="copy" class="w-3 h-3"></i>
+        Copy Prompt
+      </button>
+    </div>
+    <button class="w-full flex items-center justify-center gap-2 py-2.5 px-3 rounded-lg bg-accent text-white text-[11px] font-semibold mono hover:bg-accent-hover transition-colors duration-150 shadow-sm shadow-accent/15">
+      <i data-lucide="sparkles" class="w-3.5 h-3.5"></i>
+      Execute with Agent
+    </button>
+  </div>
+</div>
+
+</body>
+<script>if (window.lucide) lucide.createIcons();</script>
+</html>

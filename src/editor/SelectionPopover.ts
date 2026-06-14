@@ -247,7 +247,7 @@ export class SelectionPopover {
     }
     // Vertical divider
     row.createDiv({ cls: "mae-divider" });
-    const noteBtn = row.createEl("button", { cls: "mae-note-btn", text: "Note" });
+    const noteBtn = row.createEl("button", { cls: "mae-note-btn", text: "Add Note" });
     noteBtn.title = "添加笔记";
     noteBtn.onmousedown = (e) => {
       e.preventDefault();
@@ -285,7 +285,7 @@ export class SelectionPopover {
     };
 
     // Note button
-    const noteBtn = row.createEl("button", { cls: "mae-note-btn", text: "Note" });
+    const noteBtn = row.createEl("button", { cls: "mae-note-btn", text: "Add Note" });
     noteBtn.title = "添加批阅意见";
     noteBtn.onmousedown = (e) => {
       e.preventDefault();

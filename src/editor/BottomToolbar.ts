@@ -109,7 +109,7 @@ export class BottomToolbar {
         }
       };
     }
-    const noteBtn = row.createEl("button", { text: "Note" });
+    const noteBtn = row.createEl("button", { text: "Add Note" });
     noteBtn.onclick = () => {
       this.toggleNoteArea();
     };
@@ -143,7 +143,7 @@ export class BottomToolbar {
     };
 
     // Note button
-    const noteBtn = row.createEl("button", { cls: "mae-note-btn", text: "Note" });
+    const noteBtn = row.createEl("button", { cls: "mae-note-btn", text: "Add Note" });
     noteBtn.title = "添加批阅意见";
     noteBtn.onclick = () => {
       this.toggleNoteArea();

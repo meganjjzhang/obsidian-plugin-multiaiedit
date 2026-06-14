@@ -1,10 +1,9 @@
-import { ItemView, MarkdownView, Notice, TFile, WorkspaceLeaf } from "obsidian";
+import { ItemView, Menu, MarkdownView, Notice, TFile, WorkspaceLeaf } from "obsidian";
 import { Annotation, ViewMode } from "../annotation/AnnotationModel";
 import { AnnotationStore } from "../annotation/AnnotationStore";
 import { locate, fuzzyLocate, computeLineHint, computeOccurrenceIndex } from "../annotation/AnnotationLocator";
 import type MultiAIEditPlugin from "../main";
 import { isMobile } from "../utils/platform";
-import { isCursorInstalled } from "../agent/CursorLauncher";
 import { EditorView } from "@codemirror/view";
 
 export const SIDEBAR_VIEW_TYPE = "multiaiedit-sidebar";
@@ -290,24 +289,11 @@ export class SidebarView extends ItemView {
     }
   }
 
-  /** Render bottom action bar: Export + Copy Prompt + Execute with Agent + status */
+  /** Render bottom action bar: Row1 Agent CTA + Row2 Copy Prompt + More menu */
   private renderActionBar(parent: HTMLElement, reviewCount: number): void {
     const hasReviews = reviewCount > 0;
 
-    // Row 1: 导出 + 复制 Prompt
-    const row1 = parent.createDiv({ cls: "mae-action-row" });
-    const exportBtn = row1.createEl("button", { cls: "mae-action-btn", text: "导出" });
-    exportBtn.onclick = () => {
-      if (this.currentFilePath) this.plugin.runExport(this.currentFilePath);
-      else this.plugin.runExport();
-    };
-    const copyBtn = row1.createEl("button", { cls: "mae-action-btn secondary", text: "复制 Prompt" });
-    copyBtn.onclick = () => {
-      if (this.currentFilePath) this.plugin.runCopyPrompt(this.currentFilePath);
-      else this.plugin.runCopyPrompt();
-    };
-
-    // Row 2: CLI Agent 执行（仅桌面端）
+    // Row 1: Agent 执行（紫色 CTA 主按钮，桌面端）
     if (!isMobile()) {
       const execBtn = parent.createEl("button", {
         cls: "mae-action-execute",
@@ -316,47 +302,52 @@ export class SidebarView extends ItemView {
       execBtn.disabled = !hasReviews;
       execBtn.onclick = () => {
         if (!hasReviews) { new Notice("当前文件没有批阅意见"); return; }
-        const agents = this.plugin.getAgentInfo();
-        const installed = agents.filter((a) => a.installed);
-        if (installed.length > 0) {
-          this.plugin.runAgent(installed[0].rule.id);
-        } else {
-          this.plugin.runCopyAgentCommand();
-        }
-      };
-
-      // Row 3: Cursor 直调 + API Key 直调（桌面端）
-      const row3 = parent.createDiv({ cls: "mae-action-row mae-action-row-secondary" });
-
-      const cursorInstalled = isCursorInstalled();
-      const cursorBtn = row3.createEl("button", {
-        cls: "mae-action-btn" + (cursorInstalled ? "" : " secondary"),
-        text: cursorInstalled ? "Cursor 执行" : "Cursor（未检测到）",
-      });
-      cursorBtn.disabled = !hasReviews;
-      cursorBtn.title = cursorInstalled
-        ? "打开 Cursor 并注入批阅任务（需在 Cursor 内按 Cmd+I 执行）"
-        : "未检测到 /Applications/Cursor.app，点击仍可注入文件";
-      cursorBtn.onclick = () => {
-        if (!hasReviews) { new Notice("当前文件没有批阅意见"); return; }
-        this.plugin.runCursor();
-      };
-
-      const hasApiKey = !!this.plugin.settings.apiSettings?.apiKey;
-      const apiBtn = row3.createEl("button", {
-        cls: "mae-action-btn" + (hasApiKey ? "" : " secondary"),
-        text: hasApiKey ? "API 执行" : "API（未配置）",
-      });
-      apiBtn.disabled = !hasReviews;
-      apiBtn.title = hasApiKey
-        ? `直接调用 ${this.plugin.settings.apiSettings.provider} API 执行批阅`
-        : "在设置中配置 API Key 后启用";
-      apiBtn.onclick = () => {
-        if (!hasReviews) { new Notice("当前文件没有批阅意见"); return; }
-        if (!hasApiKey) { new Notice("请先在设置中配置 API Key"); return; }
-        this.plugin.runAPIExecute();
+        this.plugin.runAgentWithSelect();
       };
     }
+
+    // Row 2: 复制 Prompt + 更多
+    const row2 = parent.createDiv({ cls: "mae-action-row" });
+
+    const copyBtn = row2.createEl("button", { cls: "mae-action-btn", text: "📋 复制 Prompt" });
+    copyBtn.disabled = !hasReviews;
+    copyBtn.onclick = () => {
+      if (this.currentFilePath) this.plugin.runCopyPrompt(this.currentFilePath);
+      else this.plugin.runCopyPrompt();
+    };
+
+    const moreBtn = row2.createEl("button", { cls: "mae-action-btn mae-more-btn", text: "更多 ▾" });
+    moreBtn.disabled = !hasReviews;
+    moreBtn.onclick = (ev) => {
+      if (!hasReviews) return;
+      const menu = new Menu();
+
+      // 导出批注文件
+      menu.addItem((item) => {
+        item.setTitle("📄 导出批注文件")
+          .onClick(() => {
+            if (this.currentFilePath) this.plugin.runExport(this.currentFilePath);
+            else this.plugin.runExport();
+          });
+      });
+
+      // API Key 直调（桌面端）
+      if (!isMobile()) {
+        menu.addSeparator();
+        const hasApiKey = !!this.plugin.settings.apiSettings?.apiKey;
+        menu.addItem((item) => {
+          item.setTitle(hasApiKey ? "⚡ API 执行" : "⚡ API（未配置）")
+            .setChecked(hasApiKey)
+            .onClick(() => {
+              if (!hasApiKey) { new Notice("请先在设置中配置 API Key"); return; }
+              this.plugin.runAPIExecute();
+            });
+        });
+      }
+
+      const rect = moreBtn.getBoundingClientRect();
+      menu.showAtPosition({ x: rect.left, y: rect.top - 4 } as any);
+    };
 
     // Status hint
     const status = parent.createDiv({ cls: "mae-action-status" });

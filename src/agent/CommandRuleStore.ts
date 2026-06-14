@@ -9,6 +9,7 @@ export interface CommandRule {
 	template: string;       // e.g. 'cd "{{vaultPath}}" && claude ...'
 	installHint: string;   // shown when Agent is not installed
 	isPreset: boolean;     // true for built-in, false for user-created
+	vendor?: string;       // display: "Anthropic", "OpenAI", etc.
 }
 
 // ---------- preset rules ----------
@@ -17,6 +18,7 @@ export const PRESET_RULES: CommandRule[] = [
 	{
 		id: "claude",
 		label: "Claude Code",
+		vendor: "Anthropic",
 		detectCmd: "which claude",
 		template:
 			'cd {{vaultPath}} && claude "读取 {{instructionFile}}，按批注指令修改对应文件"',
@@ -24,8 +26,19 @@ export const PRESET_RULES: CommandRule[] = [
 		isPreset: true,
 	},
 	{
+		id: "claude-internal",
+		label: "Claude Internal",
+		vendor: "Anthropic (internal)",
+		detectCmd: "which claude-internal",
+		template:
+			'cd {{vaultPath}} && claude-internal --config-dir ~/.claude-internal "读取 {{instructionFile}}，按批注指令修改对应文件"',
+		installHint: "内部版本，需要内部权限",
+		isPreset: true,
+	},
+	{
 		id: "codex",
 		label: "Codex CLI",
+		vendor: "OpenAI",
 		detectCmd: "which codex",
 		template:
 			'cd {{vaultPath}} && codex "读取 {{instructionFile}}，按批注指令修改对应文件"',
@@ -35,6 +48,7 @@ export const PRESET_RULES: CommandRule[] = [
 	{
 		id: "aider",
 		label: "Aider",
+		vendor: "Paul Gauthier",
 		detectCmd: "which aider",
 		template:
 			'cd {{vaultPath}} && aider --msg "读取 {{instructionFile}}，按批注指令修改对应文件"',
@@ -44,6 +58,7 @@ export const PRESET_RULES: CommandRule[] = [
 	{
 		id: "gemini",
 		label: "Gemini CLI",
+		vendor: "Google",
 		detectCmd: "which gemini",
 		template:
 			'cd {{vaultPath}} && gemini "读取 {{instructionFile}}，按批注指令修改对应文件"',
