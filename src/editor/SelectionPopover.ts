@@ -177,7 +177,10 @@ export class SelectionPopover {
     this.strikePending = false;
     this.pendingStrikeId = null;
 
-    // Single action row (colors/actions + Note button + mode capsule inline)
+    // Title row: "添加记录" / "编辑记录"  +  mode capsule on the right
+    this.renderTitleRow();
+
+    // Action row (colors/buttons)
     if (this.mode === "reviewing") {
       this.renderReviewingActions();
     } else {
@@ -187,7 +190,18 @@ export class SelectionPopover {
     this.renderedMode = this.mode;
   }
 
-  /** Build the inline mode-switching capsule (appended to the action row) */
+  /** Title row: label left + mode capsule right */
+  private renderTitleRow(): void {
+    const row = this.el.createDiv({ cls: "mae-popover-title-row" });
+    const title = row.createSpan({
+      cls: "mae-popover-title",
+      text: this.editingAnnotationId ? "编辑记录" : "添加记录",
+    });
+    void title;
+    this.buildModeCapsule(row);
+  }
+
+  /** Build the inline mode-switching capsule */
   private buildModeCapsule(parent: HTMLElement): void {
     const wrap = parent.createDiv({ cls: "mae-popover-capsule" });
     const modes: Array<[ViewMode, string]> = [
@@ -239,9 +253,6 @@ export class SelectionPopover {
       e.preventDefault();
       this.toggleNoteArea();
     };
-    // Mode capsule inline after Note button
-    row.createDiv({ cls: "mae-divider" });
-    this.buildModeCapsule(row);
   }
 
   /** Render reviewing mode action buttons: Delete (toggle) + Note + confirm ✓ + mode capsule */
@@ -295,9 +306,6 @@ export class SelectionPopover {
       }
     };
 
-    // Mode capsule inline
-    row.createDiv({ cls: "mae-divider" });
-    this.buildModeCapsule(row);
   }
 
   /** Update confirm button visibility based on strike state and note expansion */

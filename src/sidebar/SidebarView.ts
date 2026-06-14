@@ -4,6 +4,7 @@ import { AnnotationStore } from "../annotation/AnnotationStore";
 import { locate, fuzzyLocate, computeLineHint, computeOccurrenceIndex } from "../annotation/AnnotationLocator";
 import type MultiAIEditPlugin from "../main";
 import { isMobile } from "../utils/platform";
+import { isCursorInstalled } from "../agent/CursorLauncher";
 import { EditorView } from "@codemirror/view";
 
 export const SIDEBAR_VIEW_TYPE = "multiaiedit-sidebar";
@@ -291,10 +292,11 @@ export class SidebarView extends ItemView {
 
   /** Render bottom action bar: Export + Copy Prompt + Execute with Agent + status */
   private renderActionBar(parent: HTMLElement, reviewCount: number): void {
-    // Primary action row
+    const hasReviews = reviewCount > 0;
+
+    // Row 1: 导出 + 复制 Prompt
     const row1 = parent.createDiv({ cls: "mae-action-row" });
     const exportBtn = row1.createEl("button", { cls: "mae-action-btn", text: "导出" });
-    // Icon prefix via CSS ::before
     exportBtn.onclick = () => {
       if (this.currentFilePath) this.plugin.runExport(this.currentFilePath);
       else this.plugin.runExport();
@@ -305,22 +307,56 @@ export class SidebarView extends ItemView {
       else this.plugin.runCopyPrompt();
     };
 
-    // Execute with Agent button
-    const execBtn = parent.createEl("button", { cls: "mae-action-execute", text: "Agent 执行" });
-    execBtn.onclick = () => {
-      if (reviewCount === 0) {
-        new Notice("当前文件没有批阅意见");
-        return;
-      }
-      // Try first installed agent, fallback to copy command
-      const agents = this.plugin.getAgentInfo();
-      const installed = agents.filter((a) => a.installed);
-      if (installed.length > 0) {
-        this.plugin.runAgent(installed[0].rule.id);
-      } else {
-        this.plugin.runCopyAgentCommand();
-      }
-    };
+    // Row 2: CLI Agent 执行（仅桌面端）
+    if (!isMobile()) {
+      const execBtn = parent.createEl("button", {
+        cls: "mae-action-execute",
+        text: "Agent 执行",
+      });
+      execBtn.disabled = !hasReviews;
+      execBtn.onclick = () => {
+        if (!hasReviews) { new Notice("当前文件没有批阅意见"); return; }
+        const agents = this.plugin.getAgentInfo();
+        const installed = agents.filter((a) => a.installed);
+        if (installed.length > 0) {
+          this.plugin.runAgent(installed[0].rule.id);
+        } else {
+          this.plugin.runCopyAgentCommand();
+        }
+      };
+
+      // Row 3: Cursor 直调 + API Key 直调（桌面端）
+      const row3 = parent.createDiv({ cls: "mae-action-row mae-action-row-secondary" });
+
+      const cursorInstalled = isCursorInstalled();
+      const cursorBtn = row3.createEl("button", {
+        cls: "mae-action-btn" + (cursorInstalled ? "" : " secondary"),
+        text: cursorInstalled ? "Cursor 执行" : "Cursor（未检测到）",
+      });
+      cursorBtn.disabled = !hasReviews;
+      cursorBtn.title = cursorInstalled
+        ? "打开 Cursor 并注入批阅任务（需在 Cursor 内按 Cmd+I 执行）"
+        : "未检测到 /Applications/Cursor.app，点击仍可注入文件";
+      cursorBtn.onclick = () => {
+        if (!hasReviews) { new Notice("当前文件没有批阅意见"); return; }
+        this.plugin.runCursor();
+      };
+
+      const hasApiKey = !!this.plugin.settings.apiSettings?.apiKey;
+      const apiBtn = row3.createEl("button", {
+        cls: "mae-action-btn" + (hasApiKey ? "" : " secondary"),
+        text: hasApiKey ? "API 执行" : "API（未配置）",
+      });
+      apiBtn.disabled = !hasReviews;
+      apiBtn.title = hasApiKey
+        ? `直接调用 ${this.plugin.settings.apiSettings.provider} API 执行批阅`
+        : "在设置中配置 API Key 后启用";
+      apiBtn.onclick = () => {
+        if (!hasReviews) { new Notice("当前文件没有批阅意见"); return; }
+        if (!hasApiKey) { new Notice("请先在设置中配置 API Key"); return; }
+        this.plugin.runAPIExecute();
+      };
+    }
 
     // Status hint
     const status = parent.createDiv({ cls: "mae-action-status" });
@@ -406,32 +442,19 @@ export class SidebarView extends ItemView {
 
     // ── 卡片内容 ──
     if (ann.type === "review") {
-      const layout = card.createDiv({ cls: "mae-card-layout" });
-
-      // Left: icon badge
-      const badge = layout.createDiv({ cls: "mae-card-badge" });
-      if (ann.strike) {
-        badge.addClass("strike");
-        badge.setText("S");
-      } else {
-        badge.addClass("review");
-        badge.setText("✎");
-      }
-
-      // Right: quote + review text + source
-      const body = layout.createDiv({ cls: "mae-card-body" });
-      const quote = body.createDiv({
+      // Quote + review text + source（no icon badge）
+      const quote = card.createDiv({
         cls: "mae-card-quote mae-quote-orange" + (ann.strike ? " strike" : ""),
       });
       quote.setText(ann.selectedText);
 
       if (ann.reviewText) {
-        const review = body.createDiv({ cls: "mae-card-text mae-text-purple" });
+        const review = card.createDiv({ cls: "mae-card-text mae-text-purple" });
         review.setText(ann.reviewText);
       }
 
       const fileName = (this.currentFilePath ?? "").split("/").pop() ?? "";
-      const source = body.createDiv({ cls: "mae-card-source" });
+      const source = card.createDiv({ cls: "mae-card-source" });
       source.createSpan({ text: fileName });
       source.createSpan({ text: ` · L.${ann.lineHint}` });
     } else {

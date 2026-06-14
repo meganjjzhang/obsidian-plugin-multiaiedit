@@ -261,6 +261,25 @@
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.20);
 }
 
+/* 浮窗标题行：左侧标题 + 右侧模式胶囊 */
+.mae-popover-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid var(--background-modifier-border);
+  margin-bottom: 2px;
+}
+.mae-popover-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-family: var(--font-monospace);
+  letter-spacing: 0.02em;
+}
+
 /* 浮窗按钮行（颜色圆点 + 按钮横排） */
 .mae-popover-actions {
   display: flex;
@@ -685,6 +704,27 @@
 }
 .mae-action-execute:active {
   transform: scale(0.98);
+}
+.mae-action-execute:disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+
+/* Secondary tool row: Cursor + API Key — smaller, subdued */
+.mae-action-row-secondary {
+  margin-top: 2px;
+}
+.mae-action-row-secondary .mae-action-btn {
+  font-size: 10.5px;
+  padding: 5px 8px;
+  opacity: 0.7;
+}
+.mae-action-row-secondary .mae-action-btn:hover {
+  opacity: 1;
+}
+.mae-action-row-secondary .mae-action-btn:disabled {
+  opacity: 0.3;
+  cursor: default;
 }
 
 /* Status hint at bottom */
