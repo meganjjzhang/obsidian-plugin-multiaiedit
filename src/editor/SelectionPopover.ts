@@ -221,8 +221,9 @@ export class SelectionPopover {
         dot.addClass("active");
         this.selectedColor = color;
         if (this.noteExpanded) {
-          // Just update the color indicator in the note area (no save yet)
-          this.updateNoteColorIndicator();
+          // Auto-save color change immediately; keep note area open for further editing
+          this.cb.onHighlight(color, this.editingAnnotationId ?? undefined);
+          // (do NOT hide — user still needs to save the note text)
         } else {
           // Direct highlight — save and hide
           this.cb.onHighlight(color, this.editingAnnotationId ?? undefined);
