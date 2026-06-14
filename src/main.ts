@@ -62,6 +62,20 @@ import {
 import { CommandConfirmModal } from "./agent/CommandConfirmModal";
 import { DiffModal, DiffModalResult } from "./diff/DiffModal";
 
+// v0.4 Cursor direct
+import { launchCursor, cleanupCursorRules } from "./agent/CursorLauncher";
+import { CursorConfirmModal } from "./agent/CursorConfirmModal";
+
+// v0.4 API Key direct call
+import {
+  callAPI,
+  API_SYSTEM_PROMPT,
+  buildAPIUserMessage,
+  APIProviderConfig,
+} from "./api/APIProvider";
+import { APIConfirmModal, APIProgressModal } from "./api/APIExecuteModal";
+import { buildReviewMarkdown, estimateTokens } from "./export/Exporters";
+
 export default class MultiAIEditPlugin extends Plugin {
   settings: MultiAIEditSettings = DEFAULT_SETTINGS;
   store!: AnnotationStore;
@@ -186,6 +200,18 @@ export default class MultiAIEditPlugin extends Plugin {
     // v0.2: Agent commands
     this.registerAgentCommands();
 
+    // v0.4: Cursor and API commands
+    this.addCommand({
+      id: "cursor-launch",
+      name: "Cursor 直调执行",
+      callback: () => this.runCursor(),
+    });
+    this.addCommand({
+      id: "api-execute",
+      name: "API Key 直调执行",
+      callback: () => this.runAPIExecute(),
+    });
+
     // Open sidebar on first install
     this.app.workspace.onLayoutReady(() => {
       if (this.app.workspace.getLeavesOfType(SIDEBAR_VIEW_TYPE).length === 0) {
@@ -243,6 +269,195 @@ export default class MultiAIEditPlugin extends Plugin {
   /** Invalidate agent cache (e.g. after settings change) */
   invalidateAgentCache(): void {
     this.agentCache = null;
+  }
+
+  // ---------- v0.4: Cursor direct launch ----------
+
+  async runCursor(): Promise<void> {
+    if (isMobile()) {
+      new Notice("移动端暂不支持 Cursor 直调");
+      return;
+    }
+
+    const targetPath = this.resolveTargetMarkdownPath();
+    if (!targetPath) {
+      new Notice("请先打开一个 Markdown 文件");
+      return;
+    }
+
+    await this.store.flushAll();
+    const data = await this.store.getFile(targetPath);
+    if (data.annotations.filter((a) => a.type === "review").length === 0) {
+      new Notice("当前文件没有批阅意见");
+      return;
+    }
+
+    const file = this.app.vault.getAbstractFileByPath(targetPath);
+    if (!(file instanceof TFile)) {
+      new Notice("找不到原文件");
+      return;
+    }
+
+    const vaultPath = (this.app.vault.adapter as unknown as { basePath?: string }).basePath
+      ?? this.app.vault.getRoot().path;
+
+    // Generate instruction file
+    const originalText = await this.app.vault.read(file);
+    const fileName = file.basename;
+    const instructionFilePath = `${this.settings.exportDir}/${fileName}-cursor-instruction.md`;
+    const instructionContent = buildReviewMarkdown(
+      fileName,
+      `${vaultPath}/${targetPath}`,
+      data,
+      { includeReadingNotes: this.settings.includeReadingNotesInExport },
+      originalText,
+    );
+
+    const adapter = this.app.vault.adapter;
+    if (!(await adapter.exists(this.settings.exportDir))) {
+      await adapter.mkdir(this.settings.exportDir);
+    }
+    await adapter.write(instructionFilePath, instructionContent);
+
+    // Show confirmation modal
+    const result = await new CursorConfirmModal(
+      this.app,
+      instructionFilePath,
+      vaultPath,
+    ).openForResult();
+
+    if (!result.confirmed && !result.copyOnly) return;
+    if (result.copyOnly) return; // clipboard already handled in modal
+
+    // Save original for diff (Cursor edits the file in-place, monitor changes)
+    this.originalTextBeforeAgent = originalText;
+
+    await launchCursor({
+      app: this.app,
+      vaultPath,
+      instructionFilePath,
+      injectMode: this.settings.cursorInjectMode,
+      cleanupAfter: this.settings.cursorCleanupAfter,
+    });
+
+    // Start monitoring for file changes (same as CLI flow)
+    this.startFileMonitoring(targetPath);
+  }
+
+  // ---------- v0.4: API Key direct call ----------
+
+  async runAPIExecute(): Promise<void> {
+    const targetPath = this.resolveTargetMarkdownPath();
+    if (!targetPath) {
+      new Notice("请先打开一个 Markdown 文件");
+      return;
+    }
+
+    const apiSettings = this.settings.apiSettings;
+    if (!apiSettings.apiKey) {
+      new Notice("请在设置面板中配置 API Key（设置 → API Key 直调）");
+      return;
+    }
+
+    await this.store.flushAll();
+    const data = await this.store.getFile(targetPath);
+    const reviews = data.annotations.filter((a) => a.type === "review");
+    if (reviews.length === 0) {
+      new Notice("当前文件没有批阅意见");
+      return;
+    }
+
+    const file = this.app.vault.getAbstractFileByPath(targetPath);
+    if (!(file instanceof TFile)) {
+      new Notice("找不到原文件");
+      return;
+    }
+
+    const originalText = await this.app.vault.read(file);
+    const fileName = file.basename;
+
+    // Build message content
+    const reviewMd = buildReviewMarkdown(
+      fileName,
+      targetPath,
+      data,
+      { includeReadingNotes: this.settings.includeReadingNotesInExport },
+    );
+    const userMessage = buildAPIUserMessage(originalText, reviewMd);
+    const estTokens = estimateTokens(API_SYSTEM_PROMPT + userMessage);
+
+    // Confirm modal
+    const config: APIProviderConfig = {
+      provider: apiSettings.provider,
+      apiKey: apiSettings.apiKey,
+      model: apiSettings.model,
+      customEndpoint: apiSettings.customEndpoint,
+      maxTokens: apiSettings.maxTokens,
+    };
+
+    const confirmResult = await new APIConfirmModal(
+      this.app,
+      config,
+      estTokens,
+      reviews.length,
+    ).openForResult();
+
+    if (confirmResult.action !== "execute") return;
+
+    // Progress modal + API call
+    const progressModal = new APIProgressModal(this.app);
+    const resultPromise = progressModal.openForResult();
+    progressModal.setState({ phase: "calling" });
+
+    const apiResult = await callAPI(config, {
+      systemPrompt: API_SYSTEM_PROMPT,
+      userMessage,
+    });
+
+    if (!apiResult.success || !apiResult.text) {
+      progressModal.setState({ phase: "error", message: apiResult.error ?? "未知错误" });
+      await resultPromise;
+      return;
+    }
+
+    progressModal.setState({ phase: "done", text: apiResult.text });
+    const modifiedText = await resultPromise;
+
+    if (!modifiedText) return; // user closed / error
+
+    // Diff flow (same as CLI)
+    if (originalText === modifiedText) {
+      new Notice("API 返回内容与原文相同，无需修改");
+      return;
+    }
+
+    const diffResult = await new DiffModal(
+      this.app,
+      originalText,
+      modifiedText,
+      fileName,
+    ).openForResult();
+
+    switch (diffResult.action) {
+      case "accept-all": {
+        await this.app.vault.modify(file, modifiedText);
+        await this.reanchorAndConfirm(targetPath, originalText, modifiedText);
+        new Notice("已接受所有修改");
+        break;
+      }
+      case "accept-partial": {
+        if (diffResult.mergedText !== undefined) {
+          await this.app.vault.modify(file, diffResult.mergedText);
+          await this.reanchorAndConfirm(targetPath, originalText, diffResult.mergedText);
+          new Notice("已应用选中的修改");
+        }
+        break;
+      }
+      case "reject": {
+        new Notice("已取消，文件未修改");
+        break;
+      }
+    }
   }
 
   /**
@@ -467,6 +682,7 @@ export default class MultiAIEditPlugin extends Plugin {
         // File already has the new content — re-anchor then update baseline
         const finalText = modified;
         await this.reanchorAndConfirm(filePath, original, finalText);
+        if (this.settings.cursorCleanupAfter) await cleanupCursorRules(this.app);
         new Notice("已接受所有修改");
         break;
       }
@@ -475,6 +691,7 @@ export default class MultiAIEditPlugin extends Plugin {
           await this.app.vault.modify(file, result.mergedText);
           const finalText = result.mergedText;
           await this.reanchorAndConfirm(filePath, original, finalText);
+          if (this.settings.cursorCleanupAfter) await cleanupCursorRules(this.app);
           new Notice("已应用选中的修改");
         }
         break;
@@ -641,7 +858,8 @@ export default class MultiAIEditPlugin extends Plugin {
   }
 
   private popoverCallbacks() {
-    /** Collapse the CM6 selection so selectionchange doesn't re-show the popover */
+    /** Collapse the CM6 selection AFTER annotation is created, so selectionchange
+     *  doesn't re-show the popover. Must only be called after creation completes. */
     const collapseSelection = () => {
       const md = this.app.workspace.getActiveViewOfType(MarkdownView);
       if (!md) return;
@@ -653,10 +871,8 @@ export default class MultiAIEditPlugin extends Plugin {
 
     return {
       onHighlight: (color: HighlightColor, annotationId?: string) => {
-        this.lastSelection = null;
-        collapseSelection();
         if (annotationId) {
-          // Editing existing annotation — change type to "highlight", clear review fields
+          // Editing existing — selection not needed
           const filePath = this.findAnnotationFilePath(annotationId);
           if (filePath) this.store.updateAnnotation(filePath, annotationId, {
             type: "highlight" as AnnotationType,
@@ -666,15 +882,18 @@ export default class MultiAIEditPlugin extends Plugin {
             strike: undefined,
           });
           this.refreshDecorations();
+          this.lastSelection = null;
+          collapseSelection();
         } else {
-          this.createHighlightFromSelection(color);
+          // New: use current CM selection FIRST, then collapse
+          this.createHighlightFromSelection(color).then(() => {
+            this.lastSelection = null;
+            collapseSelection();
+          });
         }
       },
       onNote: (text: string, color: HighlightColor, annotationId?: string) => {
-        this.lastSelection = null;
-        collapseSelection();
         if (annotationId) {
-          // Editing existing annotation — change type to "note", clear review fields
           const filePath = this.findAnnotationFilePath(annotationId);
           if (filePath) this.store.updateAnnotation(filePath, annotationId, {
             type: "note" as AnnotationType,
@@ -684,15 +903,18 @@ export default class MultiAIEditPlugin extends Plugin {
             strike: undefined,
           });
           this.refreshDecorations();
+          this.lastSelection = null;
+          collapseSelection();
         } else {
-          this.createNoteFromSelection(text, color);
+          // New: create with live selection first, then collapse
+          this.createNoteFromSelection(text, color).then(() => {
+            this.lastSelection = null;
+            collapseSelection();
+          });
         }
       },
       onReview: (text: string, strike: boolean, annotationId?: string) => {
-        this.lastSelection = null;
-        collapseSelection();
         if (annotationId) {
-          // Editing existing annotation — change type to "review"
           const filePath = this.findAnnotationFilePath(annotationId);
           if (filePath) {
             const patch: Partial<Annotation> = {
@@ -701,14 +923,17 @@ export default class MultiAIEditPlugin extends Plugin {
               noteText: undefined,
               highlightColor: undefined,
             };
-            // Only update reviewText when a non-empty value is provided
-            // (empty text means Delete toggle — don't clear existing reviewText)
             if (text) patch.reviewText = text;
             this.store.updateAnnotation(filePath, annotationId, patch);
           }
           this.refreshDecorations();
+          this.lastSelection = null;
+          collapseSelection();
         } else {
-          this.createReviewFromSelection(text, strike);
+          this.createReviewFromSelection(text, strike).then(() => {
+            this.lastSelection = null;
+            collapseSelection();
+          });
         }
       },
       onStrikeCreate: async (): Promise<string> => {
