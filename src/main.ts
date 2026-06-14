@@ -872,14 +872,14 @@ export default class MultiAIEditPlugin extends Plugin {
     return {
       onHighlight: (color: HighlightColor, annotationId?: string) => {
         if (annotationId) {
-          // Editing existing — selection not needed
+          // Editing existing — only update color, preserve noteText
           const filePath = this.findAnnotationFilePath(annotationId);
           if (filePath) this.store.updateAnnotation(filePath, annotationId, {
             type: "highlight" as AnnotationType,
             highlightColor: color,
-            noteText: undefined,
             reviewText: undefined,
             strike: undefined,
+            // noteText intentionally omitted — preserve existing note
           });
           this.refreshDecorations();
           this.lastSelection = null;
