@@ -86,11 +86,13 @@ export function buildReviewMarkdown(
 }
 
 /**
- * Build the prompt body that includes full original text + review list.
+ * Build the prompt body that references the original file by absolute path
+ * instead of embedding the full text. This keeps the prompt short and lets
+ * the AI tool read the file directly.
  */
 export function buildPromptText(
   fileName: string,
-  originalText: string,
+  filePathAbsolute: string,
   data: AnnotationFile,
   opts: { includeReadingNotes: boolean },
 ): string {
@@ -104,8 +106,8 @@ export function buildPromptText(
   prompt += "3. 删除线 (strike: true) 表示强删除/合并意图，最终请结合上下文判断。\n";
   prompt += "4. 输出完整修改后的 Markdown 文档。\n\n";
 
-  prompt += "## 原文\n\n";
-  prompt += "```markdown\n" + originalText + "\n```\n\n";
+  prompt += "## 原文路径\n\n";
+  prompt += `${filePathAbsolute}\n\n`;
 
   prompt += "## 批阅意见\n\n";
   if (reviews.length === 0) {
@@ -195,9 +197,11 @@ export class PromptExporter {
       new Notice("找不到原文件");
       return;
     }
-    const text = await this.app.vault.read(file);
     const fileName = file.basename;
-    const prompt = buildPromptText(fileName, text, data, opts);
+    const vaultPath = (this.app.vault.adapter as unknown as { basePath?: string }).basePath
+      ?? this.app.vault.getRoot().path;
+    const filePathAbsolute = `${vaultPath}/${filePath}`;
+    const prompt = buildPromptText(fileName, filePathAbsolute, data, opts);
     await copyToClipboard(prompt);
     const tokens = estimateTokens(prompt);
     new Notice(`Prompt 已复制（约 ${tokens} tokens${tokens > TOKEN_WARN ? "，建议分段" : ""}）`);
@@ -206,7 +210,7 @@ export class PromptExporter {
 
 /** Cross-platform clipboard copy. Falls back from navigator.clipboard to
  *  execCommand for mobile / non-secure contexts. */
-async function copyToClipboard(text: string): Promise<void> {
+export async function copyToClipboard(text: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(text);
   } catch {

@@ -26,7 +26,7 @@ export function buildCommand(rule: CommandRule, vars: TemplateVars): string {
 	for (const [key, value] of Object.entries(vars)) {
 		const token = `{{${key}}}`;
 		if (cmd.includes(token)) {
-			cmd = cmd.replaceAll(token, shellEscape(value));
+			cmd = cmd.split(token).join(shellEscape(value));
 		}
 	}
 	return cmd;

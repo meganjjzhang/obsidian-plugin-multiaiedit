@@ -3,7 +3,7 @@
 export type AnnotationType = "highlight" | "note" | "review";
 export type ViewMode = "reading" | "reviewing" | "all";
 export type HighlightColor = "yellow" | "blue" | "green" | "purple";
-export type MatchStrategy = "strict" | "fuzzy" | "drifted";
+export type MatchStrategy = "strict" | "fuzzy" | "auto-healed" | "drifted";
 
 export interface Annotation {
   // identity
@@ -55,4 +55,6 @@ export interface LocateResult {
   to?: number;
   // For multi-match fuzzy hits, the alternative ranges
   candidates?: Array<{ from: number; to: number }>;
+  // For auto-healed matches, the confidence score (0..1)
+  confidence?: number;
 }

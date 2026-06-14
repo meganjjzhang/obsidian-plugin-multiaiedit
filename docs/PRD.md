@@ -86,7 +86,8 @@
 1. P0：导出批阅文件。
 2. P0：复制 Prompt。
 3. P1：CLI 一键执行，支持用户自定义命令规则。
-4. P2：API Key 直调模型，低优先级兜底。
+4. P1：Cursor 直调，打开 Cursor 并注入批阅文件。
+5. P2：API Key 直调模型，BYOK 低优先级兜底。
 
 ```text
 批阅数据 sidecar
@@ -94,8 +95,9 @@
 Prompt / 批阅文件生成器
    ├─ 导出 Markdown / JSON
    ├─ 复制 Prompt
-   ├─ CLI 一键执行：Claude Code / Codex / Aider / Gemini CLI
-   └─ API 直调：低优先级兜底
+   ├─ CLI 一键执行：Claude Code / Codex / Aider / Gemini CLI / Cursor
+   ├─ Cursor 直调：打开 Cursor 并注入批阅指令文件
+   └─ API Key 直调：低优先级兜底，BYOK 直调模型 API
 ```
 
 ---
@@ -286,6 +288,7 @@ MVP 预设：
 | Codex CLI | `which codex` | `npm i -g @openai/codex` |
 | Aider | `which aider` | `pip install aider-chat` |
 | Gemini CLI | `which gemini` | `npm i -g @google/gemini-cli` |
+| Cursor | `which cursor` | 桌面应用，检测 `/usr/local/bin/cursor` 或 `/Applications/Cursor.app` |
 
 支持用户自定义命令规则模板：
 
@@ -619,14 +622,14 @@ ChatGPT / Claude.ai / Gemini 等通过导出文件或复制 Prompt 覆盖。
 
 ### v0.2 — CLI 一键执行 + Diff 预览
 
-| 功能 | 说明 |
-|------|------|
-| Agent 检测 | Claude / Codex / Aider / Gemini |
-| 命令规则模板 | 预设 + 自定义变量 + 白名单 lint |
-| 终端唤起 | **macOS first**:Terminal/iTerm2 自动唤起;Windows / Linux **仅复制命令**(用户粘贴到自己的终端)|
-| 执行前确认 | 展示完整命令,二次确认 |
-| Agent 配置文件 | CLAUDE.md / GEMINI.md |
-| Diff 预览 | jsdiff + Modal,接受/回滚 |
+| 功能         | 说明                                                                         |
+| ---------- | -------------------------------------------------------------------------- |
+| Agent 检测   | Claude / Codex / Aider / Gemini                                            |
+| 命令规则模板     | 预设 + 自定义变量 + 白名单 lint                                                      |
+| 终端唤起       | **macOS first**:Terminal/iTerm2 自动唤起;Windows / Linux **仅复制命令**(用户粘贴到自己的终端) |
+| 执行前确认      | 展示完整命令,二次确认                                                                |
+| Agent 配置文件 | CLAUDE.md / GEMINI.md                                                      |
+| Diff 预览    | jsdiff + Modal,接受/回滚                                                       |
 
 > Windows / Linux 一键唤起的覆盖在 v0.3 视用户反馈再做。理由:跨 DE 终端碎片化,v0.2 强行覆盖性价比低。详见 [technical-design.md](technical-design.md) §6.3。
 
@@ -641,11 +644,11 @@ ChatGPT / Claude.ai / Gemini 等通过导出文件或复制 Prompt 覆盖。
 
 ### v0.4 — API 直调 + MCP Server
 
-| 功能 | 说明 |
-|------|------|
-| API Key 直调 | 低优先级兜底 |
+| 功能         | 说明                               |
+| ---------- | -------------------------------- |
+| API Key 直调 | 低优先级兜底                           |
 | MCP Server | 暴露 list_annotations / apply_edit |
-| 更多 Agent | Cursor / Devin / Cline |
+| 更多 Agent   | Cursor / Devin / Cline           |
 
 ### v0.5 — 协作与迁移
 

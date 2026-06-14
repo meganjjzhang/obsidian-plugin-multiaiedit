@@ -1,6 +1,6 @@
 {
   "name": "obsidian-multiaiedit",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Obsidian 阅读标注与 AI 批阅插件——阅读时高亮/记笔记，批阅时快速留下修改意见，一键导出给外部 AI 或 Agent 执行修改。",
   "main": "main.js",
   "scripts": {

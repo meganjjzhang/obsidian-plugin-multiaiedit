@@ -118,20 +118,23 @@ function mergeRanges(
   return result;
 }
 
-function decoClassFor(ann: Annotation, status: "strict" | "fuzzy"): string | null {
+function decoClassFor(ann: Annotation, status: "strict" | "fuzzy" | "auto-healed"): string | null {
+  // auto-healed renders like strict (no warning indicator) — the user already
+  // got a Notice about the auto-repair. fuzzy still shows a subtle warning.
   const fuzzy = status === "fuzzy" ? " cm-multiaiedit-fuzzy" : "";
+  const healed = status === "auto-healed" ? " cm-multiaiedit-auto-healed" : "";
   if (ann.type === "highlight") {
     const color = ann.highlightColor ?? "yellow";
-    return `cm-multiaiedit-highlight cm-multiaiedit-highlight-${color}${fuzzy}`;
+    return `cm-multiaiedit-highlight cm-multiaiedit-highlight-${color}${fuzzy}${healed}`;
   }
   if (ann.type === "note") {
-    // Notes piggyback on a subtle yellow underline.
-    return `cm-multiaiedit-highlight cm-multiaiedit-highlight-yellow${fuzzy}`;
+    const color = ann.highlightColor ?? "yellow";
+    return `cm-multiaiedit-highlight cm-multiaiedit-highlight-${color}${fuzzy}${healed}`;
   }
   if (ann.type === "review") {
     let cls = "cm-multiaiedit-review";
     if (ann.strike) cls += " cm-multiaiedit-strike";
-    return cls + fuzzy;
+    return cls + fuzzy + healed;
   }
   return null;
 }

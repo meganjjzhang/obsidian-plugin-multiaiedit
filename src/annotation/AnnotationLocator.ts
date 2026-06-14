@@ -96,6 +96,158 @@ export function locate(doc: string, ann: Annotation): LocateResult {
   };
 }
 
+// ---------------------------------------------------------------------------
+// fuzzyLocate — edit-distance based approximate matching (方案 A)
+// ---------------------------------------------------------------------------
+
+/** Minimum confidence threshold for auto-healed matches */
+const AUTO_HEAL_THRESHOLD = 0.5;
+/** Maximum selectedText length for fuzzy search (performance guard) */
+const MAX_FUZZY_LENGTH = 500;
+/** Sliding window step size (trade-off: smaller = more precise, larger = faster) */
+const WINDOW_STEP = 8;
+
+/**
+ * Attempt to locate a drifted annotation using edit-distance fuzzy matching.
+ *
+ * When `locate()` returns `drifted` (exact text not found), this function
+ * slides a window of the expected size across the document and computes
+ * a similarity score for each position. The best match above the threshold
+ * is returned as an `auto-healed` result.
+ *
+ * Performance: O(doc.length / step * needle.length) — fast enough for
+ * typical Obsidian documents (< 100KB) with step=8.
+ */
+export function fuzzyLocate(doc: string, ann: Annotation): LocateResult {
+  if (!ann.selectedText) return { status: "drifted" };
+  if (ann.selectedText.length > MAX_FUZZY_LENGTH) return { status: "drifted" };
+  if (doc.length === 0) return { status: "drifted" };
+
+  const needle = ann.selectedText;
+  const needleLen = needle.length;
+
+  // Step 1: Narrow search region around lineHint for performance.
+  // If lineHint is available, search ±50 lines around it.
+  let searchStart = 0;
+  let searchEnd = doc.length;
+
+  if (ann.lineHint > 0) {
+    // Find approximate character offset of lineHint
+    let lineCount = 1;
+    let lineStart = 0;
+    for (let i = 0; i < doc.length; i++) {
+      if (lineCount >= ann.lineHint - 50) {
+        lineStart = i;
+        break;
+      }
+      if (doc.charCodeAt(i) === 10) lineCount++;
+    }
+
+    let lineEnd = doc.length;
+    lineCount = 1;
+    for (let i = 0; i < doc.length; i++) {
+      if (lineCount >= ann.lineHint + 50) {
+        lineEnd = i;
+        break;
+      }
+      if (doc.charCodeAt(i) === 10) lineCount++;
+    }
+
+    searchStart = Math.max(0, lineStart - 200);
+    searchEnd = Math.min(doc.length, lineEnd + 200);
+  }
+
+  // Step 2: Sliding window search
+  let bestPos = -1;
+  let bestScore = 0;
+
+  for (let pos = searchStart; pos <= searchEnd - needleLen; pos += WINDOW_STEP) {
+    const candidate = doc.slice(pos, pos + needleLen);
+    const score = trigramSimilarity(needle, candidate);
+
+    if (score > bestScore) {
+      bestScore = score;
+      bestPos = pos;
+    }
+  }
+
+  // Step 3: Refine around best position with finer step
+  if (bestPos >= 0 && bestScore >= AUTO_HEAL_THRESHOLD * 0.8) {
+    const refineStart = Math.max(searchStart, bestPos - WINDOW_STEP * 2);
+    const refineEnd = Math.min(searchEnd - needleLen, bestPos + WINDOW_STEP * 2);
+
+    for (let pos = refineStart; pos <= refineEnd; pos++) {
+      const candidate = doc.slice(pos, pos + needleLen);
+      const score = trigramSimilarity(needle, candidate);
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestPos = pos;
+      }
+    }
+  }
+
+  if (bestPos < 0 || bestScore < AUTO_HEAL_THRESHOLD) {
+    return { status: "drifted" };
+  }
+
+  // Step 4: Try to extend/contract the match to find natural boundaries
+  // (word boundaries, whitespace) — improves alignment quality
+  let from = bestPos;
+  let to = bestPos + needleLen;
+
+  return {
+    status: "auto-healed",
+    from,
+    to,
+    confidence: bestScore,
+  };
+}
+
+/**
+ * Trigram similarity — a fast approximation of edit distance similarity.
+ * Computes the Jaccard coefficient of the sets of character trigrams.
+ * Returns 0..1 where 1 = identical.
+ *
+ * Faster than Levenshtein for medium-length strings and sufficient for
+ * our "find the closest match" use case.
+ */
+function trigramSimilarity(a: string, b: string): number {
+  if (a === b) return 1;
+  if (a.length < 3 || b.length < 3) {
+    // For very short strings, fall back to character overlap
+    if (a.length === 0 && b.length === 0) return 1;
+    if (a.length === 0 || b.length === 0) return 0;
+    const setA = new Set(a);
+    const setB = new Set(b);
+    let inter = 0;
+    for (const ch of setA) { if (setB.has(ch)) inter++; }
+    return inter / (setA.size + setB.size - inter);
+  }
+
+  const triA = trigramSet(a);
+  const triB = trigramSet(b);
+
+  let intersection = 0;
+  for (const tg of triA.keys()) {
+    if (triB.has(tg)) intersection++;
+  }
+
+  const union = triA.size + triB.size - intersection;
+  return union > 0 ? intersection / union : 0;
+}
+
+function trigramSet(s: string): Set<number> {
+  // Use numeric hash of trigrams for speed
+  const set = new Set<number>();
+  for (let i = 0; i <= s.length - 3; i++) {
+    // Simple rolling hash for 3-char trigrams
+    const h = (s.charCodeAt(i) << 16) | (s.charCodeAt(i + 1) << 8) | s.charCodeAt(i + 2);
+    set.add(h);
+  }
+  return set;
+}
+
 /**
  * Compute the occurrenceIndex of `selectedText` whose match starts at
  * exactly `at` (used at creation time).

@@ -1,35 +1,80 @@
 /* ============================================================
- * MultiAIEdit v0.1 styles
+ * MultiAIEdit — visual styles
+ * 设计参考：design/demo-interactive.html
+ *
+ * 取色策略：尽量走 Obsidian 的 CSS 变量以同时适配亮/暗主题；
+ * 仅在设计稿里有独有视觉（紫色 accent、橙色批阅、4 色高亮、
+ * 引用块底色）时使用固定 RGBA。
  * ============================================================ */
 
-/* ---------- Highlight Decorations ---------- */
+/* 字体：设计稿主体 DM Sans，引用与代码段 JetBrains Mono。
+ * Obsidian 自带 var(--font-monospace) 与 var(--font-interface)，
+ * 这里仅在引用框内强制 mono，UI 本身跟随 Obsidian 主题。 */
+.multiaiedit-popover,
+.multiaiedit-bottom-toolbar,
+.multiaiedit-sidebar {
+  font-family: var(--font-interface, "DM Sans", system-ui, sans-serif);
+}
+
+/* ============================================================
+ * 1. 编辑器内的高亮 / 批阅装饰
+ * ============================================================ */
+
+/* 高亮：低饱和背景 + 同色下划线（从设计稿 .hl-* 复刻） */
 .cm-multiaiedit-highlight {
   border-radius: 2px;
   padding: 0;
+  border-bottom: 1px solid transparent;
 }
-.cm-multiaiedit-highlight-yellow { background-color: rgba(244, 211, 94, 0.32); }
-.cm-multiaiedit-highlight-blue   { background-color: rgba(120, 170, 240, 0.30); }
-.cm-multiaiedit-highlight-green  { background-color: rgba(120, 200, 140, 0.30); }
-.cm-multiaiedit-highlight-purple { background-color: rgba(190, 140, 220, 0.30); }
+.cm-multiaiedit-highlight-yellow {
+  background-color: rgba(250, 204, 21, 0.18);
+  border-bottom-color: rgba(250, 204, 21, 0.40);
+}
+.cm-multiaiedit-highlight-blue {
+  background-color: rgba(96, 165, 250, 0.18);
+  border-bottom-color: rgba(96, 165, 250, 0.40);
+}
+.cm-multiaiedit-highlight-green {
+  background-color: rgba(74, 222, 128, 0.18);
+  border-bottom-color: rgba(74, 222, 128, 0.40);
+}
+.cm-multiaiedit-highlight-purple {
+  background-color: rgba(192, 132, 252, 0.18);
+  border-bottom-color: rgba(192, 132, 252, 0.40);
+}
 
-.theme-dark .cm-multiaiedit-highlight-yellow { background-color: rgba(244, 211, 94, 0.22); }
-.theme-dark .cm-multiaiedit-highlight-blue   { background-color: rgba(120, 170, 240, 0.22); }
-.theme-dark .cm-multiaiedit-highlight-green  { background-color: rgba(120, 200, 140, 0.22); }
-.theme-dark .cm-multiaiedit-highlight-purple { background-color: rgba(190, 140, 220, 0.22); }
+.theme-dark .cm-multiaiedit-highlight-yellow {
+  background-color: rgba(250, 204, 21, 0.15);
+  border-bottom-color: rgba(250, 204, 21, 0.30);
+}
+.theme-dark .cm-multiaiedit-highlight-blue {
+  background-color: rgba(96, 165, 250, 0.15);
+  border-bottom-color: rgba(96, 165, 250, 0.30);
+}
+.theme-dark .cm-multiaiedit-highlight-green {
+  background-color: rgba(74, 222, 128, 0.15);
+  border-bottom-color: rgba(74, 222, 128, 0.30);
+}
+.theme-dark .cm-multiaiedit-highlight-purple {
+  background-color: rgba(192, 132, 252, 0.15);
+  border-bottom-color: rgba(192, 132, 252, 0.30);
+}
 
+/* 批阅：橙色（设计稿 .hl-review） */
 .cm-multiaiedit-review {
-  background-color: rgba(255, 200, 200, 0.30);
-  border-bottom: 2px solid rgba(220, 100, 100, 0.6);
+  background-color: rgba(251, 146, 60, 0.18);
+  border-bottom: 1px solid rgba(251, 146, 60, 0.40);
+  border-radius: 2px;
 }
 .theme-dark .cm-multiaiedit-review {
-  background-color: rgba(255, 120, 120, 0.18);
-  border-bottom: 2px solid rgba(220, 100, 100, 0.5);
+  background-color: rgba(251, 146, 60, 0.15);
+  border-bottom-color: rgba(251, 146, 60, 0.30);
 }
 
 .cm-multiaiedit-strike {
   text-decoration: line-through;
-  text-decoration-color: rgba(220, 80, 80, 0.85);
-  background-color: rgba(220, 80, 80, 0.12);
+  text-decoration-color: rgba(251, 146, 60, 0.65);
+  text-decoration-thickness: 1.5px;
 }
 
 .cm-multiaiedit-fuzzy {
@@ -37,57 +82,396 @@
   outline-offset: -1px;
 }
 
-/* ---------- Selection Popover (desktop) ---------- */
+/* auto-healed: subtle blue left border to indicate repaired position */
+.cm-multiaiedit-auto-healed {
+  border-left: 2px solid rgba(96, 165, 250, 0.45);
+  margin-left: -2px;
+}
+
+/* ============================================================
+ * 2. 选区浮窗 (Selection Popover, desktop)
+ *    设计稿 #popover-reading / #popover-reviewing
+ *    纵向布局：模式胶囊 + 按钮行 + Note 展开区
+ * ============================================================ */
+
 .multiaiedit-popover {
-  position: absolute;
+  position: fixed;
   z-index: 999;
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
-  padding: 6px 8px;
+  padding: 6px 10px;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
-  font-size: 13px;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 4px rgba(0, 0, 0, 0.08);
+  font-size: 12px;
+  animation: mae-popover-fade-in 0.15s ease-out;
+  min-width: 0;
 }
+.theme-dark .multiaiedit-popover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.25);
+}
+
+@keyframes mae-popover-fade-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 阅读浮窗的 4 色圆点（直径 16px，hover 放大，active 环） */
 .multiaiedit-popover .mae-color {
-  width: 22px;
-  height: 22px;
+  width: 16px;
+  height: 16px;
   border-radius: 50%;
   cursor: pointer;
-  border: 1px solid var(--background-modifier-border);
+  border: 2px solid transparent;
+  flex-shrink: 0;
+  transition: transform 0.12s ease, box-shadow 0.12s ease;
+  outline: 2px solid transparent;
+  outline-offset: 1px;
 }
-.multiaiedit-popover .mae-color.yellow { background: #f4d35e; }
-.multiaiedit-popover .mae-color.blue   { background: #78aaf0; }
-.multiaiedit-popover .mae-color.green  { background: #78c88c; }
-.multiaiedit-popover .mae-color.purple { background: #be8cdc; }
+.multiaiedit-popover .mae-color.yellow {
+  background: rgba(250, 204, 21, 0.75);
+  border-color: rgba(250, 204, 21, 0.55);
+}
+.multiaiedit-popover .mae-color.blue {
+  background: rgba(96, 165, 250, 0.75);
+  border-color: rgba(96, 165, 250, 0.55);
+}
+.multiaiedit-popover .mae-color.green {
+  background: rgba(74, 222, 128, 0.75);
+  border-color: rgba(74, 222, 128, 0.55);
+}
+.multiaiedit-popover .mae-color.purple {
+  background: rgba(192, 132, 252, 0.75);
+  border-color: rgba(192, 132, 252, 0.55);
+}
 .multiaiedit-popover .mae-color:hover {
-  transform: scale(1.1);
-  transition: transform 0.1s;
+  transform: scale(1.15);
 }
+/* 颜色选中态：白色外环 */
+.multiaiedit-popover .mae-color.active.yellow  { outline-color: rgba(250, 204, 21, 0.90); }
+.multiaiedit-popover .mae-color.active.blue    { outline-color: rgba(96, 165, 250, 0.90); }
+.multiaiedit-popover .mae-color.active.green   { outline-color: rgba(74, 222, 128, 0.90); }
+.multiaiedit-popover .mae-color.active.purple  { outline-color: rgba(192, 132, 252, 0.90); }
+
+
+/* 浮窗内的分割线（圆点和按钮之间） */
+.multiaiedit-popover .mae-divider {
+  width: 1px;
+  height: 16px;
+  background: var(--background-modifier-border);
+  margin: 0 2px;
+  flex-shrink: 0;
+}
+
+/* 浮窗按钮：扁平 chip 风格 */
 .multiaiedit-popover button {
   background: transparent;
-  border: 1px solid var(--background-modifier-border);
+  border: none;
   border-radius: 4px;
   padding: 4px 8px;
   cursor: pointer;
-  color: var(--text-normal);
-  font-size: 13px;
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  transition: background 0.12s, color 0.12s;
 }
 .multiaiedit-popover button:hover {
   background: var(--background-modifier-hover);
-}
-.multiaiedit-popover input[type="text"] {
-  width: 220px;
-  padding: 4px 6px;
-  border: 1px solid var(--background-modifier-border);
-  border-radius: 4px;
-  background: var(--background-primary);
   color: var(--text-normal);
 }
 
-/* ---------- Bottom Toolbar (mobile) ---------- */
+/* 删除线 S 按钮（橙色方块，设计稿 #btn-strikethrough） */
+.multiaiedit-popover .mae-strike-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: rgba(251, 146, 60, 0.15);
+  border: 1px solid rgba(251, 146, 60, 0.30);
+  color: rgba(251, 146, 60, 0.95);
+  font-weight: 700;
+  font-family: var(--font-monospace);
+  font-size: 13px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.multiaiedit-popover .mae-strike-btn:hover {
+  background: rgba(251, 146, 60, 0.25);
+  color: rgba(251, 146, 60, 1);
+}
+
+/* 提交按钮（紫色回车按钮，设计稿 #btn-submit-review） */
+.multiaiedit-popover .mae-submit-btn {
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  background: rgba(167, 139, 250, 0.15);
+  border: 1px solid rgba(167, 139, 250, 0.30);
+  color: rgba(167, 139, 250, 1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  padding: 0;
+}
+.multiaiedit-popover .mae-submit-btn:hover {
+  background: rgba(167, 139, 250, 0.25);
+}
+
+/* 浮窗内模式切换胶囊（紧凑版） */
+.mae-popover-capsule {
+  display: flex;
+  background: var(--background-secondary);
+  border-radius: 4px;
+  padding: 1px;
+  gap: 1px;
+  width: fit-content;
+  box-sizing: border-box;
+  align-self: center;
+}
+.mae-popover-capsule button {
+  background: transparent;
+  border: none;
+  box-shadow: none;
+  outline: none;
+  padding: 1px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 500;
+  font-family: var(--font-monospace);
+  line-height: 1.4;
+  transition: background 0.15s, color 0.15s;
+}
+.mae-popover-capsule button:hover {
+  color: var(--text-normal);
+}
+.mae-popover-capsule button.active {
+  background: var(--background-primary);
+  color: var(--text-normal);
+  font-weight: 600;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
+}
+.theme-dark .mae-popover-capsule button.active {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.20);
+}
+
+/* 浮窗按钮行（颜色圆点 + 按钮横排） */
+.mae-popover-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Delete 按钮（批阅模式，橙色，可 toggle） */
+.multiaiedit-popover .mae-delete-btn,
+.multiaiedit-bottom-toolbar .mae-delete-btn {
+  background: rgba(251, 146, 60, 0.08);
+  border: 1px solid rgba(251, 146, 60, 0.20);
+  color: rgba(251, 146, 60, 0.7);
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 600;
+  font-family: var(--font-monospace);
+  transition: background 0.12s, border-color 0.12s, color 0.12s;
+}
+.multiaiedit-popover .mae-delete-btn:hover,
+.multiaiedit-bottom-toolbar .mae-delete-btn:hover {
+  background: rgba(251, 146, 60, 0.16);
+  border-color: rgba(251, 146, 60, 0.35);
+  color: rgba(251, 146, 60, 0.9);
+}
+/* Delete 按钮 toggle 活跃态 */
+.multiaiedit-popover .mae-delete-btn.active,
+.multiaiedit-bottom-toolbar .mae-delete-btn.active {
+  background: rgba(251, 146, 60, 0.20);
+  border-color: rgba(251, 146, 60, 0.45);
+  color: rgba(251, 146, 60, 1);
+}
+
+/* ✓ 确认按钮（Delete toggle 激活时出现） */
+.multiaiedit-popover .mae-review-confirm-btn,
+.multiaiedit-bottom-toolbar .mae-review-confirm-btn {
+  background: rgba(251, 146, 60, 0.15);
+  border: 1px solid rgba(251, 146, 60, 0.35);
+  color: rgba(251, 146, 60, 1);
+  border-radius: 4px;
+  padding: 4px 8px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  font-family: var(--font-monospace);
+  transition: background 0.12s;
+}
+.multiaiedit-popover .mae-review-confirm-btn:hover,
+.multiaiedit-bottom-toolbar .mae-review-confirm-btn:hover {
+  background: rgba(251, 146, 60, 0.28);
+}
+
+/* Note 展开区 header 中的"删除"标记 */
+.mae-strike-indicator {
+  font-size: 9px;
+  font-weight: 600;
+  font-family: var(--font-monospace);
+  padding: 1px 5px;
+  border-radius: 999px;
+  background: rgba(251, 146, 60, 0.12);
+  color: rgba(251, 146, 60, 0.85);
+  border: 1px solid rgba(251, 146, 60, 0.25);
+}
+
+/* Note 按钮（批阅模式 + 阅读模式共用） */
+.multiaiedit-popover .mae-note-btn,
+.multiaiedit-bottom-toolbar .mae-note-btn {
+  background: transparent;
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-muted);
+  border-radius: 4px;
+  padding: 4px 10px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-monospace);
+  transition: background 0.12s, color 0.12s;
+}
+.multiaiedit-popover .mae-note-btn:hover,
+.multiaiedit-bottom-toolbar .mae-note-btn:hover {
+  background: var(--background-modifier-hover);
+  color: var(--text-normal);
+}
+
+/* ===== Note 展开区 ===== */
+.mae-popover-note-area {
+  margin-top: 2px;
+  padding-top: 6px;
+  border-top: 1px solid var(--background-modifier-border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  animation: mae-note-area-expand 0.15s ease-out;
+}
+@keyframes mae-note-area-expand {
+  from { opacity: 0; max-height: 0; }
+  to   { opacity: 1; max-height: 120px; }
+}
+
+/* Note 展开区 header：颜色指示 + 分割线 + 标签 */
+.mae-popover-note-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mae-note-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.mae-note-dot.yellow { background: rgba(250, 204, 21, 0.65); border: 1px solid rgba(250, 204, 21, 0.45); }
+.mae-note-dot.blue   { background: rgba(96, 165, 250, 0.65); border: 1px solid rgba(96, 165, 250, 0.45); }
+.mae-note-dot.green  { background: rgba(74, 222, 128, 0.65); border: 1px solid rgba(74, 222, 128, 0.45); }
+.mae-note-dot.purple { background: rgba(192, 132, 252, 0.65); border: 1px solid rgba(192, 132, 252, 0.45); }
+.mae-note-dot.orange { background: rgba(251, 146, 60, 0.65); border: 1px solid rgba(251, 146, 60, 0.45); }
+
+.mae-popover-note-header .mae-divider {
+  width: 1px;
+  height: 12px;
+  background: var(--background-modifier-border);
+  flex-shrink: 0;
+}
+
+.mae-note-label {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-monospace);
+  padding: 1px 6px;
+  border-radius: 999px;
+}
+.mae-note-label.yellow { background: rgba(250, 204, 21, 0.10); color: rgba(250, 204, 21, 0.80); }
+.mae-note-label.blue   { background: rgba(96, 165, 250, 0.10); color: rgba(96, 165, 250, 0.80); }
+.mae-note-label.green  { background: rgba(74, 222, 128, 0.10); color: rgba(74, 222, 128, 0.80); }
+.mae-note-label.purple { background: rgba(192, 132, 252, 0.10); color: rgba(192, 132, 252, 0.80); }
+.mae-note-label.orange { background: rgba(251, 146, 60, 0.10); color: rgba(251, 146, 60, 0.80); }
+
+/* Note 展开区 input */
+.mae-popover-note-input-wrap {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-secondary);
+  transition: border-color 0.15s;
+}
+.mae-popover-note-input-wrap:focus-within {
+  border-color: rgba(167, 139, 250, 0.45);
+}
+.mae-popover-note-input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  color: var(--text-normal);
+  font-size: 12px;
+  font-family: var(--font-monospace);
+  padding: 6px 8px;
+  outline: none;
+}
+.mae-popover-note-input::placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
+}
+
+/* Note 展开区 footer（右对齐 Save 按钮） */
+.mae-popover-note-footer {
+  display: flex;
+  justify-content: flex-end;
+}
+.mae-popover-note-save {
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+  color: rgba(167, 139, 250, 0.9);
+  border-radius: 4px;
+  padding: 3px 12px;
+  cursor: pointer;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-monospace);
+  transition: background 0.12s, border-color 0.12s;
+}
+.mae-popover-note-save:hover {
+  background: rgba(167, 139, 250, 0.22);
+  border-color: rgba(167, 139, 250, 0.40);
+}
+
+/* 输入框（批阅模式 #review-input — 保留旧行式兼容） */
+.multiaiedit-popover input[type="text"] {
+  flex: 1;
+  min-width: 200px;
+  padding: 5px 8px;
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  font-size: 12px;
+  font-family: var(--font-monospace);
+  outline: none;
+  transition: border-color 0.15s;
+}
+.multiaiedit-popover input[type="text"]:focus {
+  border-color: rgba(167, 139, 250, 0.55);
+}
+.multiaiedit-popover input[type="text"]::placeholder {
+  color: var(--text-muted);
+  opacity: 0.7;
+}
+
+/* ============================================================
+ * 3. 移动端底部工具栏
+ * ============================================================ */
 .multiaiedit-bottom-toolbar {
   position: fixed;
   left: 0;
@@ -96,39 +480,114 @@
   z-index: 1000;
   background: var(--background-primary);
   border-top: 1px solid var(--background-modifier-border);
-  padding: 8px 10px;
+  padding: 10px 12px;
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.12);
+  box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.16);
 }
+.multiaiedit-bottom-toolbar .mae-color {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.multiaiedit-bottom-toolbar .mae-color.yellow { background: rgba(250, 204, 21, 0.65); }
+.multiaiedit-bottom-toolbar .mae-color.blue   { background: rgba(96, 165, 250, 0.65); }
+.multiaiedit-bottom-toolbar .mae-color.green  { background: rgba(74, 222, 128, 0.65); }
+.multiaiedit-bottom-toolbar .mae-color.purple { background: rgba(192, 132, 252, 0.65); }
 
-/* ---------- Sidebar ---------- */
+/* ============================================================
+ * 4. 侧边栏
+ * ============================================================ */
+
 .multiaiedit-sidebar {
-  padding: 8px 10px;
+  padding: 0;
   display: flex;
   flex-direction: column;
-  gap: 10px;
   height: 100%;
-  overflow-y: auto;
+  overflow: hidden;
+  background: var(--background-primary);
 }
+
+/* 4.0 Header (fixed top) */
+.mae-sidebar-header {
+  padding: 14px 12px 0;
+  flex-shrink: 0;
+}
+
+.mae-header-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+.mae-header-left {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.mae-header-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 4px;
+  background: rgba(192, 132, 252, 0.15);
+  color: rgba(192, 132, 252, 0.8);
+  font-size: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.mae-header-title {
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-monospace);
+  color: var(--text-normal);
+  letter-spacing: 0.01em;
+}
+.mae-header-settings {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+  font-size: 13px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+.mae-header-settings:hover {
+  color: var(--text-normal);
+  background: var(--background-modifier-hover);
+}
+
+/* 4.1 模式切换胶囊 — now inside header */
 .mae-mode-capsule {
   display: flex;
   background: var(--background-secondary);
-  border-radius: 999px;
-  padding: 2px;
-  align-self: flex-start;
+  border-radius: 8px;
+  padding: 3px;
+  gap: 2px;
+  width: 100%;
+  box-sizing: border-box;
 }
 .mae-mode-capsule button {
   flex: 1;
   background: transparent;
   border: none;
-  padding: 4px 14px;
-  border-radius: 999px;
+  padding: 5px 10px;
+  border-radius: 6px;
   cursor: pointer;
   color: var(--text-muted);
   font-size: 12px;
+  font-weight: 500;
+  font-family: var(--font-monospace);
+  transition: background 0.15s, color 0.15s;
+}
+.mae-mode-capsule button:hover {
+  color: var(--text-normal);
 }
 .mae-mode-capsule button.active {
   background: var(--background-primary);
@@ -136,12 +595,124 @@
   font-weight: 600;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
-.mae-banner {
-  background: var(--background-modifier-error-hover, rgba(220, 100, 100, 0.12));
-  color: var(--text-warning);
-  border: 1px solid var(--text-warning);
+.theme-dark .mae-mode-capsule button.active {
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.30);
+}
+
+/* 4.1b Scrollable content area */
+.mae-sidebar-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* 4.1c Bottom action bar (fixed bottom) */
+.mae-sidebar-action-bar {
+  flex-shrink: 0;
+  border-top: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.mae-action-row {
+  display: flex;
+  gap: 6px;
+}
+.mae-action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  font-family: var(--font-monospace);
+  padding: 7px 12px;
   border-radius: 6px;
-  padding: 6px 10px;
+  background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  color: var(--text-normal);
+  opacity: 0.85;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mae-action-btn:hover {
+  border-color: var(--text-muted);
+  opacity: 1;
+}
+.mae-action-btn:active {
+  transform: scale(0.98);
+}
+.mae-action-btn::before {
+  font-size: 12px;
+  opacity: 0.7;
+}
+.mae-action-btn.secondary {
+  background: var(--background-primary);
+  color: var(--text-muted);
+}
+.mae-action-btn.secondary:hover {
+  color: var(--text-normal);
+}
+
+/* Execute with Agent — purple CTA button */
+.mae-action-execute {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 600;
+  font-family: var(--font-monospace);
+  padding: 9px 14px;
+  border-radius: 6px;
+  background: rgba(167, 139, 250, 0.12);
+  border: 1px solid rgba(167, 139, 250, 0.20);
+  color: rgba(167, 139, 250, 0.85);
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.mae-action-execute:hover {
+  background: rgba(167, 139, 250, 0.20);
+  border-color: rgba(167, 139, 250, 0.35);
+}
+.mae-action-execute:active {
+  transform: scale(0.98);
+}
+
+/* Status hint at bottom */
+.mae-action-status {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: var(--text-muted);
+  opacity: 0.5;
+  font-size: 10px;
+  font-family: var(--font-monospace);
+}
+.mae-status-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: rgba(74, 222, 128, 0.50);
+  flex-shrink: 0;
+}
+
+/* 4.2 横幅（baseline 漂移提示） */
+.mae-banner {
+  background: rgba(251, 146, 60, 0.10);
+  color: var(--text-normal);
+  border: 1px solid rgba(251, 146, 60, 0.30);
+  border-radius: 8px;
+  padding: 8px 10px;
   font-size: 12px;
   display: flex;
   align-items: center;
@@ -149,103 +720,643 @@
   gap: 8px;
 }
 .mae-banner button {
-  background: transparent;
-  border: 1px solid currentColor;
-  color: inherit;
+  background: rgba(251, 146, 60, 0.15);
+  border: 1px solid rgba(251, 146, 60, 0.40);
+  color: rgba(251, 146, 60, 1);
   border-radius: 4px;
-  padding: 2px 8px;
+  padding: 3px 10px;
   cursor: pointer;
   font-size: 11px;
+  font-weight: 500;
+  white-space: nowrap;
 }
-.mae-toolbar {
-  display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+.mae-banner button:hover {
+  background: rgba(251, 146, 60, 0.25);
 }
-.mae-toolbar button {
-  background: var(--interactive-accent);
-  color: var(--text-on-accent);
-  border: none;
-  border-radius: 4px;
-  padding: 4px 10px;
-  cursor: pointer;
-  font-size: 12px;
-}
-.mae-toolbar button:hover {
-  background: var(--interactive-accent-hover);
-}
-.mae-toolbar button.secondary {
-  background: var(--background-secondary);
-  color: var(--text-normal);
-  border: 1px solid var(--background-modifier-border);
-}
+
+/* 4.3 工具栏样式已移至底部操作栏 (.mae-action-row / .mae-action-btn) */
+
+/* 4.4 卡片（设计稿核心元素） */
 .mae-card {
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
-  border-radius: 6px;
-  padding: 8px 10px;
+  border-radius: 8px;
+  padding: 10px 10px 10px 12px;
   font-size: 12px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 6px;
   cursor: pointer;
+  position: relative;
+  transition: border-color 0.15s, background 0.15s;
 }
 .mae-card:hover {
   background: var(--background-modifier-hover);
 }
-.mae-card.fuzzy {
-  border-left: 3px solid var(--text-warning);
+.theme-dark .mae-card {
+  background: rgba(255, 255, 255, 0.025);
 }
+.theme-dark .mae-card:hover {
+  background: rgba(255, 255, 255, 0.045);
+}
+
+/* 卡片左侧 2px 颜色条（设计稿 .w-0.5 self-stretch） */
+.mae-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 10px;
+  bottom: 10px;
+  width: 2px;
+  border-radius: 999px;
+  background: var(--text-muted);
+  opacity: 0.45;
+}
+.mae-card.color-yellow::before { background: rgba(250, 204, 21, 0.55); }
+.mae-card.color-blue::before   { background: rgba(96, 165, 250, 0.55); }
+.mae-card.color-green::before  { background: rgba(74, 222, 128, 0.55); }
+.mae-card.color-purple::before { background: rgba(192, 132, 252, 0.55); }
+.mae-card.color-orange::before { background: rgba(251, 146, 60, 0.55); }
+
+.mae-card:hover.color-yellow { border-color: rgba(250, 204, 21, 0.30); }
+.mae-card:hover.color-blue   { border-color: rgba(96, 165, 250, 0.30); }
+.mae-card:hover.color-green  { border-color: rgba(74, 222, 128, 0.30); }
+.mae-card:hover.color-purple { border-color: rgba(192, 132, 252, 0.30); }
+.mae-card:hover.color-orange { border-color: rgba(251, 146, 60, 0.30); }
+
+/* fuzzy / auto-healed / drifted 状态 */
+.mae-card.fuzzy::before { background: var(--text-warning); }
+.mae-card.auto-healed::before { background: rgba(96, 165, 250, 0.55); }
 .mae-card.drifted {
   opacity: 0.55;
-  border-left: 3px solid var(--background-modifier-error);
 }
+.mae-card.drifted::before { background: var(--background-modifier-error); }
+
+/* ---- Review card layout (design ref: icon badge + orange quote + purple text) ---- */
+.mae-card-layout {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+}
+
+/* Icon badge: small square with S (strikethrough) or ✎ (review) */
+.mae-card-badge {
+  width: 20px;
+  height: 20px;
+  border-radius: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  font-size: 10px;
+  font-weight: 700;
+  font-family: var(--font-monospace);
+}
+.mae-card-badge.strike {
+  background: rgba(251, 146, 60, 0.12);
+  border: 1px solid rgba(251, 146, 60, 0.20);
+  color: rgba(251, 146, 60, 0.80);
+  text-decoration: line-through;
+  text-decoration-color: rgba(251, 146, 60, 0.50);
+}
+.mae-card-badge.review {
+  background: rgba(251, 146, 60, 0.12);
+  border: 1px solid rgba(251, 146, 60, 0.20);
+  color: rgba(251, 146, 60, 0.80);
+}
+
+.mae-card-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Orange quote block (original text with strikethrough) */
+.mae-quote-orange {
+  background: rgba(251, 146, 60, 0.08);
+  border-left: 2px solid rgba(251, 146, 60, 0.25);
+}
+.mae-quote-orange.strike {
+  text-decoration: line-through;
+  text-decoration-color: rgba(251, 146, 60, 0.40);
+  opacity: 0.55;
+}
+.theme-dark .mae-quote-orange {
+  background: rgba(251, 146, 60, 0.06);
+}
+
+/* Purple review text block */
+.mae-text-purple {
+  background: rgba(168, 85, 247, 0.08);
+  border-left: 2px solid rgba(168, 85, 247, 0.25);
+  color: rgba(168, 85, 247, 0.85);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.theme-dark .mae-text-purple {
+  background: rgba(168, 85, 247, 0.06);
+  color: rgba(192, 132, 252, 0.80);
+}
+
+/* Status hint for review cards */
+.mae-card-status-hint {
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+/* 元信息（类型 chip + 漂移标记 + 删除按钮） */
 .mae-card-meta {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 5px;
   font-size: 10px;
   color: var(--text-muted);
 }
+/* spacer 把删除按钮推到右边 */
+.mae-card-meta-spacer {
+  flex: 1;
+}
+/* 内联状态文字 */
+.mae-card-status-inline {
+  font-size: 9px;
+  opacity: 0.75;
+}
+/* 删除按钮（meta 行右侧，hover 才显色） */
+.mae-card-del-btn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  color: var(--text-faint);
+  font-size: 9px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-family: var(--font-monospace);
+  opacity: 0;
+  transition: opacity 0.15s, color 0.12s, background 0.12s;
+  flex-shrink: 0;
+}
+.mae-card:hover .mae-card-del-btn {
+  opacity: 1;
+}
+.mae-card-del-btn:hover {
+  color: var(--text-error);
+  background: rgba(239, 68, 68, 0.10);
+}
+
 .mae-card-meta .mae-tag {
   padding: 1px 6px;
   border-radius: 999px;
   background: var(--background-primary);
+  border: 1px solid var(--background-modifier-border);
+  font-family: var(--font-monospace);
+  font-size: 9px;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
 }
-.mae-card-meta .mae-tag.yellow { background: rgba(244, 211, 94, 0.5); }
-.mae-card-meta .mae-tag.blue   { background: rgba(120, 170, 240, 0.5); }
-.mae-card-meta .mae-tag.green  { background: rgba(120, 200, 140, 0.5); }
-.mae-card-meta .mae-tag.purple { background: rgba(190, 140, 220, 0.5); color: white; }
-.mae-card-text {
-  color: var(--text-muted);
-  border-left: 2px solid var(--background-modifier-border);
-  padding-left: 6px;
+
+/* 类型标签按颜色着色 */
+.mae-card-meta .mae-tag.yellow {
+  background: rgba(250, 204, 21, 0.10);
+  color: rgba(250, 204, 21, 0.85);
+  border-color: rgba(250, 204, 21, 0.25);
 }
-.mae-card-text.strike {
-  text-decoration: line-through;
+.mae-card-meta .mae-tag.blue {
+  background: rgba(96, 165, 250, 0.10);
+  color: rgba(96, 165, 250, 0.85);
+  border-color: rgba(96, 165, 250, 0.25);
 }
-.mae-card-review {
+.mae-card-meta .mae-tag.green {
+  background: rgba(74, 222, 128, 0.10);
+  color: rgba(74, 222, 128, 0.85);
+  border-color: rgba(74, 222, 128, 0.25);
+}
+.mae-card-meta .mae-tag.purple {
+  background: rgba(192, 132, 252, 0.10);
+  color: rgba(192, 132, 252, 0.85);
+  border-color: rgba(192, 132, 252, 0.25);
+}
+.mae-card-meta .mae-tag.orange {
+  background: rgba(251, 146, 60, 0.10);
+  color: rgba(251, 146, 60, 0.85);
+  border-color: rgba(251, 146, 60, 0.25);
+}
+
+/* 引用块：原文摘录（设计稿 .bg-quote-bg） */
+.mae-card-quote {
+  background: rgba(125, 125, 145, 0.08);
+  border-radius: 4px;
+  padding: 5px 8px;
+  font-family: var(--font-monospace);
+  font-size: 11px;
+  line-height: 1.5;
   color: var(--text-normal);
+  opacity: 0.85;
+  word-break: break-word;
 }
-.mae-card-actions {
+.theme-dark .mae-card-quote {
+  background: rgba(255, 255, 255, 0.04);
+}
+.mae-card-quote.strike {
+  text-decoration: line-through;
+  text-decoration-color: rgba(251, 146, 60, 0.55);
+  opacity: 0.55;
+}
+
+/* 笔记 / 批阅文本（带前缀图标） */
+.mae-card-text {
+  padding: 0 4px;
+  font-size: 11.5px;
+  line-height: 1.55;
+  color: var(--text-normal);
   display: flex;
   gap: 6px;
-  margin-top: 4px;
+  align-items: flex-start;
 }
-.mae-card-actions button {
-  background: transparent;
-  border: none;
-  cursor: pointer;
+.mae-card-text::before {
+  content: "✎";
+  font-size: 10px;
   color: var(--text-muted);
-  font-size: 11px;
-  padding: 0;
+  margin-top: 2px;
+  flex-shrink: 0;
 }
-.mae-card-actions button:hover {
-  color: var(--text-normal);
+.mae-card-text.review::before {
+  content: "💬";
 }
+
+/* 文件名 / 行号（卡片底部） */
+.mae-card-source {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  color: var(--text-muted);
+  opacity: 0.65;
+  font-family: var(--font-monospace);
+}
+.mae-card-source::before {
+  content: "📄";
+  font-size: 9px;
+}
+
+/* 空状态 */
 .mae-empty {
   color: var(--text-muted);
   font-size: 12px;
   text-align: center;
-  padding: 16px 0;
+  padding: 32px 12px;
+  opacity: 0.6;
+  line-height: 1.6;
+  white-space: pre-line;
+}
+
+/* ============================================================
+ * 5. v0.2 — Agent bridge / Diff
+ *    保留之前的样式，与新视觉对齐配色
+ * ============================================================ */
+
+.mae-agent-buttons {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+  width: 100%;
+}
+.mae-agent-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  white-space: nowrap;
+  font-family: var(--font-monospace);
+}
+.mae-agent-btn {
+  background: var(--background-secondary) !important;
+  color: var(--text-normal) !important;
+  border: 1px solid var(--background-modifier-border) !important;
+  border-radius: 6px !important;
+  padding: 4px 10px !important;
+  cursor: pointer;
+  font-size: 11px !important;
+  white-space: nowrap;
+  transition: all 0.15s;
+}
+.mae-agent-btn:hover {
+  background: var(--background-modifier-hover) !important;
+  border-color: rgba(167, 139, 250, 0.40) !important;
+}
+.mae-agent-btn.not-installed {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.mae-agent-btn.secondary {
+  background: transparent !important;
+  border: 1px dashed var(--background-modifier-border) !important;
+}
+
+/* ---------- Command Confirm Modal ---------- */
+.mae-confirm-modal .mae-confirm-command {
+  background: var(--background-secondary);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 12px;
+  max-height: 200px;
+  overflow-y: auto;
+  margin: 8px 0;
+}
+.mae-confirm-modal .mae-confirm-command code {
+  font-family: var(--font-monospace);
+  font-size: 12px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  color: var(--text-normal);
+}
+.mae-confirm-modal .mae-confirm-warning {
+  color: var(--text-warning);
+  font-size: 12px;
+  margin: 8px 0;
+}
+
+/* ---------- Diff Modal ---------- */
+.mae-diff-modal .modal {
+  max-width: 90vw;
+  width: 900px;
+}
+.mae-diff-modal .mae-diff-summary {
+  color: var(--text-muted);
+  font-size: 13px;
+  margin: 4px 0 12px;
+}
+.mae-diff-modal .mae-diff-container {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  overflow: hidden;
+  max-height: 50vh;
+  overflow-y: auto;
+  font-family: var(--font-monospace);
+  font-size: 12px;
+  line-height: 24px;
+}
+.mae-diff-row {
+  display: flex;
+  align-items: stretch;
+  min-height: 24px;
+}
+.mae-diff-row.mae-diff-removed {
+  background: rgba(248, 113, 113, 0.10);
+}
+.mae-diff-row.mae-diff-added {
+  background: rgba(74, 222, 128, 0.10);
+}
+.theme-dark .mae-diff-row.mae-diff-removed {
+  background: rgba(248, 113, 113, 0.14);
+}
+.theme-dark .mae-diff-row.mae-diff-added {
+  background: rgba(74, 222, 128, 0.14);
+}
+.mae-diff-row.rejected {
+  opacity: 0.35;
+  text-decoration: line-through;
+}
+.mae-diff-nums {
+  display: flex;
+  gap: 4px;
+  min-width: 70px;
+  padding: 0 8px;
+  color: var(--text-muted);
+  font-size: 10px;
+  user-select: none;
+  border-right: 1px solid var(--background-modifier-border);
+  background: var(--background-secondary);
+  flex-shrink: 0;
+}
+.mae-diff-nums span {
+  min-width: 28px;
+  text-align: right;
+}
+.mae-diff-content {
+  flex: 1;
+  padding: 0 8px;
+  white-space: pre-wrap;
+  word-break: break-all;
+  overflow-wrap: break-word;
+}
+.mae-diff-prefix {
+  user-select: none;
+  display: inline-block;
+  min-width: 12px;
+  color: var(--text-muted);
+}
+.mae-diff-toggle {
+  display: flex;
+  align-items: center;
+  padding: 0 6px;
+  flex-shrink: 0;
+}
+.mae-diff-toggle input[type="checkbox"] {
+  cursor: pointer;
+  accent-color: rgba(167, 139, 250, 1);
+}
+
+.mae-diff-virtual-scroll {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+}
+.mae-diff-virtual-scroll .mae-diff-row {
+  height: 24px;
+  box-sizing: border-box;
+}
+
+.mae-diff-actions {
+  margin-top: 16px;
+}
+.mae-diff-actions .setting-item {
+  border: none;
+}
+
+/* ---------- Settings: Agent Section ---------- */
+.mae-agent-detected {
+  padding: 8px 0;
+}
+.mae-agent-detected h4 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+.mae-agent-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  padding: 2px 0;
+}
+.mae-agent-status {
+  font-size: 14px;
+}
+.mae-agent-status.not-installed {
+  opacity: 0.6;
+}
+.mae-agent-hint {
+  color: var(--text-muted);
+  font-size: 11px;
+  font-family: var(--font-monospace);
+}
+.mae-rule-form {
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 12px;
+  margin: 8px 0;
+  background: var(--background-secondary);
+}
+.mae-empty-hint {
+  color: var(--text-muted);
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* ============================================================
+ * 6. 浅色模式覆盖 — 对齐 design/light-mode.html
+ *    作用域：body:not(.theme-dark) 下的插件容器
+ *    要点：暖米色调 / 实心紫 CTA / 白底+阴影卡片 / 深紫 accent
+ * ============================================================ */
+
+body:not(.theme-dark) {
+  /* 暖米色体系（设计稿 @theme tokens 复刻） */
+  --mae-surface: #fefefe;
+  --mae-surface-hover: #f5f3f0;
+  --mae-bg-base: #faf9f7;
+  --mae-border: #e5e2de;
+  --mae-border-subtle: #ece9e5;
+  --mae-text-primary: #1c1917;
+  --mae-text-secondary: #44403c;
+  --mae-text-muted: #78716c;
+  --mae-quote-bg: #f5f3f0;
+  /* 深紫 accent —— 设计稿 #6d5acd（不是浅薰衣草 rgba(167,139,250)） */
+  --mae-accent: #6d5acd;
+  --mae-accent-hover: #5b49bd;
+  --mae-accent-soft: rgba(109, 90, 205, 0.08);
+}
+
+/* ---- 6.1 容器：底色改成暖米基底，去除冷白默认 ---- */
+body:not(.theme-dark) .multiaiedit-sidebar {
+  background: var(--mae-bg-base);
+}
+body:not(.theme-dark) .mae-sidebar-action-bar {
+  background: rgba(254, 254, 254, 0.6);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  border-top-color: var(--mae-border-subtle);
+}
+
+/* ---- 6.2 Header：icon 用 accent-soft，标题用 primary 文字色 ---- */
+body:not(.theme-dark) .mae-header-icon {
+  background: var(--mae-accent-soft);
+  color: var(--mae-accent);
+}
+body:not(.theme-dark) .mae-header-title {
+  color: var(--mae-text-primary);
+}
+
+/* ---- 6.3 Mode capsule：底用 border-subtle 暖米调 ---- */
+body:not(.theme-dark) .mae-mode-capsule,
+body:not(.theme-dark) .mae-popover-capsule {
+  background: rgba(236, 233, 229, 0.8);
+}
+body:not(.theme-dark) .mae-mode-capsule button.active,
+body:not(.theme-dark) .mae-popover-capsule button.active {
+  background: var(--mae-surface);
+  color: var(--mae-text-primary);
+  box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
+}
+
+/* ---- 6.4 卡片：白底 + 双层阴影（核心改动）---- */
+body:not(.theme-dark) .mae-card {
+  background: var(--mae-surface);
+  /* 阴影同时充当极细描边，去掉原 1px 实边框的"嵌进底色"感 */
+  border-color: transparent;
+  box-shadow:
+    0 1px 2px rgba(28, 25, 23, 0.04),
+    0 0 0 1px rgba(28, 25, 23, 0.03);
+  transition: box-shadow 0.15s, background 0.15s;
+}
+body:not(.theme-dark) .mae-card:hover {
+  background: var(--mae-surface);
+  box-shadow:
+    0 2px 8px rgba(28, 25, 23, 0.06),
+    0 0 0 1px rgba(28, 25, 23, 0.05);
+}
+
+/* 引用块：暖米色而非紫灰 */
+body:not(.theme-dark) .mae-card-quote {
+  background: var(--mae-quote-bg);
+  color: var(--mae-text-secondary);
+  opacity: 1;
+}
+
+/* ---- 6.5 CTA 主按钮：实心紫 + 白字（核心改动）---- */
+body:not(.theme-dark) .mae-action-execute {
+  background: var(--mae-accent);
+  border-color: var(--mae-accent);
+  color: #ffffff;
+  box-shadow: 0 1px 2px rgba(109, 90, 205, 0.15);
+}
+body:not(.theme-dark) .mae-action-execute:hover {
+  background: var(--mae-accent-hover);
+  border-color: var(--mae-accent-hover);
+  color: #ffffff;
+}
+
+/* 次按钮（Export / Copy Prompt）：白底 + 暖米边框 */
+body:not(.theme-dark) .mae-action-btn {
+  background: var(--mae-surface);
+  border-color: var(--mae-border);
+  color: var(--mae-text-muted);
+}
+body:not(.theme-dark) .mae-action-btn:hover {
+  background: var(--mae-surface-hover);
+  color: var(--mae-text-primary);
+  border-color: var(--mae-border);
+}
+
+/* ---- 6.6 Note input：focus 用深紫 ---- */
+body:not(.theme-dark) .mae-popover-note-input-wrap:focus-within {
+  border-color: var(--mae-accent);
+}
+body:not(.theme-dark) .multiaiedit-popover input[type="text"]:focus {
+  border-color: var(--mae-accent);
+}
+
+/* Note Save 按钮：用深紫 accent，淡底 */
+body:not(.theme-dark) .mae-popover-note-save {
+  background: var(--mae-accent-soft);
+  border-color: rgba(109, 90, 205, 0.20);
+  color: var(--mae-accent);
+}
+body:not(.theme-dark) .mae-popover-note-save:hover {
+  background: rgba(109, 90, 205, 0.16);
+  border-color: rgba(109, 90, 205, 0.35);
+}
+
+/* 浮窗提交按钮：深紫描边 */
+body:not(.theme-dark) .multiaiedit-popover .mae-submit-btn {
+  background: var(--mae-accent-soft);
+  border-color: rgba(109, 90, 205, 0.20);
+  color: var(--mae-accent);
+}
+body:not(.theme-dark) .multiaiedit-popover .mae-submit-btn:hover {
+  background: rgba(109, 90, 205, 0.16);
+}
+
+/* Agent 按钮 hover 边框：深紫 */
+body:not(.theme-dark) .mae-agent-btn:hover {
+  border-color: rgba(109, 90, 205, 0.40) !important;
+}
+
+/* Diff 复选框 accent */
+body:not(.theme-dark) .mae-diff-toggle input[type="checkbox"] {
+  accent-color: var(--mae-accent);
 }

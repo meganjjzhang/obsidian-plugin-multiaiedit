@@ -170,7 +170,7 @@ export class SettingsTab extends PluginSettingTab {
     if (customRules.length === 0) {
       containerEl.createEl("p", {
         cls: "mae-empty-hint",
-        text: "暂无自定义规则。点击下方"添加"按钮创建。",
+        text: "暂无自定义规则。点击下方「添加」按钮创建。",
       });
     } else {
       for (const rule of customRules) {

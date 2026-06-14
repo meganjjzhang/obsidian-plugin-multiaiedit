@@ -6,12 +6,11 @@ import {
   Plugin,
   TFile,
   WorkspaceLeaf,
-  Modal,
-  Setting,
 } from "obsidian";
 
 import {
   Annotation,
+  AnnotationType,
   HighlightColor,
   ViewMode,
 } from "./annotation/AnnotationModel";
@@ -21,7 +20,9 @@ import {
   computeOccurrenceIndex,
   extractContext,
   locate,
+  fuzzyLocate,
 } from "./annotation/AnnotationLocator";
+import { reanchorAnnotations } from "./annotation/AnchorUpdater";
 import {
   annotationDecoratorExtension,
   setAnnotationsEffect,
@@ -64,7 +65,7 @@ import { DiffModal, DiffModalResult } from "./diff/DiffModal";
 export default class MultiAIEditPlugin extends Plugin {
   settings: MultiAIEditSettings = DEFAULT_SETTINGS;
   store!: AnnotationStore;
-  private popover: SelectionPopover | null = null;
+  popover: SelectionPopover | null = null;
   private toolbar: BottomToolbar | null = null;
   private reviewExporter!: ReviewExporter;
   private promptExporter!: PromptExporter;
@@ -290,9 +291,12 @@ export default class MultiAIEditPlugin extends Plugin {
 
     // Build instruction file path
     const instructionFilePath = `${this.settings.exportDir}/${fileName}-agent-instruction.md`;
+    const vaultPath = (this.app.vault.adapter as unknown as { basePath?: string }).basePath
+      ?? this.app.vault.getRoot().path;
+    const filePathAbsolute = `${vaultPath}/${targetPath}`;
     const instructionContent = buildPromptText(
       fileName,
-      originalText,
+      filePathAbsolute,
       data,
       { includeReadingNotes: this.settings.includeReadingNotesInExport },
     );
@@ -305,8 +309,6 @@ export default class MultiAIEditPlugin extends Plugin {
     await adapter.write(instructionFilePath, instructionContent);
 
     // Build command
-    const vaultPath = (this.app.vault.adapter as unknown as { basePath?: string }).basePath
-      ?? this.app.vault.getRoot().path;
     const templateVars: TemplateVars = {
       vaultPath,
       instructionFile: instructionFilePath,
@@ -380,13 +382,15 @@ export default class MultiAIEditPlugin extends Plugin {
     const file = this.app.vault.getAbstractFileByPath(targetPath);
     if (!(file instanceof TFile)) return;
 
-    const originalText = await this.app.vault.read(file);
     const fileName = file.basename;
 
+    const vaultPath = (this.app.vault.adapter as unknown as { basePath?: string }).basePath
+      ?? this.app.vault.getRoot().path;
+    const filePathAbsolute = `${vaultPath}/${targetPath}`;
     const instructionFilePath = `${this.settings.exportDir}/${fileName}-agent-instruction.md`;
     const instructionContent = buildPromptText(
       fileName,
-      originalText,
+      filePathAbsolute,
       data,
       { includeReadingNotes: this.settings.includeReadingNotesInExport },
     );
@@ -397,8 +401,6 @@ export default class MultiAIEditPlugin extends Plugin {
     }
     await adapter.write(instructionFilePath, instructionContent);
 
-    const vaultPath = (this.app.vault.adapter as unknown as { basePath?: string }).basePath
-      ?? this.app.vault.getRoot().path;
     const templateVars: TemplateVars = {
       vaultPath,
       instructionFile: instructionFilePath,
@@ -462,25 +464,23 @@ export default class MultiAIEditPlugin extends Plugin {
 
     switch (result.action) {
       case "accept-all": {
-        // File already has the new content, just update baseline
-        const newHash = await sha256(modified);
-        await this.store.confirmBaseline(filePath, newHash);
-        this.refreshDecorations();
+        // File already has the new content — re-anchor then update baseline
+        const finalText = modified;
+        await this.reanchorAndConfirm(filePath, original, finalText);
         new Notice("已接受所有修改");
         break;
       }
       case "accept-partial": {
         if (result.mergedText !== undefined) {
           await this.app.vault.modify(file, result.mergedText);
-          const newHash = await sha256(result.mergedText);
-          await this.store.confirmBaseline(filePath, newHash);
-          this.refreshDecorations();
+          const finalText = result.mergedText;
+          await this.reanchorAndConfirm(filePath, original, finalText);
           new Notice("已应用选中的修改");
         }
         break;
       }
       case "reject": {
-        // Restore original
+        // Restore original — no re-anchor needed (back to baseline)
         await this.app.vault.modify(file, original);
         this.refreshDecorations();
         new Notice("已回滚所有修改");
@@ -495,10 +495,29 @@ export default class MultiAIEditPlugin extends Plugin {
   private isDraggingSelection = false;
 
   onModeChange(mode: ViewMode): void {
+    // Sync sidebar mode (avoid circular setMode→onModeChange)
+    const leaves = this.app.workspace.getLeavesOfType(SIDEBAR_VIEW_TYPE);
+    if (leaves.length > 0) {
+      (leaves[0].view as SidebarView).setModeExternal(mode);
+    }
     this.popover?.setMode(mode);
     this.toolbar?.setMode(mode);
     if (this.lastSelection) {
       const { cm, from, to } = this.lastSelection;
+      // Clicking a sidebar capsule moved focus away from the editor and
+      // collapsed the visible selection. Re-apply the CM6 selection and pull
+      // focus back so the user keeps seeing the highlighted text, then show
+      // the popover under the new mode.
+      try {
+        cm.dispatch({ selection: { anchor: from, head: to } });
+        cm.focus();
+      } catch {
+        // EditorView may have been disposed (e.g. file closed) — fall back to
+        // just hiding the popover.
+        this.lastSelection = null;
+        this.popover?.hide();
+        return;
+      }
       if (this.popover) this.popover.show(cm, from, to);
       if (this.toolbar) this.toolbar.show();
     }
@@ -511,10 +530,91 @@ export default class MultiAIEditPlugin extends Plugin {
     return view.getMode();
   }
 
+  /**
+   * Re-anchor annotations after a confirmed text change (Agent execution or
+   * user edit), then update baseline.
+   *
+   * Strategy:
+   * 1. Use AnchorUpdater (方案 B) to compute precise old→new position mappings
+   *    based on the diff between oldText and finalText.
+   * 2. Apply "healed" patches to annotations in the store.
+   * 3. For any that couldn't be mapped, try fuzzyLocate (方案 A) as fallback.
+   * 4. Update baselineHash.
+   */
+  private async reanchorAndConfirm(
+    filePath: string,
+    oldText: string,
+    finalText: string,
+  ): Promise<void> {
+    const data = await this.store.getFile(filePath);
+
+    // Step 1: Diff-based re-anchoring (方案 B)
+    const updates = reanchorAnnotations(oldText, finalText, data.annotations, this.settings.contextSpan);
+
+    let healed = 0;
+    let stillDrifted = 0;
+
+    for (const update of updates) {
+      if (update.status === "healed" && Object.keys(update.patch).length > 0) {
+        await this.store.updateAnnotation(filePath, update.id, update.patch);
+        healed++;
+      } else if (update.status === "drifted") {
+        // Step 2: Try fuzzyLocate fallback (方案 A)
+        const ann = data.annotations.find((a) => a.id === update.id);
+        if (ann) {
+          const fuzzyResult = fuzzyLocate(finalText, ann);
+          if (fuzzyResult.status === "auto-healed" && fuzzyResult.from !== undefined && fuzzyResult.to !== undefined) {
+            // Extract new anchor data from the fuzzy-matched position
+            const span = this.settings.contextSpan;
+            const ctxStart = Math.max(0, fuzzyResult.from - span);
+            const ctxEnd = Math.min(finalText.length, fuzzyResult.to + span);
+            const newSelectedText = finalText.slice(fuzzyResult.from, fuzzyResult.to);
+            const newContextBefore = finalText.slice(ctxStart, fuzzyResult.from);
+            const newContextAfter = finalText.slice(fuzzyResult.to, ctxEnd);
+            const newLineHint = computeLineHint(finalText, fuzzyResult.from);
+            const newOccIndex = computeOccurrenceIndex(finalText, newSelectedText, fuzzyResult.from);
+
+            await this.store.updateAnnotation(filePath, update.id, {
+              selectedText: newSelectedText,
+              contextBefore: newContextBefore,
+              contextAfter: newContextAfter,
+              lineHint: newLineHint,
+              occurrenceIndex: newOccIndex,
+            });
+            healed++;
+          } else {
+            stillDrifted++;
+          }
+        }
+      }
+    }
+
+    // Step 3: Update baseline
+    const newHash = await sha256(finalText);
+    await this.store.confirmBaseline(filePath, newHash);
+
+    // Step 4: Refresh editor decorations
+    this.refreshDecorations();
+
+    // Notify user
+    if (healed > 0 && stillDrifted > 0) {
+      new Notice(`已自动修复 ${healed} 条批注位置，${stillDrifted} 条仍需手动检查`);
+    } else if (healed > 0) {
+      new Notice(`已自动修复 ${healed} 条批注位置`);
+    } else if (stillDrifted > 0) {
+      new Notice(`${stillDrifted} 条批注位置已漂移，请手动检查`);
+    }
+  }
+
+  // ---------- selection handling ----------
+
   // ---------- selection handling ----------
 
   private onSelectionChange(): void {
     if (this.isDraggingSelection) return;
+    // If the popover is in annotation-editing mode (jumped from sidebar),
+    // don't let selectionchange override its state.
+    if (this.popover?.isEditing) return;
     const md = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (!md) return;
     const editor = md.editor;
@@ -541,24 +641,115 @@ export default class MultiAIEditPlugin extends Plugin {
   }
 
   private popoverCallbacks() {
+    /** Collapse the CM6 selection so selectionchange doesn't re-show the popover */
+    const collapseSelection = () => {
+      const md = this.app.workspace.getActiveViewOfType(MarkdownView);
+      if (!md) return;
+      const cm: EditorView | undefined = (md.editor as unknown as { cm?: EditorView }).cm;
+      if (!cm) return;
+      const anchor = cm.state.selection.main.head;
+      cm.dispatch({ selection: { anchor } });
+    };
+
     return {
-      onHighlight: (color: HighlightColor) => {
+      onHighlight: (color: HighlightColor, annotationId?: string) => {
         this.lastSelection = null;
-        this.createHighlightFromSelection(color);
+        collapseSelection();
+        if (annotationId) {
+          // Editing existing annotation — change type to "highlight", clear review fields
+          const filePath = this.findAnnotationFilePath(annotationId);
+          if (filePath) this.store.updateAnnotation(filePath, annotationId, {
+            type: "highlight" as AnnotationType,
+            highlightColor: color,
+            noteText: undefined,
+            reviewText: undefined,
+            strike: undefined,
+          });
+          this.refreshDecorations();
+        } else {
+          this.createHighlightFromSelection(color);
+        }
       },
-      onNote: () => {
+      onNote: (text: string, color: HighlightColor, annotationId?: string) => {
         this.lastSelection = null;
-        this.openNoteModalForSelection();
+        collapseSelection();
+        if (annotationId) {
+          // Editing existing annotation — change type to "note", clear review fields
+          const filePath = this.findAnnotationFilePath(annotationId);
+          if (filePath) this.store.updateAnnotation(filePath, annotationId, {
+            type: "note" as AnnotationType,
+            noteText: text,
+            highlightColor: color,
+            reviewText: undefined,
+            strike: undefined,
+          });
+          this.refreshDecorations();
+        } else {
+          this.createNoteFromSelection(text, color);
+        }
       },
-      onReview: (text: string, strike: boolean) => {
+      onReview: (text: string, strike: boolean, annotationId?: string) => {
         this.lastSelection = null;
-        this.createReviewFromSelection(text, strike);
+        collapseSelection();
+        if (annotationId) {
+          // Editing existing annotation — change type to "review"
+          const filePath = this.findAnnotationFilePath(annotationId);
+          if (filePath) {
+            const patch: Partial<Annotation> = {
+              type: "review" as AnnotationType,
+              strike,
+              noteText: undefined,
+              highlightColor: undefined,
+            };
+            // Only update reviewText when a non-empty value is provided
+            // (empty text means Delete toggle — don't clear existing reviewText)
+            if (text) patch.reviewText = text;
+            this.store.updateAnnotation(filePath, annotationId, patch);
+          }
+          this.refreshDecorations();
+        } else {
+          this.createReviewFromSelection(text, strike);
+        }
       },
-      onStrike: () => {
+      onStrikeCreate: async (): Promise<string> => {
         this.lastSelection = null;
-        this.createReviewFromSelection("", true);
+        const ctx = this.getActiveSelectionContext();
+        if (!ctx) return "";
+        const anchor = await this.buildAnchor(
+          ctx.file, ctx.doc, ctx.from, ctx.to, ctx.selectedText,
+        );
+        const ann: Annotation = {
+          ...anchor,
+          type: "review",
+          reviewText: undefined,
+          strike: true,
+        };
+        await this.store.addAnnotation(ctx.file.path, ann);
+        this.refreshDecorations();
+        return ann.id;
+      },
+      onStrikeRemove: (annotationId: string) => {
+        this.lastSelection = null;
+        const filePath = this.findAnnotationFilePath(annotationId);
+        if (filePath) {
+          this.store.removeAnnotation(filePath, annotationId);
+          this.refreshDecorations();
+        }
+      },
+      onModeSwitch: (mode: ViewMode) => {
+        this.onModeChange(mode);
       },
     };
+  }
+
+  /** Find which file an annotation belongs to by searching open files' sidecars */
+  private findAnnotationFilePath(annotationId: string): string | null {
+    // First check the active file
+    const active = this.resolveTargetMarkdownPath();
+    if (active) return active;
+    // Fallback: not ideal but annotation filePath is stored in sidecar,
+    // not directly accessible from id alone. For now, return null.
+    return null;
   }
 
   // ---------- annotation creation ----------
@@ -671,6 +862,25 @@ export default class MultiAIEditPlugin extends Plugin {
     }).open();
   }
 
+  /** Create a note annotation directly with the given text (from popover inline input) */
+  async createNoteFromSelection(text: string, color: HighlightColor): Promise<void> {
+    const ctx = this.getActiveSelectionContext();
+    if (!ctx) {
+      new Notice("请先选中要批注的文字");
+      return;
+    }
+    const anchor = await this.buildAnchor(
+      ctx.file,
+      ctx.doc,
+      ctx.from,
+      ctx.to,
+      ctx.selectedText,
+    );
+    const ann: Annotation = { ...anchor, type: "note", noteText: text, highlightColor: color };
+    await this.store.addAnnotation(ctx.file.path, ann);
+    this.refreshDecorations();
+  }
+
   async openReviewModalForSelection(): Promise<void> {
     const ctx = this.getActiveSelectionContext();
     if (!ctx) {
@@ -745,10 +955,8 @@ export default class MultiAIEditPlugin extends Plugin {
   }
 
   async deleteAnnotation(ann: Annotation): Promise<void> {
-    new ConfirmModal(this.app, "删除该批注？", async () => {
-      await this.store.removeAnnotation(ann.filePath, ann.id);
-      this.refreshDecorations();
-    }).open();
+    await this.store.removeAnnotation(ann.filePath, ann.id);
+    this.refreshDecorations();
   }
 
   // ---------- decorations refresh ----------
@@ -804,10 +1012,21 @@ export default class MultiAIEditPlugin extends Plugin {
   }
 
   private resolveTargetMarkdownPath(): string | null {
+    // Priority: 1) active markdown view  2) the file the sidebar is currently
+    // showing  3) any open markdown leaf. The sidebar's own currentFilePath is
+    // the source of truth when the user clicks a sidebar button (sidebar is
+    // active leaf, no active markdown view) — otherwise we'd risk swapping
+    // files mid-flow.
     const active = this.app.workspace.getActiveViewOfType(MarkdownView);
     if (active?.file) return active.file.path;
-    const leaves = this.app.workspace.getLeavesOfType("markdown");
-    for (const leaf of leaves) {
+    const leaves = this.app.workspace.getLeavesOfType(SIDEBAR_VIEW_TYPE);
+    if (leaves.length > 0) {
+      const sidebar = leaves[0].view as SidebarView;
+      const path = sidebar.getCurrentFilePath();
+      if (path) return path;
+    }
+    const mdLeaves = this.app.workspace.getLeavesOfType("markdown");
+    for (const leaf of mdLeaves) {
       const v = leaf.view as MarkdownView;
       if (v?.file) return v.file.path;
     }
@@ -826,25 +1045,5 @@ export default class MultiAIEditPlugin extends Plugin {
       }
     }
     if (leaf) this.app.workspace.revealLeaf(leaf);
-  }
-}
-
-class ConfirmModal extends Modal {
-  constructor(app: App, private message: string, private onConfirm: () => void) {
-    super(app);
-  }
-  onOpen(): void {
-    this.contentEl.createEl("p", { text: this.message });
-    new Setting(this.contentEl)
-      .addButton((b) => b.setButtonText("取消").onClick(() => this.close()))
-      .addButton((b) =>
-        b
-          .setButtonText("确认")
-          .setWarning()
-          .onClick(() => {
-            this.onConfirm();
-            this.close();
-          }),
-      );
   }
 }
