@@ -26,16 +26,6 @@ export const PRESET_RULES: CommandRule[] = [
 		isPreset: true,
 	},
 	{
-		id: "claude-internal",
-		label: "Claude Internal",
-		vendor: "Anthropic (internal)",
-		detectCmd: "which claude-internal",
-		template:
-			'cd {{vaultPath}} && claude-internal --config-dir ~/.claude-internal "读取 {{instructionFile}}，按批注指令修改对应文件"',
-		installHint: "内部版本，需要内部权限",
-		isPreset: true,
-	},
-	{
 		id: "codex",
 		label: "Codex CLI",
 		vendor: "OpenAI",

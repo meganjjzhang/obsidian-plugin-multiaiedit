@@ -53,25 +53,25 @@ export class APIConfirmModal extends Modal {
 	onOpen(): void {
 		const { modalEl } = this;
 		modalEl.empty();
-		modalEl.addClass("mae-api-confirm-modal");
+		modalEl.addClass("prm-api-confirm-modal");
 
 		const col = colorFor(this.config.provider);
 		const providerName = PROVIDER_LABEL[this.config.provider];
 		const modelName = this.config.model || PROVIDER_DEFAULTS[this.config.provider].model;
 
 		// ── Header ──
-		const header = modalEl.createDiv({ cls: "mae-apm-header" });
-		const headerLeft = header.createDiv({ cls: "mae-apm-header-left" });
-		const iconWrap = headerLeft.createDiv({ cls: "mae-apm-icon" });
+		const header = modalEl.createDiv({ cls: "prm-apm-header" });
+		const headerLeft = header.createDiv({ cls: "prm-apm-header-left" });
+		const iconWrap = headerLeft.createDiv({ cls: "prm-apm-icon" });
 		setIcon(iconWrap, "zap");
 		const titleWrap = headerLeft.createDiv();
-		titleWrap.createDiv({ cls: "mae-apm-title", text: "API 批阅确认" });
+		titleWrap.createDiv({ cls: "prm-apm-title", text: "API 批阅确认" });
 		titleWrap.createDiv({
-			cls: "mae-apm-subtitle",
+			cls: "prm-apm-subtitle",
 			text: `${providerName} · 即将发送至 API`,
 		});
 
-		const closeBtn = header.createEl("button", { cls: "mae-apm-close" });
+		const closeBtn = header.createEl("button", { cls: "prm-apm-close" });
 		closeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 		closeBtn.onclick = () => {
 			this.resolve?.({ action: "cancel" });
@@ -79,26 +79,26 @@ export class APIConfirmModal extends Modal {
 		};
 
 		// ── Provider badge row ──
-		const badgeRow = modalEl.createDiv({ cls: "mae-apm-provider-row" });
-		const providerAvatar = badgeRow.createDiv({ cls: "mae-apm-provider-avatar" });
+		const badgeRow = modalEl.createDiv({ cls: "prm-apm-provider-row" });
+		const providerAvatar = badgeRow.createDiv({ cls: "prm-apm-provider-avatar" });
 		providerAvatar.style.background = col.bg;
 		providerAvatar.style.borderColor = col.border;
-		const avatarChar = providerAvatar.createSpan({ cls: "mae-apm-provider-char", text: providerName[0] });
+		const avatarChar = providerAvatar.createSpan({ cls: "prm-apm-provider-char", text: providerName[0] });
 		avatarChar.style.color = col.text;
-		badgeRow.createSpan({ cls: "mae-apm-provider-name", text: providerName });
-		const badge = badgeRow.createSpan({ cls: "mae-apm-provider-badge", text: "provider" });
+		badgeRow.createSpan({ cls: "prm-apm-provider-name", text: providerName });
+		const badge = badgeRow.createSpan({ cls: "prm-apm-provider-badge", text: "provider" });
 		badge.style.background = col.bg;
 		badge.style.borderColor = col.border;
 		badge.style.color = col.text;
 
 		// ── Info table ──
-		const infoWrap = modalEl.createDiv({ cls: "mae-apm-info-wrap" });
-		const infoBox = infoWrap.createDiv({ cls: "mae-apm-info-box" });
+		const infoWrap = modalEl.createDiv({ cls: "prm-apm-info-wrap" });
+		const infoBox = infoWrap.createDiv({ cls: "prm-apm-info-box" });
 
 		const addRow = (label: string, value: string, warn = false) => {
-			const row = infoBox.createDiv({ cls: "mae-apm-info-row" });
-			row.createSpan({ cls: "mae-apm-info-label", text: label });
-			const val = row.createSpan({ cls: warn ? "mae-apm-info-value mae-apm-info-warn" : "mae-apm-info-value", text: value });
+			const row = infoBox.createDiv({ cls: "prm-apm-info-row" });
+			row.createSpan({ cls: "prm-apm-info-label", text: label });
+			const val = row.createSpan({ cls: warn ? "prm-apm-info-value prm-apm-info-warn" : "prm-apm-info-value", text: value });
 			return val;
 		};
 
@@ -107,19 +107,19 @@ export class APIConfirmModal extends Modal {
 		addRow("Tokens", `~${this.estimatedTokens.toLocaleString()}`, this.estimatedTokens > 50_000);
 
 		// ── Warning ──
-		const warnBox = modalEl.createDiv({ cls: "mae-apm-warning" });
-		const warnIcon = warnBox.createDiv({ cls: "mae-apm-warning-icon" });
+		const warnBox = modalEl.createDiv({ cls: "prm-apm-warning" });
+		const warnIcon = warnBox.createDiv({ cls: "prm-apm-warning-icon" });
 		setIcon(warnIcon, "alert-triangle");
 		warnBox.createEl("p", {
-			cls: "mae-apm-warning-text",
+			cls: "prm-apm-warning-text",
 			text: "原文与批阅意见将发送至所选 Provider，请确认不含敏感信息。数据将离开本地 Vault。",
 		});
 
 		// ── Footer ──
-		const footer = modalEl.createDiv({ cls: "mae-apm-footer" });
-		const cancelBtn = footer.createEl("button", { cls: "mae-apm-btn mae-apm-btn-cancel" });
-		const cancelInner = cancelBtn.createSpan({ cls: "mae-apm-btn-inner" });
-		const cancelIcon = cancelInner.createSpan({ cls: "mae-apm-btn-icon" });
+		const footer = modalEl.createDiv({ cls: "prm-apm-footer" });
+		const cancelBtn = footer.createEl("button", { cls: "prm-apm-btn prm-apm-btn-cancel" });
+		const cancelInner = cancelBtn.createSpan({ cls: "prm-apm-btn-inner" });
+		const cancelIcon = cancelInner.createSpan({ cls: "prm-apm-btn-icon" });
 		setIcon(cancelIcon, "x");
 		cancelInner.createSpan({ text: "取消" });
 		cancelBtn.onclick = () => {
@@ -127,9 +127,9 @@ export class APIConfirmModal extends Modal {
 			this.close();
 		};
 
-		const execBtn = footer.createEl("button", { cls: "mae-apm-btn mae-apm-btn-exec" });
-		const execInner = execBtn.createSpan({ cls: "mae-apm-btn-inner" });
-		const execIcon = execInner.createSpan({ cls: "mae-apm-btn-icon" });
+		const execBtn = footer.createEl("button", { cls: "prm-apm-btn prm-apm-btn-exec" });
+		const execInner = execBtn.createSpan({ cls: "prm-apm-btn-inner" });
+		const execIcon = execInner.createSpan({ cls: "prm-apm-btn-icon" });
 		setIcon(execIcon, "send");
 		execInner.createSpan({ text: "确认执行" });
 		execBtn.onclick = () => {
@@ -180,25 +180,25 @@ export class APIProgressModal extends Modal {
 	onOpen(): void {
 		const { modalEl } = this;
 		modalEl.empty();
-		modalEl.addClass("mae-api-progress-modal");
+		modalEl.addClass("prm-api-progress-modal");
 
 		// ── Header ──
-		const header = modalEl.createDiv({ cls: "mae-ppm-header" });
-		const headerLeft = header.createDiv({ cls: "mae-ppm-header-left" });
-		const iconWrap = headerLeft.createDiv({ cls: "mae-ppm-icon" });
+		const header = modalEl.createDiv({ cls: "prm-ppm-header" });
+		const headerLeft = header.createDiv({ cls: "prm-ppm-header-left" });
+		const iconWrap = headerLeft.createDiv({ cls: "prm-ppm-icon" });
 		setIcon(iconWrap, "zap");
 		const titleWrap = headerLeft.createDiv();
-		titleWrap.createDiv({ cls: "mae-ppm-title", text: "API 批阅中…" });
-		titleWrap.createDiv({ cls: "mae-ppm-subtitle", text: "正在调用 API" });
+		titleWrap.createDiv({ cls: "prm-ppm-title", text: "API 批阅中…" });
+		titleWrap.createDiv({ cls: "prm-ppm-subtitle", text: "正在调用 API" });
 
 		// ── Content area (re-rendered by setState) ──
-		this.contentArea = modalEl.createDiv({ cls: "mae-ppm-content" });
+		this.contentArea = modalEl.createDiv({ cls: "prm-ppm-content" });
 
 		// ── Footer ──
-		const footer = modalEl.createDiv({ cls: "mae-ppm-footer" });
-		const closeBtnWrap = footer.createDiv({ cls: "mae-ppm-footer-right" });
-		const closeBtn = closeBtnWrap.createEl("button", { cls: "mae-ppm-btn mae-ppm-btn-close" });
-		const closeInner = closeBtn.createSpan({ cls: "mae-ppm-btn-inner" });
+		const footer = modalEl.createDiv({ cls: "prm-ppm-footer" });
+		const closeBtnWrap = footer.createDiv({ cls: "prm-ppm-footer-right" });
+		const closeBtn = closeBtnWrap.createEl("button", { cls: "prm-ppm-btn prm-ppm-btn-close" });
+		const closeInner = closeBtn.createSpan({ cls: "prm-ppm-btn-inner" });
 		closeInner.createSpan({ text: "关闭" });
 		closeBtn.onclick = () => {
 			this.resolve?.(null);
@@ -206,9 +206,9 @@ export class APIProgressModal extends Modal {
 		};
 		closeBtn.style.display = "none"; // hidden during calling
 
-		const diffBtn = closeBtnWrap.createEl("button", { cls: "mae-ppm-btn mae-ppm-btn-diff" });
-		const diffInner = diffBtn.createSpan({ cls: "mae-ppm-btn-inner" });
-		const diffIcon = diffInner.createSpan({ cls: "mae-ppm-btn-icon" });
+		const diffBtn = closeBtnWrap.createEl("button", { cls: "prm-ppm-btn prm-ppm-btn-diff" });
+		const diffInner = diffBtn.createSpan({ cls: "prm-ppm-btn-inner" });
+		const diffIcon = diffInner.createSpan({ cls: "prm-ppm-btn-icon" });
 		setIcon(diffIcon, "git-compare");
 		diffInner.createSpan({ text: "查看 Diff" });
 		diffBtn.onclick = () => {
@@ -230,32 +230,32 @@ export class APIProgressModal extends Modal {
 		area.empty();
 
 		// Footer buttons
-		const footerRight = this.modalEl.querySelector(".mae-ppm-footer-right") as HTMLElement;
-		const closeBtn = footerRight?.querySelector(".mae-ppm-btn-close") as HTMLElement;
-		const diffBtn = footerRight?.querySelector(".mae-ppm-btn-diff") as HTMLElement;
+		const footerRight = this.modalEl.querySelector(".prm-ppm-footer-right") as HTMLElement;
+		const closeBtn = footerRight?.querySelector(".prm-ppm-btn-close") as HTMLElement;
+		const diffBtn = footerRight?.querySelector(".prm-ppm-btn-diff") as HTMLElement;
 		if (closeBtn) closeBtn.style.display = "none";
 		if (diffBtn) diffBtn.style.display = "none";
 
 		if (this.state.phase === "calling") {
-			area.createDiv({ cls: "mae-ppm-spinner" });
-			area.createEl("p", { cls: "mae-ppm-calling-text", text: "正在调用 API，请稍候…" });
+			area.createDiv({ cls: "prm-ppm-spinner" });
+			area.createEl("p", { cls: "prm-ppm-calling-text", text: "正在调用 API，请稍候…" });
 			return;
 		}
 
 		if (this.state.phase === "error") {
-			const errBox = area.createDiv({ cls: "mae-ppm-error" });
-			const errIcon = errBox.createDiv({ cls: "mae-ppm-error-icon" });
+			const errBox = area.createDiv({ cls: "prm-ppm-error" });
+			const errIcon = errBox.createDiv({ cls: "prm-ppm-error-icon" });
 			setIcon(errIcon, "x-circle");
-			errBox.createEl("p", { cls: "mae-ppm-error-text", text: `调用失败：${this.state.message}` });
+			errBox.createEl("p", { cls: "prm-ppm-error-text", text: `调用失败：${this.state.message}` });
 			if (closeBtn) closeBtn.style.display = "";
 			return;
 		}
 
 		// done
-		const doneBox = area.createDiv({ cls: "mae-ppm-success" });
-		const doneIcon = doneBox.createDiv({ cls: "mae-ppm-success-icon" });
+		const doneBox = area.createDiv({ cls: "prm-ppm-success" });
+		const doneIcon = doneBox.createDiv({ cls: "prm-ppm-success-icon" });
 		setIcon(doneIcon, "check-circle");
-		doneBox.createEl("p", { cls: "mae-ppm-success-text", text: "API 返回成功，即将打开 Diff 预览" });
+		doneBox.createEl("p", { cls: "prm-ppm-success-text", text: "API 返回成功，即将打开 Diff 预览" });
 		if (diffBtn) diffBtn.style.display = "";
 	}
 

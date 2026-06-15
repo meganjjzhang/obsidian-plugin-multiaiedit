@@ -51,7 +51,7 @@ function buildDecorations(doc: string, anns: Annotation[]): DecorationSet {
       to: r.to,
       deco: Decoration.mark({
         class: cls,
-        attributes: { "data-mae-id": ann.id },
+        attributes: { "data-prm-id": ann.id },
       }),
     });
   }
@@ -93,12 +93,12 @@ function mergeRanges(
     for (const c of covering) {
       const spec = c.deco.spec;
       if (spec.class) spec.class.split(/\s+/).forEach((cls: string) => classes.add(cls));
-      if (spec.attributes?.["data-mae-id"]) dataIds.push(spec.attributes["data-mae-id"]);
+      if (spec.attributes?.["data-prm-id"]) dataIds.push(spec.attributes["data-prm-id"]);
     }
 
     const mergedDeco = Decoration.mark({
       class: Array.from(classes).join(" "),
-      attributes: dataIds.length > 0 ? { "data-mae-id": dataIds.join(",") } : undefined,
+      attributes: dataIds.length > 0 ? { "data-prm-id": dataIds.join(",") } : undefined,
     });
     result.push({ from, to, deco: mergedDeco });
   }
@@ -107,19 +107,19 @@ function mergeRanges(
 }
 
 function decoClassFor(ann: Annotation, status: "strict" | "fuzzy" | "auto-healed"): string | null {
-  const fuzzy = status === "fuzzy" ? " cm-multiaiedit-fuzzy" : "";
-  const healed = status === "auto-healed" ? " cm-multiaiedit-auto-healed" : "";
+  const fuzzy = status === "fuzzy" ? " cm-promptuary-fuzzy" : "";
+  const healed = status === "auto-healed" ? " cm-promptuary-auto-healed" : "";
   if (ann.type === "highlight") {
     const color = ann.highlightColor ?? "yellow";
-    return `cm-multiaiedit-highlight cm-multiaiedit-highlight-${color}${fuzzy}${healed}`;
+    return `cm-promptuary-highlight cm-promptuary-highlight-${color}${fuzzy}${healed}`;
   }
   if (ann.type === "note") {
     const color = ann.highlightColor ?? "yellow";
-    return `cm-multiaiedit-highlight cm-multiaiedit-highlight-${color}${fuzzy}${healed}`;
+    return `cm-promptuary-highlight cm-promptuary-highlight-${color}${fuzzy}${healed}`;
   }
   if (ann.type === "review") {
-    let cls = "cm-multiaiedit-review";
-    if (ann.strike) cls += " cm-multiaiedit-strike";
+    let cls = "cm-promptuary-review";
+    if (ann.strike) cls += " cm-promptuary-strike";
     return cls + fuzzy + healed;
   }
   return null;
@@ -139,23 +139,60 @@ function decoClassFor(ann: Annotation, status: "strict" | "fuzzy" | "auto-healed
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Sentinel class added to every DOM-injected highlight span. */
-const TABLE_HL_CLASS = "mae-table-hl";
+const TABLE_HL_CLASS = "prm-table-hl";
 
 class TableAnnotationPlugin {
   private rafId: number | null = null;
+  private observer: MutationObserver | null = null;
+  private view: EditorView;
+
+  constructor(view: EditorView) {
+    this.view = view;
+    this.startObserving();
+  }
+
+  // ── MutationObserver ─────────────────────────────────────────────────────
+  // In LP mode, clicking a table cell injects a nested CM6 editor (<div
+  // class="cm-editor">) into the <td>.  Clicking away removes it and the cell
+  // reverts to rendered HTML.  Our `update()` callback does NOT fire on these
+  // purely visual DOM changes (no doc/viewport/annotation change), so we need
+  // a MutationObserver to detect when a table widget's DOM mutates — especially
+  // when a nested editor is removed — so we can re-inject highlights.
+  // ─────────────────────────────────────────────────────────────────────────
+  private startObserving(): void {
+    this.observer = new MutationObserver((mutations) => {
+      const relevant = mutations.some((m) => {
+        const target = m.target as HTMLElement;
+        // Change inside a table widget
+        if (typeof target.closest === "function" && target.closest(".cm-table-widget")) return true;
+        // A nested editor was added/removed
+        for (const node of Array.from(m.addedNodes).concat(Array.from(m.removedNodes))) {
+          const el = node as HTMLElement;
+          if (typeof el.closest !== "function") continue;
+          if (el.classList?.contains("cm-editor") || el.querySelector?.(".cm-editor")) return true;
+        }
+        return false;
+      });
+      if (!relevant) return;
+      this.scheduleApply();
+    });
+    this.observer.observe(this.view.dom, { childList: true, subtree: true });
+  }
+
+  private scheduleApply(): void {
+    if (this.rafId !== null) cancelAnimationFrame(this.rafId);
+    this.rafId = requestAnimationFrame(() => {
+      this.rafId = null;
+      this.applyTableHighlights(this.view);
+    });
+  }
 
   update(update: ViewUpdate): void {
     const hasAnnotationChange = update.transactions.some(
       (t) => t.effects.some((e) => e.is(setAnnotationsEffect)),
     );
     if (!update.docChanged && !update.viewportChanged && !hasAnnotationChange) return;
-
-    // Defer until after CM6 has finished its own DOM update.
-    if (this.rafId !== null) cancelAnimationFrame(this.rafId);
-    this.rafId = requestAnimationFrame(() => {
-      this.rafId = null;
-      this.applyTableHighlights(update.view);
-    });
+    this.scheduleApply();
   }
 
   destroy(): void {
@@ -163,6 +200,8 @@ class TableAnnotationPlugin {
       cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
+    this.observer?.disconnect();
+    this.observer = null;
   }
 
   private applyTableHighlights(view: EditorView): void {
@@ -195,7 +234,7 @@ class TableAnnotationPlugin {
     // 3. Walk each visible .cm-line.
     for (const lineEl of Array.from(view.dom.querySelectorAll<HTMLElement>(".cm-line"))) {
       // Skip lines where CM6 already inserted our decoration spans (edit mode).
-      if (lineEl.querySelector("[class*='cm-multiaiedit']")) continue;
+      if (lineEl.querySelector("[class*='cm-promptuary']")) continue;
 
       // Determine the document line text for this DOM element.
       let lineText: string;

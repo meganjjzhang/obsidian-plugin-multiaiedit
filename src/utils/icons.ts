@@ -1,5 +1,5 @@
 /**
- * Icon registry for MultiAIEdit plugin.
+ * Icon registry for Promptuary plugin.
  *
  * Uses Obsidian's built-in `addIcon` / `setIcon` with Lucide icons where possible,
  * and registers custom SVG icons for cases where Lucide doesn't have an exact match.
@@ -18,10 +18,10 @@ const SVG_DIYA = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24"
 
 /** Register all custom icons. Call once in plugin onload(). */
 export function registerIcons(): void {
-	addIcon("mae-highlighter", SVG_HIGHLIGHTER);
-	addIcon("mae-check-check", SVG_CHECK_CHECK);
-	addIcon("mae-diff", SVG_DIFF);
-	addIcon("mae-diya", SVG_DIYA);
+	addIcon("prm-highlighter", SVG_HIGHLIGHTER);
+	addIcon("prm-check-check", SVG_CHECK_CHECK);
+	addIcon("prm-diff", SVG_DIFF);
+	addIcon("prm-diya", SVG_DIYA);
 }
 
 /** Set a Lucide or custom icon on an element. Wrapper for convenience. */
@@ -38,7 +38,7 @@ export function createIconSpan(
 	iconName: string,
 	cls?: string,
 ): HTMLElement {
-	const span = parent.createSpan({ cls: `mae-icon ${cls ?? ""}`.trim() });
+	const span = parent.createSpan({ cls: `prm-icon ${cls ?? ""}`.trim() });
 	setIcon(span, iconName);
 	return span;
 }

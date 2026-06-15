@@ -1,5 +1,5 @@
 import { App, Modal, Notice, PluginSettingTab, Setting, setIcon } from "obsidian";
-import type MultiAIEditPlugin from "../main";
+import type PromptuaryPlugin from "../main";
 import { ViewMode } from "../annotation/AnnotationModel";
 import { CommandRule, CommandRuleStore, PRESET_RULES } from "../agent/CommandRuleStore";
 import { detectAgents, AgentInfo } from "../agent/AgentDetector";
@@ -15,7 +15,7 @@ export interface APISettings {
   maxTokens: number;
 }
 
-export interface MultiAIEditSettings {
+export interface PromptuarySettings {
   defaultMode: ViewMode;
   contextSpan: number;
   sidecarDir: string;
@@ -36,11 +36,11 @@ export const DEFAULT_API_SETTINGS: APISettings = {
   maxTokens: 4096,
 };
 
-export const DEFAULT_SETTINGS: MultiAIEditSettings = {
+export const DEFAULT_SETTINGS: PromptuarySettings = {
   defaultMode: "reading",
   contextSpan: 50,
-  sidecarDir: ".multiaiedit/annotations",
-  exportDir: "MultiAIEdit/exports",
+  sidecarDir: ".promptuary/annotations",
+  exportDir: ".promptuary/exports",
   includeReadingNotesInExport: false,
   terminalApp: "Terminal",
   customCommandRules: [],
@@ -66,20 +66,20 @@ class AddRuleModal extends Modal {
   onOpen(): void {
     const { contentEl, modalEl } = this;
     contentEl.empty();
-    contentEl.addClass("mae-add-rule-modal");
-    modalEl.addClass("mae-add-rule-modal");
+    contentEl.addClass("prm-add-rule-modal");
+    modalEl.addClass("prm-add-rule-modal");
 
     // Header
-    const header = contentEl.createDiv({ cls: "mae-arm-header" });
-    const headerLeft = header.createDiv({ cls: "mae-arm-header-left" });
-    const icon = headerLeft.createDiv({ cls: "mae-arm-icon" });
+    const header = contentEl.createDiv({ cls: "prm-arm-header" });
+    const headerLeft = header.createDiv({ cls: "prm-arm-header-left" });
+    const icon = headerLeft.createDiv({ cls: "prm-arm-icon" });
     setIcon(icon, "zap");
     const titleWrap = headerLeft.createDiv({});
-    titleWrap.createDiv({ cls: "mae-arm-title", text: "添加命令规则" });
-    titleWrap.createDiv({ cls: "mae-arm-subtitle", text: "自定义 Agent CLI 命令模板" });
+    titleWrap.createDiv({ cls: "prm-arm-title", text: "添加命令规则" });
+    titleWrap.createDiv({ cls: "prm-arm-subtitle", text: "自定义 Agent CLI 命令模板" });
 
     // Form
-    const form = contentEl.createDiv({ cls: "mae-arm-form" });
+    const form = contentEl.createDiv({ cls: "prm-arm-form" });
 
     let newId = "";
     let newLabel = "";
@@ -121,9 +121,9 @@ class AddRuleModal extends Modal {
       );
 
     // Template variables reference
-    const varRef = form.createDiv({ cls: "mae-arm-var-ref" });
-    varRef.createDiv({ cls: "mae-arm-var-title", text: "可用模板变量" });
-    const varGrid = varRef.createDiv({ cls: "mae-arm-var-grid" });
+    const varRef = form.createDiv({ cls: "prm-arm-var-ref" });
+    varRef.createDiv({ cls: "prm-arm-var-title", text: "可用模板变量" });
+    const varGrid = varRef.createDiv({ cls: "prm-arm-var-grid" });
     const vars = [
       ["{{vaultPath}}", "Vault 根目录"],
       ["{{instructionFile}}", "指令文件路径"],
@@ -132,21 +132,21 @@ class AddRuleModal extends Modal {
       ["{{prompt}}", "内联 Prompt"],
     ];
     for (const [v, desc] of vars) {
-      const item = varGrid.createDiv({ cls: "mae-arm-var-item" });
-      item.createDiv({ cls: "mae-arm-var-code", text: v });
-      item.createDiv({ cls: "mae-arm-var-desc", text: desc });
+      const item = varGrid.createDiv({ cls: "prm-arm-var-item" });
+      item.createDiv({ cls: "prm-arm-var-code", text: v });
+      item.createDiv({ cls: "prm-arm-var-desc", text: desc });
     }
 
     // Footer
-    const footer = contentEl.createDiv({ cls: "mae-arm-footer" });
+    const footer = contentEl.createDiv({ cls: "prm-arm-footer" });
     const cancelBtn = footer.createEl("button", {
-      cls: "mae-arm-btn-cancel",
+      cls: "prm-arm-btn-cancel",
       text: "取消",
     });
     cancelBtn.onclick = () => this.close();
 
     const saveBtn = footer.createEl("button", {
-      cls: "mae-arm-btn-save",
+      cls: "prm-arm-btn-save",
       text: "添加规则",
     });
     saveBtn.onclick = () => {
@@ -193,7 +193,7 @@ class AddRuleModal extends Modal {
 // ---------- Settings Tab ----------
 
 export class SettingsTab extends PluginSettingTab {
-  constructor(app: App, private plugin: MultiAIEditPlugin) {
+  constructor(app: App, private plugin: PromptuaryPlugin) {
     super(app, plugin);
   }
 
@@ -202,17 +202,17 @@ export class SettingsTab extends PluginSettingTab {
     containerEl.empty();
 
     // Page header
-    const pageHeader = containerEl.createDiv({ cls: "mae-settings-header" });
-    const pageHeaderLeft = pageHeader.createDiv({ cls: "mae-settings-header-left" });
-    const pageIcon = pageHeaderLeft.createDiv({ cls: "mae-settings-page-icon" });
+    const pageHeader = containerEl.createDiv({ cls: "prm-settings-header" });
+    const pageHeaderLeft = pageHeader.createDiv({ cls: "prm-settings-header-left" });
+    const pageIcon = pageHeaderLeft.createDiv({ cls: "prm-settings-page-icon" });
     if (this.plugin.logoUrl) {
-      const img = pageIcon.createEl("img", { cls: "mae-logo-img" });
+      const img = pageIcon.createEl("img", { cls: "prm-logo-img" });
       img.src = this.plugin.logoUrl;
-      img.alt = "MultiAIEdit";
+      img.alt = "Promptuary";
     } else {
-      setIcon(pageIcon, "mae-highlighter");
+      setIcon(pageIcon, "prm-highlighter");
     }
-    pageHeaderLeft.createDiv({ cls: "mae-settings-page-title", text: "MultiAIEdit" });
+    pageHeaderLeft.createDiv({ cls: "prm-settings-page-title", text: "Promptuary" });
 
     // --- Section 1: Basic ---
     this.renderSection(containerEl, {
@@ -255,21 +255,21 @@ export class SettingsTab extends PluginSettingTab {
       render: (el: HTMLElement) => void;
     },
   ): void {
-    const section = containerEl.createDiv({ cls: "mae-settings-section" });
+    const section = containerEl.createDiv({ cls: "prm-settings-section" });
 
     // Clickable header
-    const header = section.createDiv({ cls: "mae-settings-section-header" });
-    const headerLeft = header.createDiv({ cls: "mae-settings-section-left" });
-    const iconEl = headerLeft.createDiv({ cls: "mae-settings-section-icon" });
+    const header = section.createDiv({ cls: "prm-settings-section-header" });
+    const headerLeft = header.createDiv({ cls: "prm-settings-section-left" });
+    const iconEl = headerLeft.createDiv({ cls: "prm-settings-section-icon" });
     setIcon(iconEl, opts.icon);
-    const textWrap = headerLeft.createDiv({ cls: "mae-settings-section-text" });
-    textWrap.createDiv({ cls: "mae-settings-section-title", text: opts.title });
-    textWrap.createDiv({ cls: "mae-settings-section-desc", text: opts.desc });
-    const chevron = header.createDiv({ cls: "mae-settings-section-chevron" });
+    const textWrap = headerLeft.createDiv({ cls: "prm-settings-section-text" });
+    textWrap.createDiv({ cls: "prm-settings-section-title", text: opts.title });
+    textWrap.createDiv({ cls: "prm-settings-section-desc", text: opts.desc });
+    const chevron = header.createDiv({ cls: "prm-settings-section-chevron" });
     setIcon(chevron, "chevron-down");
 
     // Collapsible body
-    const body = section.createDiv({ cls: "mae-settings-section-body" });
+    const body = section.createDiv({ cls: "prm-settings-section-body" });
     if (opts.open) {
       body.addClass("is-open");
       chevron.addClass("is-open");
@@ -331,7 +331,7 @@ export class SettingsTab extends PluginSettingTab {
 
     new Setting(containerEl)
       .setName("导出目录")
-      .setDesc("导出批阅文件的保存位置（vault 相对路径）")
+      .setDesc("导出批阅文件的保存位置（vault 相对路径）。默认隐藏目录，导出后自动在 Finder 中打开")
       .addText((t) =>
         t
           .setValue(this.plugin.settings.exportDir)
@@ -373,32 +373,32 @@ export class SettingsTab extends PluginSettingTab {
 
     // --- Detected agents as cards ---
     const agentResults: AgentInfo[] = detectAgents(PRESET_RULES);
-    const detectedWrap = containerEl.createDiv({ cls: "mae-agent-cards" });
+    const detectedWrap = containerEl.createDiv({ cls: "prm-agent-cards" });
 
     for (const info of agentResults) {
       const card = detectedWrap.createDiv({
-        cls: `mae-agent-card ${info.installed ? "installed" : "not-installed"}`,
+        cls: `prm-agent-card ${info.installed ? "installed" : "not-installed"}`,
       });
 
       // Avatar
-      const avatar = card.createDiv({ cls: "mae-agent-card-avatar" });
+      const avatar = card.createDiv({ cls: "prm-agent-card-avatar" });
       avatar.setText(info.rule.label.charAt(0));
 
       // Info
-      const infoEl = card.createDiv({ cls: "mae-agent-card-info" });
-      const nameRow = infoEl.createDiv({ cls: "mae-agent-card-name-row" });
-      nameRow.createDiv({ cls: "mae-agent-card-name", text: info.rule.label });
+      const infoEl = card.createDiv({ cls: "prm-agent-card-info" });
+      const nameRow = infoEl.createDiv({ cls: "prm-agent-card-name-row" });
+      nameRow.createDiv({ cls: "prm-agent-card-name", text: info.rule.label });
       const badge = nameRow.createDiv({
-        cls: `mae-agent-card-badge ${info.installed ? "installed" : "missing"}`,
+        cls: `prm-agent-card-badge ${info.installed ? "installed" : "missing"}`,
         text: info.installed ? "已安装" : "未安装",
       });
 
       if (info.rule.vendor) {
-        infoEl.createDiv({ cls: "mae-agent-card-vendor", text: info.rule.vendor });
+        infoEl.createDiv({ cls: "prm-agent-card-vendor", text: info.rule.vendor });
       }
       if (!info.installed) {
         infoEl.createDiv({
-          cls: "mae-agent-card-hint",
+          cls: "prm-agent-card-hint",
           text: `安装：${info.rule.installHint}`,
         });
       }
@@ -422,10 +422,10 @@ export class SettingsTab extends PluginSettingTab {
     const customRules = ruleStore.getCustomRules();
 
     // Sub-section header
-    const ruleHeader = containerEl.createDiv({ cls: "mae-settings-sub-header" });
-    ruleHeader.createDiv({ cls: "mae-settings-sub-title", text: "自定义命令规则" });
+    const ruleHeader = containerEl.createDiv({ cls: "prm-settings-sub-header" });
+    ruleHeader.createDiv({ cls: "prm-settings-sub-title", text: "自定义命令规则" });
     const addBtn = ruleHeader.createEl("button", {
-      cls: "mae-settings-sub-btn",
+      cls: "prm-settings-sub-btn",
       text: "+ 添加",
     });
     addBtn.onclick = async () => {
@@ -449,20 +449,20 @@ export class SettingsTab extends PluginSettingTab {
 
     if (customRules.length === 0) {
       containerEl.createDiv({
-        cls: "mae-settings-empty",
+        cls: "prm-settings-empty",
         text: "暂无自定义规则，点击上方「+ 添加」按钮创建。",
       });
     } else {
-      const ruleCards = containerEl.createDiv({ cls: "mae-rule-cards" });
+      const ruleCards = containerEl.createDiv({ cls: "prm-rule-cards" });
       for (const rule of customRules) {
         this.renderCustomRuleCard(ruleCards, rule);
       }
     }
 
     // Available variables help
-    const varDetails = containerEl.createEl("details", { cls: "mae-settings-var-details" });
+    const varDetails = containerEl.createEl("details", { cls: "prm-settings-var-details" });
     varDetails.createEl("summary", { text: "可用模板变量参考" });
-    const varTable = varDetails.createEl("table", { cls: "mae-settings-var-table" });
+    const varTable = varDetails.createEl("table", { cls: "prm-settings-var-table" });
     const vars = [
       ["{{vaultPath}}", "Vault 根目录绝对路径"],
       ["{{instructionFile}}", "生成的批注指令文件路径"],
@@ -478,21 +478,21 @@ export class SettingsTab extends PluginSettingTab {
   }
 
   private renderCustomRuleCard(containerEl: HTMLElement, rule: CommandRule): void {
-    const card = containerEl.createDiv({ cls: "mae-rule-card" });
+    const card = containerEl.createDiv({ cls: "prm-rule-card" });
 
     // Left: info
-    const info = card.createDiv({ cls: "mae-rule-card-info" });
-    info.createDiv({ cls: "mae-rule-card-label", text: rule.label });
-    const meta = info.createDiv({ cls: "mae-rule-card-meta" });
+    const info = card.createDiv({ cls: "prm-rule-card-info" });
+    info.createDiv({ cls: "prm-rule-card-label", text: rule.label });
+    const meta = info.createDiv({ cls: "prm-rule-card-meta" });
     meta.createSpan({ text: `检测: ${rule.detectCmd}` });
     // Template preview (truncate)
     const tpl = rule.template.length > 60 ? rule.template.slice(0, 57) + "…" : rule.template;
-    const tplSpan = meta.createSpan({ cls: "mae-rule-card-template" });
+    const tplSpan = meta.createSpan({ cls: "prm-rule-card-template" });
     tplSpan.setText(`模板: ${tpl}`);
 
     // Right: delete button
     const delBtn = card.createEl("button", {
-      cls: "mae-rule-card-del",
+      cls: "prm-rule-card-del",
       text: "删除",
     });
     delBtn.onclick = async () => {
@@ -541,7 +541,7 @@ export class SettingsTab extends PluginSettingTab {
             await this.plugin.saveSettings();
           });
         t.inputEl.type = "password";
-        t.inputEl.addClass("mae-api-key-input");
+        t.inputEl.addClass("prm-api-key-input");
 
         // Toggle visibility button
         const inputParent = t.inputEl.parentElement;
@@ -549,7 +549,7 @@ export class SettingsTab extends PluginSettingTab {
           inputParent.style.position = "relative";
         }
         const toggleBtn = inputParent?.createEl("button", {
-          cls: "mae-api-key-toggle",
+          cls: "prm-api-key-toggle",
         });
         if (toggleBtn) {
           setIcon(toggleBtn, "eye");

@@ -1,6 +1,6 @@
 {
-  "id": "multiaiedit",
-  "name": "MultiAIEdit",
+  "id": "promptuary",
+  "name": "Promptuary",
   "version": "0.2.3",
   "minAppVersion": "1.4.0",
   "description": "阅读时高亮/记笔记，批阅时快速留下修改意见，一键导出给外部 AI 或 Agent 执行修改。",

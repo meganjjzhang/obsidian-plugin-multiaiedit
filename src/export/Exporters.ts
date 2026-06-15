@@ -10,7 +10,7 @@ const TOKEN_WARN = 100_000;
 
 export interface ExportOptions {
   includeReadingNotes: boolean; // §4.5: default false
-  exportDir: string; // e.g. ".multiaiedit/exports"
+  exportDir: string; // e.g. ".promptuary/exports"
 }
 
 /**
@@ -163,15 +163,16 @@ export class ReviewExporter {
     }
     const stamp = new Date().toISOString().replace(/[:.]/g, "-").slice(0, 19);
     const target = `${this.exportDir}/${fileName}-${stamp}.md`;
-    // Use vault.create() so the file is immediately indexed in Vault
-    const created = await this.app.vault.create(target, md);
+    // Use adapter.write() instead of vault.create() — hidden dirs (.promptuary)
+    // are not indexed by Vault, so vault.create() returns null.
+    await adapter.write(target, md);
     const tokens = estimateTokens(md);
     if (tokens > TOKEN_WARN) {
       new Notice(`已导出（约 ${tokens} tokens，建议分段处理）`);
     } else {
       new Notice(`已导出（约 ${tokens} tokens）`);
     }
-    return created.path;
+    return target;
   }
 }
 

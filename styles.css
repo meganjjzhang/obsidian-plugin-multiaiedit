@@ -1,5 +1,5 @@
 /* ============================================================
- * MultiAIEdit — visual styles
+ * Promptuary — visual styles
  * 设计参考：design/demo-interactive.html
  *
  * 取色策略：尽量走 Obsidian 的 CSS 变量以同时适配亮/暗主题；
@@ -10,9 +10,9 @@
 /* 字体：设计稿主体 DM Sans，引用与代码段 JetBrains Mono。
  * Obsidian 自带 var(--font-monospace) 与 var(--font-interface)，
  * 这里仅在引用框内强制 mono，UI 本身跟随 Obsidian 主题。 */
-.multiaiedit-popover,
-.multiaiedit-bottom-toolbar,
-.multiaiedit-sidebar {
+.promptuary-popover,
+.promptuary-bottom-toolbar,
+.promptuary-sidebar {
   font-family: var(--font-interface, "DM Sans", system-ui, sans-serif);
 }
 
@@ -21,69 +21,69 @@
  * ============================================================ */
 
 /* 高亮：低饱和背景 + 同色下划线（从设计稿 .hl-* 复刻） */
-.cm-multiaiedit-highlight {
+.cm-promptuary-highlight {
   border-radius: 2px;
   padding: 0;
   border-bottom: 1px solid transparent;
 }
-.cm-multiaiedit-highlight-yellow {
+.cm-promptuary-highlight-yellow {
   background-color: rgba(250, 204, 21, 0.18) !important;
   border-bottom-color: rgba(250, 204, 21, 0.40);
 }
-.cm-multiaiedit-highlight-blue {
+.cm-promptuary-highlight-blue {
   background-color: rgba(96, 165, 250, 0.18) !important;
   border-bottom-color: rgba(96, 165, 250, 0.40);
 }
-.cm-multiaiedit-highlight-green {
+.cm-promptuary-highlight-green {
   background-color: rgba(74, 222, 128, 0.18) !important;
   border-bottom-color: rgba(74, 222, 128, 0.40);
 }
-.cm-multiaiedit-highlight-purple {
+.cm-promptuary-highlight-purple {
   background-color: rgba(192, 132, 252, 0.18) !important;
   border-bottom-color: rgba(192, 132, 252, 0.40);
 }
 
-.theme-dark .cm-multiaiedit-highlight-yellow {
+.theme-dark .cm-promptuary-highlight-yellow {
   background-color: rgba(250, 204, 21, 0.15) !important;
   border-bottom-color: rgba(250, 204, 21, 0.30);
 }
-.theme-dark .cm-multiaiedit-highlight-blue {
+.theme-dark .cm-promptuary-highlight-blue {
   background-color: rgba(96, 165, 250, 0.15) !important;
   border-bottom-color: rgba(96, 165, 250, 0.30);
 }
-.theme-dark .cm-multiaiedit-highlight-green {
+.theme-dark .cm-promptuary-highlight-green {
   background-color: rgba(74, 222, 128, 0.15) !important;
   border-bottom-color: rgba(74, 222, 128, 0.30);
 }
-.theme-dark .cm-multiaiedit-highlight-purple {
+.theme-dark .cm-promptuary-highlight-purple {
   background-color: rgba(192, 132, 252, 0.15) !important;
   border-bottom-color: rgba(192, 132, 252, 0.30);
 }
 
 /* 批阅：橙色（设计稿 .hl-review） */
-.cm-multiaiedit-review {
+.cm-promptuary-review {
   background-color: rgba(251, 146, 60, 0.18) !important;
   border-bottom: 1px solid rgba(251, 146, 60, 0.40);
   border-radius: 2px;
 }
-.theme-dark .cm-multiaiedit-review {
+.theme-dark .cm-promptuary-review {
   background-color: rgba(251, 146, 60, 0.15) !important;
   border-bottom-color: rgba(251, 146, 60, 0.30);
 }
 
-.cm-multiaiedit-strike {
+.cm-promptuary-strike {
   text-decoration: line-through;
   text-decoration-color: rgba(251, 146, 60, 0.65);
   text-decoration-thickness: 1.5px;
 }
 
-.cm-multiaiedit-fuzzy {
+.cm-promptuary-fuzzy {
   outline: 1px dashed var(--text-warning);
   outline-offset: -1px;
 }
 
 /* auto-healed: subtle blue left border to indicate repaired position */
-.cm-multiaiedit-auto-healed {
+.cm-promptuary-auto-healed {
   border-left: 2px solid rgba(96, 165, 250, 0.45);
   margin-left: -2px;
 }
@@ -94,7 +94,7 @@
  *    纵向布局：模式胶囊 + 按钮行 + Note 展开区
  * ============================================================ */
 
-.multiaiedit-popover {
+.promptuary-popover {
   position: fixed;
   z-index: 999;
   background: var(--background-primary);
@@ -106,20 +106,20 @@
   gap: 4px;
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18), 0 2px 4px rgba(0, 0, 0, 0.08);
   font-size: 12px;
-  animation: mae-popover-fade-in 0.15s ease-out;
+  animation: prm-popover-fade-in 0.15s ease-out;
   min-width: 220px;
 }
-.theme-dark .multiaiedit-popover {
+.theme-dark .promptuary-popover {
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), 0 2px 4px rgba(0, 0, 0, 0.25);
 }
 
-@keyframes mae-popover-fade-in {
+@keyframes prm-popover-fade-in {
   from { opacity: 0; transform: translateY(4px); }
   to   { opacity: 1; transform: translateY(0); }
 }
 
 /* 阅读浮窗的 4 色圆点（直径 16px，hover 放大，active 环） */
-.multiaiedit-popover .mae-color {
+.promptuary-popover .prm-color {
   width: 16px;
   height: 16px;
   border-radius: 50%;
@@ -130,34 +130,34 @@
   outline: 2px solid transparent;
   outline-offset: 1px;
 }
-.multiaiedit-popover .mae-color.yellow {
+.promptuary-popover .prm-color.yellow {
   background: rgba(250, 204, 21, 0.75);
   border-color: rgba(250, 204, 21, 0.55);
 }
-.multiaiedit-popover .mae-color.blue {
+.promptuary-popover .prm-color.blue {
   background: rgba(96, 165, 250, 0.75);
   border-color: rgba(96, 165, 250, 0.55);
 }
-.multiaiedit-popover .mae-color.green {
+.promptuary-popover .prm-color.green {
   background: rgba(74, 222, 128, 0.75);
   border-color: rgba(74, 222, 128, 0.55);
 }
-.multiaiedit-popover .mae-color.purple {
+.promptuary-popover .prm-color.purple {
   background: rgba(192, 132, 252, 0.75);
   border-color: rgba(192, 132, 252, 0.55);
 }
-.multiaiedit-popover .mae-color:hover {
+.promptuary-popover .prm-color:hover {
   transform: scale(1.15);
 }
 /* 颜色选中态：白色外环 */
-.multiaiedit-popover .mae-color.active.yellow  { outline-color: rgba(250, 204, 21, 0.90); }
-.multiaiedit-popover .mae-color.active.blue    { outline-color: rgba(96, 165, 250, 0.90); }
-.multiaiedit-popover .mae-color.active.green   { outline-color: rgba(74, 222, 128, 0.90); }
-.multiaiedit-popover .mae-color.active.purple  { outline-color: rgba(192, 132, 252, 0.90); }
+.promptuary-popover .prm-color.active.yellow  { outline-color: rgba(250, 204, 21, 0.90); }
+.promptuary-popover .prm-color.active.blue    { outline-color: rgba(96, 165, 250, 0.90); }
+.promptuary-popover .prm-color.active.green   { outline-color: rgba(74, 222, 128, 0.90); }
+.promptuary-popover .prm-color.active.purple  { outline-color: rgba(192, 132, 252, 0.90); }
 
 
 /* 浮窗内的分割线（圆点和按钮之间） */
-.multiaiedit-popover .mae-divider {
+.promptuary-popover .prm-divider {
   width: 1px;
   height: 16px;
   background: var(--background-modifier-border);
@@ -166,7 +166,7 @@
 }
 
 /* 浮窗按钮：扁平 chip 风格 */
-.multiaiedit-popover button {
+.promptuary-popover button {
   background: transparent;
   border: none;
   border-radius: 4px;
@@ -177,13 +177,13 @@
   font-weight: 500;
   transition: background 0.12s, color 0.12s;
 }
-.multiaiedit-popover button:hover {
+.promptuary-popover button:hover {
   background: var(--background-modifier-hover);
   color: var(--text-normal);
 }
 
 /* 删除线 S 按钮（橙色方块，设计稿 #btn-strikethrough） */
-.multiaiedit-popover .mae-strike-btn {
+.promptuary-popover .prm-strike-btn {
   width: 26px;
   height: 26px;
   border-radius: 6px;
@@ -199,13 +199,13 @@
   justify-content: center;
   flex-shrink: 0;
 }
-.multiaiedit-popover .mae-strike-btn:hover {
+.promptuary-popover .prm-strike-btn:hover {
   background: rgba(251, 146, 60, 0.25);
   color: rgba(251, 146, 60, 1);
 }
 
 /* 提交按钮（紫色回车按钮，设计稿 #btn-submit-review） */
-.multiaiedit-popover .mae-submit-btn {
+.promptuary-popover .prm-submit-btn {
   width: 26px;
   height: 26px;
   border-radius: 6px;
@@ -218,12 +218,12 @@
   flex-shrink: 0;
   padding: 0;
 }
-.multiaiedit-popover .mae-submit-btn:hover {
+.promptuary-popover .prm-submit-btn:hover {
   background: rgba(167, 139, 250, 0.25);
 }
 
 /* 浮窗内模式切换胶囊（紧凑版） */
-.mae-popover-capsule {
+.prm-popover-capsule {
   display: flex;
   background: var(--background-secondary);
   border-radius: 4px;
@@ -233,7 +233,7 @@
   box-sizing: border-box;
   align-self: center;
 }
-.mae-popover-capsule button {
+.prm-popover-capsule button {
   background: transparent;
   border: none;
   box-shadow: none;
@@ -248,21 +248,21 @@
   line-height: 1.4;
   transition: background 0.15s, color 0.15s;
 }
-.mae-popover-capsule button:hover {
+.prm-popover-capsule button:hover {
   color: var(--text-normal);
 }
-.mae-popover-capsule button.active {
+.prm-popover-capsule button.active {
   background: var(--background-primary) !important;
   color: var(--text-normal);
   font-weight: 600;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
 }
-.theme-dark .mae-popover-capsule button.active {
+.theme-dark .prm-popover-capsule button.active {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.20);
 }
 
 /* 浮窗标题行：左侧标题 + 右侧模式胶囊 */
-.mae-popover-title-row {
+.prm-popover-title-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -271,7 +271,7 @@
   border-bottom: 1px solid var(--background-modifier-border);
   margin-bottom: 2px;
 }
-.mae-popover-title {
+.prm-popover-title {
   font-size: 11px;
   font-weight: 600;
   color: var(--text-muted);
@@ -281,15 +281,15 @@
 }
 
 /* 浮窗按钮行（颜色圆点 + 按钮横排） */
-.mae-popover-actions {
+.prm-popover-actions {
   display: flex;
   align-items: center;
   gap: 6px;
 }
 
 /* Delete 按钮（批阅模式，橙色，可 toggle） */
-.multiaiedit-popover .mae-delete-btn,
-.multiaiedit-bottom-toolbar .mae-delete-btn {
+.promptuary-popover .prm-delete-btn,
+.promptuary-bottom-toolbar .prm-delete-btn {
   background: rgba(251, 146, 60, 0.08);
   border: 1px solid rgba(251, 146, 60, 0.20);
   color: rgba(251, 146, 60, 0.7);
@@ -301,23 +301,23 @@
   font-family: var(--font-monospace);
   transition: background 0.12s, border-color 0.12s, color 0.12s;
 }
-.multiaiedit-popover .mae-delete-btn:hover,
-.multiaiedit-bottom-toolbar .mae-delete-btn:hover {
+.promptuary-popover .prm-delete-btn:hover,
+.promptuary-bottom-toolbar .prm-delete-btn:hover {
   background: rgba(251, 146, 60, 0.16);
   border-color: rgba(251, 146, 60, 0.35);
   color: rgba(251, 146, 60, 0.9);
 }
 /* Delete 按钮 toggle 活跃态 */
-.multiaiedit-popover .mae-delete-btn.active,
-.multiaiedit-bottom-toolbar .mae-delete-btn.active {
+.promptuary-popover .prm-delete-btn.active,
+.promptuary-bottom-toolbar .prm-delete-btn.active {
   background: rgba(251, 146, 60, 0.20);
   border-color: rgba(251, 146, 60, 0.45);
   color: rgba(251, 146, 60, 1);
 }
 
 /* ✓ 确认按钮（Delete toggle 激活时出现） */
-.multiaiedit-popover .mae-review-confirm-btn,
-.multiaiedit-bottom-toolbar .mae-review-confirm-btn {
+.promptuary-popover .prm-review-confirm-btn,
+.promptuary-bottom-toolbar .prm-review-confirm-btn {
   background: rgba(251, 146, 60, 0.15);
   border: 1px solid rgba(251, 146, 60, 0.35);
   color: rgba(251, 146, 60, 1);
@@ -329,13 +329,13 @@
   font-family: var(--font-monospace);
   transition: background 0.12s;
 }
-.multiaiedit-popover .mae-review-confirm-btn:hover,
-.multiaiedit-bottom-toolbar .mae-review-confirm-btn:hover {
+.promptuary-popover .prm-review-confirm-btn:hover,
+.promptuary-bottom-toolbar .prm-review-confirm-btn:hover {
   background: rgba(251, 146, 60, 0.28);
 }
 
 /* Note 展开区 header 中的"删除"标记 */
-.mae-strike-indicator {
+.prm-strike-indicator {
   font-size: 9px;
   font-weight: 600;
   font-family: var(--font-monospace);
@@ -347,8 +347,8 @@
 }
 
 /* Note 按钮（批阅模式 + 阅读模式共用） */
-.multiaiedit-popover .mae-note-btn,
-.multiaiedit-bottom-toolbar .mae-note-btn {
+.promptuary-popover .prm-note-btn,
+.promptuary-bottom-toolbar .prm-note-btn {
   background: transparent;
   border: 1px solid var(--background-modifier-border);
   color: var(--text-muted);
@@ -360,76 +360,76 @@
   font-family: var(--font-monospace);
   transition: background 0.12s, color 0.12s;
 }
-.multiaiedit-popover .mae-note-btn:hover,
-.multiaiedit-bottom-toolbar .mae-note-btn:hover {
+.promptuary-popover .prm-note-btn:hover,
+.promptuary-bottom-toolbar .prm-note-btn:hover {
   background: var(--background-modifier-hover);
   color: var(--text-normal);
 }
 
 /* ===== Note 展开区 ===== */
-.mae-popover-note-area {
+.prm-popover-note-area {
   margin-top: 2px;
   padding-top: 6px;
   border-top: 1px solid var(--background-modifier-border);
   display: flex;
   flex-direction: column;
   gap: 6px;
-  animation: mae-note-area-expand 0.15s ease-out;
+  animation: prm-note-area-expand 0.15s ease-out;
 }
-@keyframes mae-note-area-expand {
+@keyframes prm-note-area-expand {
   from { opacity: 0; max-height: 0; }
   to   { opacity: 1; max-height: 120px; }
 }
 
 /* Note 展开区 header：颜色指示 + 分割线 + 标签 */
-.mae-popover-note-header {
+.prm-popover-note-header {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.mae-note-dot {
+.prm-note-dot {
   width: 12px;
   height: 12px;
   border-radius: 50%;
   flex-shrink: 0;
 }
-.mae-note-dot.yellow { background: rgba(250, 204, 21, 0.65); border: 1px solid rgba(250, 204, 21, 0.45); }
-.mae-note-dot.blue   { background: rgba(96, 165, 250, 0.65); border: 1px solid rgba(96, 165, 250, 0.45); }
-.mae-note-dot.green  { background: rgba(74, 222, 128, 0.65); border: 1px solid rgba(74, 222, 128, 0.45); }
-.mae-note-dot.purple { background: rgba(192, 132, 252, 0.65); border: 1px solid rgba(192, 132, 252, 0.45); }
-.mae-note-dot.orange { background: rgba(251, 146, 60, 0.65); border: 1px solid rgba(251, 146, 60, 0.45); }
+.prm-note-dot.yellow { background: rgba(250, 204, 21, 0.65); border: 1px solid rgba(250, 204, 21, 0.45); }
+.prm-note-dot.blue   { background: rgba(96, 165, 250, 0.65); border: 1px solid rgba(96, 165, 250, 0.45); }
+.prm-note-dot.green  { background: rgba(74, 222, 128, 0.65); border: 1px solid rgba(74, 222, 128, 0.45); }
+.prm-note-dot.purple { background: rgba(192, 132, 252, 0.65); border: 1px solid rgba(192, 132, 252, 0.45); }
+.prm-note-dot.orange { background: rgba(251, 146, 60, 0.65); border: 1px solid rgba(251, 146, 60, 0.45); }
 
-.mae-popover-note-header .mae-divider {
+.prm-popover-note-header .prm-divider {
   width: 1px;
   height: 12px;
   background: var(--background-modifier-border);
   flex-shrink: 0;
 }
 
-.mae-note-label {
+.prm-note-label {
   font-size: 11px;
   font-weight: 500;
   font-family: var(--font-monospace);
   padding: 1px 6px;
   border-radius: 999px;
 }
-.mae-note-label.yellow { background: rgba(250, 204, 21, 0.10); color: rgba(250, 204, 21, 0.80); }
-.mae-note-label.blue   { background: rgba(96, 165, 250, 0.10); color: rgba(96, 165, 250, 0.80); }
-.mae-note-label.green  { background: rgba(74, 222, 128, 0.10); color: rgba(74, 222, 128, 0.80); }
-.mae-note-label.purple { background: rgba(192, 132, 252, 0.10); color: rgba(192, 132, 252, 0.80); }
-.mae-note-label.orange { background: rgba(251, 146, 60, 0.10); color: rgba(251, 146, 60, 0.80); }
+.prm-note-label.yellow { background: rgba(250, 204, 21, 0.10); color: rgba(250, 204, 21, 0.80); }
+.prm-note-label.blue   { background: rgba(96, 165, 250, 0.10); color: rgba(96, 165, 250, 0.80); }
+.prm-note-label.green  { background: rgba(74, 222, 128, 0.10); color: rgba(74, 222, 128, 0.80); }
+.prm-note-label.purple { background: rgba(192, 132, 252, 0.10); color: rgba(192, 132, 252, 0.80); }
+.prm-note-label.orange { background: rgba(251, 146, 60, 0.10); color: rgba(251, 146, 60, 0.80); }
 
 /* Note 展开区 input */
-.mae-popover-note-input-wrap {
+.prm-popover-note-input-wrap {
   border: 1px solid var(--background-modifier-border);
   border-radius: 6px;
   background: var(--background-secondary);
   transition: border-color 0.15s;
 }
-.mae-popover-note-input-wrap:focus-within {
+.prm-popover-note-input-wrap:focus-within {
   border-color: rgba(167, 139, 250, 0.45);
 }
-.mae-popover-note-input {
+.prm-popover-note-input {
   width: 100%;
   background: transparent;
   border: none;
@@ -439,17 +439,17 @@
   padding: 6px 8px;
   outline: none;
 }
-.mae-popover-note-input::placeholder {
+.prm-popover-note-input::placeholder {
   color: var(--text-muted);
   opacity: 0.6;
 }
 
 /* Note 展开区 footer（右对齐 Save 按钮） */
-.mae-popover-note-footer {
+.prm-popover-note-footer {
   display: flex;
   justify-content: flex-end;
 }
-.mae-popover-note-save {
+.prm-popover-note-save {
   background: rgba(167, 139, 250, 0.12);
   border: 1px solid rgba(167, 139, 250, 0.25);
   color: rgba(167, 139, 250, 0.9);
@@ -461,13 +461,13 @@
   font-family: var(--font-monospace);
   transition: background 0.12s, border-color 0.12s;
 }
-.mae-popover-note-save:hover {
+.prm-popover-note-save:hover {
   background: rgba(167, 139, 250, 0.22);
   border-color: rgba(167, 139, 250, 0.40);
 }
 
 /* 输入框（批阅模式 #review-input — 保留旧行式兼容） */
-.multiaiedit-popover input[type="text"] {
+.promptuary-popover input[type="text"] {
   flex: 1;
   min-width: 200px;
   padding: 5px 8px;
@@ -480,10 +480,10 @@
   outline: none;
   transition: border-color 0.15s;
 }
-.multiaiedit-popover input[type="text"]:focus {
+.promptuary-popover input[type="text"]:focus {
   border-color: rgba(167, 139, 250, 0.55);
 }
-.multiaiedit-popover input[type="text"]::placeholder {
+.promptuary-popover input[type="text"]::placeholder {
   color: var(--text-muted);
   opacity: 0.7;
 }
@@ -491,7 +491,7 @@
 /* ============================================================
  * 3. 移动端底部工具栏
  * ============================================================ */
-.multiaiedit-bottom-toolbar {
+.promptuary-bottom-toolbar {
   position: fixed;
   left: 0;
   right: 0;
@@ -506,23 +506,23 @@
   flex-wrap: wrap;
   box-shadow: 0 -4px 16px rgba(0, 0, 0, 0.16);
 }
-.multiaiedit-bottom-toolbar .mae-color {
+.promptuary-bottom-toolbar .prm-color {
   width: 22px;
   height: 22px;
   border-radius: 50%;
   cursor: pointer;
   flex-shrink: 0;
 }
-.multiaiedit-bottom-toolbar .mae-color.yellow { background: rgba(250, 204, 21, 0.65); }
-.multiaiedit-bottom-toolbar .mae-color.blue   { background: rgba(96, 165, 250, 0.65); }
-.multiaiedit-bottom-toolbar .mae-color.green  { background: rgba(74, 222, 128, 0.65); }
-.multiaiedit-bottom-toolbar .mae-color.purple { background: rgba(192, 132, 252, 0.65); }
+.promptuary-bottom-toolbar .prm-color.yellow { background: rgba(250, 204, 21, 0.65); }
+.promptuary-bottom-toolbar .prm-color.blue   { background: rgba(96, 165, 250, 0.65); }
+.promptuary-bottom-toolbar .prm-color.green  { background: rgba(74, 222, 128, 0.65); }
+.promptuary-bottom-toolbar .prm-color.purple { background: rgba(192, 132, 252, 0.65); }
 
 /* ============================================================
  * 4. 侧边栏
  * ============================================================ */
 
-.multiaiedit-sidebar {
+.promptuary-sidebar {
   padding: 0;
   display: flex;
   flex-direction: column;
@@ -532,23 +532,23 @@
 }
 
 /* 4.0 Header (fixed top) */
-.mae-sidebar-header {
+.prm-sidebar-header {
   padding: 14px 12px 0;
   flex-shrink: 0;
 }
 
-.mae-header-row {
+.prm-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   margin-bottom: 10px;
 }
-.mae-header-left {
+.prm-header-left {
   display: flex;
   align-items: center;
   gap: 6px;
 }
-.mae-header-icon {
+.prm-header-icon {
   width: 18px;
   height: 18px;
   border-radius: 4px;
@@ -560,14 +560,14 @@
   justify-content: center;
   flex-shrink: 0;
 }
-.mae-header-title {
+.prm-header-title {
   font-size: 12px;
   font-weight: 600;
   font-family: var(--font-monospace);
   color: var(--text-normal);
   letter-spacing: 0.01em;
 }
-.mae-header-settings {
+.prm-header-settings {
   background: transparent;
   border: none;
   cursor: pointer;
@@ -577,13 +577,13 @@
   border-radius: 4px;
   transition: color 0.15s, background 0.15s;
 }
-.mae-header-settings:hover {
+.prm-header-settings:hover {
   color: var(--text-normal);
   background: var(--background-modifier-hover);
 }
 
 /* 4.1 模式切换胶囊 — now inside header */
-.mae-mode-capsule {
+.prm-mode-capsule {
   display: flex;
   background: var(--background-secondary);
   border-radius: 8px;
@@ -592,7 +592,7 @@
   width: 100%;
   box-sizing: border-box;
 }
-.mae-mode-capsule button {
+.prm-mode-capsule button {
   flex: 1;
   background: transparent;
   border: none;
@@ -606,21 +606,21 @@
   font-family: var(--font-monospace);
   transition: background 0.15s, color 0.15s;
 }
-.mae-mode-capsule button:hover {
+.prm-mode-capsule button:hover {
   color: var(--text-normal);
 }
-.mae-mode-capsule button.active {
+.prm-mode-capsule button.active {
   background: var(--background-primary) !important;
   color: var(--text-normal);
   font-weight: 600;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
 }
-.theme-dark .mae-mode-capsule button.active {
+.theme-dark .prm-mode-capsule button.active {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.30);
 }
 
 /* 4.1b Scrollable content area */
-.mae-sidebar-content {
+.prm-sidebar-content {
   flex: 1;
   overflow-y: auto;
   padding: 10px 12px;
@@ -630,7 +630,7 @@
 }
 
 /* 4.1c Bottom action bar (fixed bottom) */
-.mae-sidebar-action-bar {
+.prm-sidebar-action-bar {
   flex-shrink: 0;
   border-top: 1px solid var(--background-modifier-border);
   background: var(--background-secondary);
@@ -640,11 +640,11 @@
   gap: 8px;
 }
 
-.mae-action-row {
+.prm-action-row {
   display: flex;
   gap: 6px;
 }
-.mae-action-btn {
+.prm-action-btn {
   flex: 1;
   display: flex;
   align-items: center;
@@ -663,52 +663,52 @@
   cursor: pointer;
   transition: all 0.15s;
 }
-.mae-action-btn:hover {
+.prm-action-btn:hover {
   border-color: var(--text-muted);
   opacity: 1;
 }
-.mae-action-btn:active {
+.prm-action-btn:active {
   transform: scale(0.98);
 }
-.mae-action-btn::before {
+.prm-action-btn::before {
   font-size: 13px;
   opacity: 0.7;
 }
 /* Action row — container query for adaptive button labels */
-.mae-action-row {
+.prm-action-row {
   container-type: inline-size;
 }
 /* Wide: icon + short label + long label */
-.mae-action-short,
-.mae-action-long {
+.prm-action-short,
+.prm-action-long {
   transition: opacity 0.15s;
 }
 /* Medium (≤340px): hide long label, show icon + short label */
 @container (max-width: 260px) {
-  .mae-action-row .mae-action-long { display: none; }
+  .prm-action-row .prm-action-long { display: none; }
 }
 /* Narrow (≤260px): hide all labels, icon only */
 @container (max-width: 200px) {
-  .mae-action-row .mae-action-short { display: none; }
-  .mae-action-row .mae-action-btn { padding: 10px 6px; }
+  .prm-action-row .prm-action-short { display: none; }
+  .prm-action-row .prm-action-btn { padding: 10px 6px; }
 }
 /* "…" more button — icon only, fixed small width */
-.mae-more-btn {
+.prm-more-btn {
   flex: 0 0 auto !important;
   min-width: 36px;
   max-width: 36px;
   padding: 10px 6px !important;
 }
-.mae-action-btn.secondary {
+.prm-action-btn.secondary {
   background: var(--background-primary);
   color: var(--text-muted);
 }
-.mae-action-btn.secondary:hover {
+.prm-action-btn.secondary:hover {
   color: var(--text-normal);
 }
 
 /* Execute with Agent — purple CTA button */
-.mae-action-execute {
+.prm-action-execute {
   width: 100%;
   display: flex;
   align-items: center;
@@ -726,17 +726,17 @@
   cursor: pointer;
   transition: all 0.15s;
 }
-.mae-action-execute::before {
+.prm-action-execute::before {
   font-size: 15px;
 }
-.mae-action-execute:hover {
+.prm-action-execute:hover {
   background: rgba(167, 139, 250, 0.20);
   border-color: rgba(167, 139, 250, 0.35);
 }
-.mae-action-execute:active {
+.prm-action-execute:active {
   transform: scale(0.98);
 }
-.mae-action-execute:disabled {
+.prm-action-execute:disabled {
   opacity: 0.35;
   cursor: default;
 }
@@ -744,7 +744,7 @@
 /* Secondary tool row — smaller, subdued (reserved) */
 
 /* Status hint at bottom */
-.mae-action-status {
+.prm-action-status {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -754,36 +754,36 @@
   font-size: 10px;
   font-family: var(--font-monospace);
 }
-.mae-status-dot {
+.prm-status-dot {
   width: 5px;
   height: 5px;
   border-radius: 50%;
   background: rgba(74, 222, 128, 0.50);
   flex-shrink: 0;
 }
-.mae-status-dot-executing {
+.prm-status-dot-executing {
   background: rgba(167, 139, 250, 0.70);
-  animation: mae-pulse 1.2s ease-in-out infinite;
+  animation: prm-pulse 1.2s ease-in-out infinite;
 }
-@keyframes mae-pulse {
+@keyframes prm-pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.3; }
 }
 
 /* Executing state — subtle pulse on CTA button */
-.mae-action-execute.mae-executing {
-  animation: mae-btn-pulse 1.6s ease-in-out infinite;
+.prm-action-execute.prm-executing {
+  animation: prm-btn-pulse 1.6s ease-in-out infinite;
 }
-.mae-action-btn.mae-executing {
-  animation: mae-btn-pulse 1.6s ease-in-out infinite;
+.prm-action-btn.prm-executing {
+  animation: prm-btn-pulse 1.6s ease-in-out infinite;
 }
-@keyframes mae-btn-pulse {
+@keyframes prm-btn-pulse {
   0%, 100% { opacity: 0.85; }
   50% { opacity: 0.55; }
 }
 
 /* 4.2 横幅（baseline 漂移提示） */
-.mae-banner {
+.prm-banner {
   background: rgba(251, 146, 60, 0.10);
   color: var(--text-normal);
   border: 1px solid rgba(251, 146, 60, 0.30);
@@ -795,7 +795,7 @@
   justify-content: space-between;
   gap: 8px;
 }
-.mae-banner button {
+.prm-banner button {
   background: rgba(251, 146, 60, 0.15);
   border: 1px solid rgba(251, 146, 60, 0.40);
   color: rgba(251, 146, 60, 1);
@@ -806,14 +806,14 @@
   font-weight: 500;
   white-space: nowrap;
 }
-.mae-banner button:hover {
+.prm-banner button:hover {
   background: rgba(251, 146, 60, 0.25);
 }
 
-/* 4.3 工具栏样式已移至底部操作栏 (.mae-action-row / .mae-action-btn) */
+/* 4.3 工具栏样式已移至底部操作栏 (.prm-action-row / .prm-action-btn) */
 
 /* 4.4 卡片（设计稿核心元素） */
-.mae-card {
+.prm-card {
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
@@ -826,18 +826,18 @@
   position: relative;
   transition: border-color 0.15s, background 0.15s;
 }
-.mae-card:hover {
+.prm-card:hover {
   background: var(--background-modifier-hover);
 }
-.theme-dark .mae-card {
+.theme-dark .prm-card {
   background: rgba(255, 255, 255, 0.025);
 }
-.theme-dark .mae-card:hover {
+.theme-dark .prm-card:hover {
   background: rgba(255, 255, 255, 0.045);
 }
 
 /* 卡片左侧 2px 颜色条（设计稿 .w-0.5 self-stretch） */
-.mae-card::before {
+.prm-card::before {
   content: "";
   position: absolute;
   left: 0;
@@ -848,35 +848,35 @@
   background: var(--text-muted);
   opacity: 0.45;
 }
-.mae-card.color-yellow::before { background: rgba(250, 204, 21, 0.55); }
-.mae-card.color-blue::before   { background: rgba(96, 165, 250, 0.55); }
-.mae-card.color-green::before  { background: rgba(74, 222, 128, 0.55); }
-.mae-card.color-purple::before { background: rgba(192, 132, 252, 0.55); }
-.mae-card.color-orange::before { background: rgba(251, 146, 60, 0.55); }
+.prm-card.color-yellow::before { background: rgba(250, 204, 21, 0.55); }
+.prm-card.color-blue::before   { background: rgba(96, 165, 250, 0.55); }
+.prm-card.color-green::before  { background: rgba(74, 222, 128, 0.55); }
+.prm-card.color-purple::before { background: rgba(192, 132, 252, 0.55); }
+.prm-card.color-orange::before { background: rgba(251, 146, 60, 0.55); }
 
-.mae-card:hover.color-yellow { border-color: rgba(250, 204, 21, 0.30); }
-.mae-card:hover.color-blue   { border-color: rgba(96, 165, 250, 0.30); }
-.mae-card:hover.color-green  { border-color: rgba(74, 222, 128, 0.30); }
-.mae-card:hover.color-purple { border-color: rgba(192, 132, 252, 0.30); }
-.mae-card:hover.color-orange { border-color: rgba(251, 146, 60, 0.30); }
+.prm-card:hover.color-yellow { border-color: rgba(250, 204, 21, 0.30); }
+.prm-card:hover.color-blue   { border-color: rgba(96, 165, 250, 0.30); }
+.prm-card:hover.color-green  { border-color: rgba(74, 222, 128, 0.30); }
+.prm-card:hover.color-purple { border-color: rgba(192, 132, 252, 0.30); }
+.prm-card:hover.color-orange { border-color: rgba(251, 146, 60, 0.30); }
 
 /* fuzzy / auto-healed / drifted 状态 */
-.mae-card.fuzzy::before { background: var(--text-warning); }
-.mae-card.auto-healed::before { background: rgba(96, 165, 250, 0.55); }
-.mae-card.drifted {
+.prm-card.fuzzy::before { background: var(--text-warning); }
+.prm-card.auto-healed::before { background: rgba(96, 165, 250, 0.55); }
+.prm-card.drifted {
   opacity: 0.55;
 }
-.mae-card.drifted::before { background: var(--background-modifier-error); }
+.prm-card.drifted::before { background: var(--background-modifier-error); }
 
 /* ---- Review card layout (design ref: icon badge + orange quote + purple text) ---- */
-.mae-card-layout {
+.prm-card-layout {
   display: flex;
   align-items: flex-start;
   gap: 8px;
 }
 
 /* Icon badge: small square with S (strikethrough) or ✎ (review) */
-.mae-card-badge {
+.prm-card-badge {
   width: 20px;
   height: 20px;
   border-radius: 5px;
@@ -889,20 +889,20 @@
   font-weight: 700;
   font-family: var(--font-monospace);
 }
-.mae-card-badge.strike {
+.prm-card-badge.strike {
   background: rgba(251, 146, 60, 0.12);
   border: 1px solid rgba(251, 146, 60, 0.20);
   color: rgba(251, 146, 60, 0.80);
   text-decoration: line-through;
   text-decoration-color: rgba(251, 146, 60, 0.50);
 }
-.mae-card-badge.review {
+.prm-card-badge.review {
   background: rgba(251, 146, 60, 0.12);
   border: 1px solid rgba(251, 146, 60, 0.20);
   color: rgba(251, 146, 60, 0.80);
 }
 
-.mae-card-body {
+.prm-card-body {
   flex: 1;
   min-width: 0;
   display: flex;
@@ -911,21 +911,21 @@
 }
 
 /* Orange quote block (original text with strikethrough) */
-.mae-quote-orange {
+.prm-quote-orange {
   background: rgba(251, 146, 60, 0.08);
   border-left: 2px solid rgba(251, 146, 60, 0.25);
 }
-.mae-quote-orange.strike {
+.prm-quote-orange.strike {
   text-decoration: line-through;
   text-decoration-color: rgba(251, 146, 60, 0.40);
   opacity: 0.55;
 }
-.theme-dark .mae-quote-orange {
+.theme-dark .prm-quote-orange {
   background: rgba(251, 146, 60, 0.06);
 }
 
 /* Review text block — aligned with reading note style (no purple bg) */
-.mae-text-purple {
+.prm-text-purple {
   background: transparent;
   border-left: none;
   color: var(--text-normal);
@@ -934,13 +934,13 @@
   font-size: 11.5px;
   line-height: 1.55;
 }
-.theme-dark .mae-text-purple {
+.theme-dark .prm-text-purple {
   background: transparent;
   color: var(--text-normal);
 }
 
 /* Status hint for review cards */
-.mae-card-status-hint {
+.prm-card-status-hint {
   font-size: 10px;
   color: var(--text-muted);
   opacity: 0.7;
@@ -948,7 +948,7 @@
 }
 
 /* 元信息（类型 chip + 漂移标记 + 删除按钮） */
-.mae-card-meta {
+.prm-card-meta {
   display: flex;
   align-items: center;
   gap: 5px;
@@ -956,16 +956,16 @@
   color: var(--text-muted);
 }
 /* spacer 把删除按钮推到右边 */
-.mae-card-meta-spacer {
+.prm-card-meta-spacer {
   flex: 1;
 }
 /* 内联状态文字 */
-.mae-card-status-inline {
+.prm-card-status-inline {
   font-size: 9px;
   opacity: 0.75;
 }
 /* 删除按钮（meta 行右侧，hover 才显色） */
-.mae-card-del-btn {
+.prm-card-del-btn {
   background: transparent;
   border: none;
   cursor: pointer;
@@ -978,15 +978,15 @@
   transition: opacity 0.15s, color 0.12s, background 0.12s;
   flex-shrink: 0;
 }
-.mae-card:hover .mae-card-del-btn {
+.prm-card:hover .prm-card-del-btn {
   opacity: 1;
 }
-.mae-card-del-btn:hover {
+.prm-card-del-btn:hover {
   color: var(--text-error);
   background: rgba(239, 68, 68, 0.10);
 }
 
-.mae-card-meta .mae-tag {
+.prm-card-meta .prm-tag {
   padding: 1px 6px;
   border-radius: 999px;
   background: var(--background-primary);
@@ -998,34 +998,34 @@
 }
 
 /* 类型标签按颜色着色 */
-.mae-card-meta .mae-tag.yellow {
+.prm-card-meta .prm-tag.yellow {
   background: rgba(250, 204, 21, 0.10);
   color: rgba(250, 204, 21, 0.85);
   border-color: rgba(250, 204, 21, 0.25);
 }
-.mae-card-meta .mae-tag.blue {
+.prm-card-meta .prm-tag.blue {
   background: rgba(96, 165, 250, 0.10);
   color: rgba(96, 165, 250, 0.85);
   border-color: rgba(96, 165, 250, 0.25);
 }
-.mae-card-meta .mae-tag.green {
+.prm-card-meta .prm-tag.green {
   background: rgba(74, 222, 128, 0.10);
   color: rgba(74, 222, 128, 0.85);
   border-color: rgba(74, 222, 128, 0.25);
 }
-.mae-card-meta .mae-tag.purple {
+.prm-card-meta .prm-tag.purple {
   background: rgba(192, 132, 252, 0.10);
   color: rgba(192, 132, 252, 0.85);
   border-color: rgba(192, 132, 252, 0.25);
 }
-.mae-card-meta .mae-tag.orange {
+.prm-card-meta .prm-tag.orange {
   background: rgba(251, 146, 60, 0.10);
   color: rgba(251, 146, 60, 0.85);
   border-color: rgba(251, 146, 60, 0.25);
 }
 
 /* 引用块：原文摘录（设计稿 .bg-quote-bg） */
-.mae-card-quote {
+.prm-card-quote {
   background: rgba(125, 125, 145, 0.08);
   border-radius: 4px;
   padding: 5px 8px;
@@ -1036,17 +1036,17 @@
   opacity: 0.85;
   word-break: break-word;
 }
-.theme-dark .mae-card-quote {
+.theme-dark .prm-card-quote {
   background: rgba(255, 255, 255, 0.04);
 }
-.mae-card-quote.strike {
+.prm-card-quote.strike {
   text-decoration: line-through;
   text-decoration-color: rgba(251, 146, 60, 0.55);
   opacity: 0.55;
 }
 
 /* 笔记 / 批阅文本（带前缀图标） */
-.mae-card-text {
+.prm-card-text {
   padding: 0 4px;
   font-size: 11.5px;
   line-height: 1.55;
@@ -1055,7 +1055,7 @@
   gap: 6px;
   align-items: flex-start;
 }
-.mae-card-text::before {
+.prm-card-text::before {
   content: "";
   width: 14px;
   height: 14px;
@@ -1069,13 +1069,13 @@
   mask-repeat: no-repeat;
   mask-size: contain;
 }
-.mae-card-text.review::before {
+.prm-card-text.review::before {
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");
   mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");
 }
 
 /* 文件名 / 行号（卡片底部） */
-.mae-card-source {
+.prm-card-source {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -1084,7 +1084,7 @@
   opacity: 0.65;
   font-family: var(--font-monospace);
 }
-.mae-card-source::before {
+.prm-card-source::before {
   content: "";
   width: 12px;
   height: 12px;
@@ -1100,7 +1100,7 @@
 }
 
 /* 空状态 */
-.mae-empty {
+.prm-empty {
   color: var(--text-muted);
   font-size: 12px;
   text-align: center;
@@ -1111,7 +1111,7 @@
 }
 
 /* 空状态占位图 */
-.mae-empty-state {
+.prm-empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1120,7 +1120,7 @@
   gap: 12px;
 }
 
-.mae-empty-state-img {
+.prm-empty-state-img {
   width: 96px;
   height: 96px;
   opacity: 0.55;
@@ -1128,7 +1128,7 @@
   flex-shrink: 0;
 }
 
-.mae-empty-state-text {
+.prm-empty-state-text {
   color: var(--text-muted);
   font-size: 12px;
   text-align: center;
@@ -1143,7 +1143,7 @@
  *    保留之前的样式，与新视觉对齐配色
  * ============================================================ */
 
-.mae-agent-buttons {
+.prm-agent-buttons {
   display: flex;
   align-items: center;
   gap: 6px;
@@ -1151,13 +1151,13 @@
   margin-top: 4px;
   width: 100%;
 }
-.mae-agent-label {
+.prm-agent-label {
   font-size: 11px;
   color: var(--text-muted);
   white-space: nowrap;
   font-family: var(--font-monospace);
 }
-.mae-agent-btn {
+.prm-agent-btn {
   background: var(--background-secondary) !important;
   color: var(--text-normal) !important;
   border: 1px solid var(--background-modifier-border) !important;
@@ -1168,15 +1168,15 @@
   white-space: nowrap;
   transition: all 0.15s;
 }
-.mae-agent-btn:hover {
+.prm-agent-btn:hover {
   background: var(--background-modifier-hover) !important;
   border-color: rgba(167, 139, 250, 0.40) !important;
 }
-.mae-agent-btn.not-installed {
+.prm-agent-btn.not-installed {
   opacity: 0.4;
   cursor: not-allowed;
 }
-.mae-agent-btn.secondary {
+.prm-agent-btn.secondary {
   background: transparent !important;
   border: 1px dashed var(--background-modifier-border) !important;
 }
@@ -1185,9 +1185,9 @@
  * Command Confirm Modal — matches Confirm Execution.html
  * ============================================================ */
 
-.modal.mae-confirm-modal { padding: 0; }
-.modal.mae-confirm-modal .modal-close-button { display: none; }
-.modal.mae-confirm-modal {
+.modal.prm-confirm-modal { padding: 0; }
+.modal.prm-confirm-modal .modal-close-button { display: none; }
+.modal.prm-confirm-modal {
   width: 500px;
   border-radius: 12px;
   background: var(--background-primary);
@@ -1199,14 +1199,14 @@
 }
 
 /* Header */
-.mae-ccm-header {
+.prm-ccm-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 18px;
   border-bottom: 1px solid var(--background-modifier-border);
   flex-shrink: 0;
 }
-.mae-ccm-header-left { display: flex; align-items: center; gap: 10px; }
-.mae-ccm-icon {
+.prm-ccm-header-left { display: flex; align-items: center; gap: 10px; }
+.prm-ccm-icon {
   width: 24px; height: 24px; border-radius: 7px;
   background: rgba(167,139,250,0.12);
   border: 1px solid rgba(167,139,250,0.20);
@@ -1214,15 +1214,15 @@
   color: rgba(167,139,250,0.85);
   flex-shrink: 0;
 }
-.mae-ccm-title {
+.prm-ccm-title {
   font-size: 13px; font-weight: 600;
   color: var(--text-normal); line-height: 1.2;
 }
-.mae-ccm-subtitle {
+.prm-ccm-subtitle {
   font-size: 10px; font-family: var(--font-monospace);
   color: var(--text-muted); margin-top: 2px;
 }
-.mae-ccm-close {
+.prm-ccm-close {
   width: 28px; height: 28px;
   border-radius: 6px;
   background: transparent; border: none;
@@ -1231,47 +1231,47 @@
   transition: background 0.12s, color 0.12s;
   flex-shrink: 0;
 }
-.mae-ccm-close:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.prm-ccm-close:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
 
 /* Agent badge row */
-.mae-ccm-agent-row {
+.prm-ccm-agent-row {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 18px 4px;
 }
-.mae-ccm-agent-avatar {
+.prm-ccm-agent-avatar {
   width: 20px; height: 20px;
   border-radius: 5px;
   display: flex; align-items: center; justify-content: center;
   border: 1px solid transparent;
   flex-shrink: 0;
 }
-.mae-ccm-agent-char {
+.prm-ccm-agent-char {
   font-size: 10px; font-weight: 700;
   font-family: var(--font-monospace);
 }
-.mae-ccm-agent-name {
+.prm-ccm-agent-name {
   font-size: 12px; font-weight: 600;
   color: var(--text-normal);
 }
-.mae-ccm-agent-badge {
+.prm-ccm-agent-badge {
   font-size: 8px; font-family: var(--font-monospace);
   padding: 1px 6px; border-radius: 999px;
   border: 1px solid transparent;
   white-space: nowrap;
 }
-.mae-ccm-agent-badge.installed {
+.prm-ccm-agent-badge.installed {
   background: rgba(74,222,128,0.10);
   color: rgba(74,222,128,0.85);
   border-color: rgba(74,222,128,0.22);
 }
-.mae-ccm-agent-vendor {
+.prm-ccm-agent-vendor {
   font-size: 10px; font-family: var(--font-monospace);
   color: var(--text-muted);
 }
 
 /* Command display */
-.mae-ccm-cmd-wrap { padding: 4px 18px 8px; }
-.mae-ccm-cmd-box {
+.prm-ccm-cmd-wrap { padding: 4px 18px 8px; }
+.prm-ccm-cmd-box {
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
@@ -1279,20 +1279,20 @@
   max-height: 220px;
   overflow-y: auto;
 }
-.mae-ccm-cmd-box::-webkit-scrollbar { width: 6px; }
-.mae-ccm-cmd-box::-webkit-scrollbar-thumb { background: var(--background-modifier-border); border-radius: 3px; }
-.mae-ccm-cmd-header {
+.prm-ccm-cmd-box::-webkit-scrollbar { width: 6px; }
+.prm-ccm-cmd-box::-webkit-scrollbar-thumb { background: var(--background-modifier-border); border-radius: 3px; }
+.prm-ccm-cmd-header {
   display: flex; align-items: center; justify-content: space-between;
   padding-bottom: 6px; margin-bottom: 6px;
   border-bottom: 1px solid var(--background-modifier-border);
 }
-.mae-ccm-cmd-label {
+.prm-ccm-cmd-label {
   font-size: 9px; font-family: var(--font-monospace);
   color: var(--text-muted); opacity: 0.6;
   text-transform: uppercase;
   letter-spacing: 0.06em;
 }
-.mae-ccm-code {
+.prm-ccm-code {
   font-family: var(--font-monospace);
   font-size: 12px;
   white-space: pre-wrap;
@@ -1302,7 +1302,7 @@
 }
 
 /* Warning */
-.mae-ccm-warning {
+.prm-ccm-warning {
   display: flex; align-items: flex-start; gap: 8px;
   background: rgba(251,146,60,0.08);
   border: 1px solid rgba(251,146,60,0.20);
@@ -1310,12 +1310,12 @@
   padding: 10px 12px;
   margin: 4px 18px 0;
 }
-.mae-ccm-warning-icon {
+.prm-ccm-warning-icon {
   color: rgba(251,146,60,0.85);
   flex-shrink: 0;
   margin-top: 1px;
 }
-.mae-ccm-warning-text {
+.prm-ccm-warning-text {
   font-size: 11px;
   color: var(--text-normal);
   opacity: 0.80;
@@ -1324,113 +1324,113 @@
 }
 
 /* Instruction file hint */
-.mae-ccm-hint {
+.prm-ccm-hint {
   display: flex; align-items: center; gap: 6px;
   padding: 4px 18px 2px;
   color: var(--text-muted);
 }
-.mae-ccm-hint-icon svg { width: 12px; height: 12px; }
-.mae-ccm-hint-text {
+.prm-ccm-hint-icon svg { width: 12px; height: 12px; }
+.prm-ccm-hint-text {
   font-size: 10px;
   font-family: var(--font-monospace);
 }
 
 /* Footer */
-.mae-ccm-footer {
+.prm-ccm-footer {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 18px 14px;
   border-top: 1px solid var(--background-modifier-border);
   margin-top: 10px;
 }
-.mae-ccm-footer-left { display: flex; align-items: center; gap: 6px; }
-.mae-ccm-footer-right { display: flex; align-items: center; gap: 8px; }
+.prm-ccm-footer-left { display: flex; align-items: center; gap: 6px; }
+.prm-ccm-footer-right { display: flex; align-items: center; gap: 8px; }
 
 /* Shared button base */
-.mae-ccm-btn {
+.prm-ccm-btn {
   display: inline-flex; align-items: center;
   font-family: var(--font-monospace); cursor: pointer;
   border-radius: 6px; transition: all 0.12s;
 }
-.mae-ccm-btn-inner {
+.prm-ccm-btn-inner {
   display: flex; align-items: center; gap: 6px;
 }
-.mae-ccm-btn-icon svg { width: 12px; height: 12px; }
+.prm-ccm-btn-icon svg { width: 12px; height: 12px; }
 
 /* Cancel */
-.mae-ccm-btn-cancel {
+.prm-ccm-btn-cancel {
   font-size: 10px; font-weight: 500;
   padding: 6px 12px;
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   color: var(--text-muted);
 }
-.mae-ccm-btn-cancel:hover {
+.prm-ccm-btn-cancel:hover {
   color: rgba(180,40,55,0.90);
   border-color: rgba(215,58,73,0.25);
   background: rgba(215,58,73,0.06);
 }
-.theme-dark .mae-ccm-btn-cancel:hover {
+.theme-dark .prm-ccm-btn-cancel:hover {
   color: rgba(248,150,150,0.90);
   border-color: rgba(248,113,113,0.25);
   background: rgba(248,113,113,0.08);
 }
 
 /* Copy Command */
-.mae-ccm-btn-copy {
+.prm-ccm-btn-copy {
   font-size: 10px; font-weight: 500;
   padding: 6px 12px;
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   color: var(--text-muted);
 }
-.mae-ccm-btn-copy:hover {
+.prm-ccm-btn-copy:hover {
   color: var(--text-normal);
   border-color: var(--text-muted);
 }
 
 /* Execute (green CTA) */
-.mae-ccm-btn-exec {
+.prm-ccm-btn-exec {
   font-size: 11px; font-weight: 600;
   padding: 7px 14px;
   background: rgba(52,168,83,0.08);
   border: 1px solid rgba(52,168,83,0.30);
   color: rgba(30,120,50,0.92);
 }
-.mae-ccm-btn-exec:hover {
+.prm-ccm-btn-exec:hover {
   background: rgba(52,168,83,0.16);
   border-color: rgba(52,168,83,0.45);
 }
-.theme-dark .mae-ccm-btn-exec {
+.theme-dark .prm-ccm-btn-exec {
   background: rgba(74,222,128,0.10);
   border-color: rgba(74,222,128,0.28);
   color: rgba(110,220,140,0.95);
 }
-.theme-dark .mae-ccm-btn-exec:hover {
+.theme-dark .prm-ccm-btn-exec:hover {
   background: rgba(74,222,128,0.20);
 }
 
 /* Dark mode overrides for Confirm Modal */
-.theme-dark .modal.mae-confirm-modal {
+.theme-dark .modal.prm-confirm-modal {
   background: var(--background-primary);
   border-color: var(--background-modifier-border);
   box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.12);
 }
-.theme-dark .mae-ccm-icon {
+.theme-dark .prm-ccm-icon {
   background: rgba(167,139,250,0.18);
   border-color: rgba(167,139,250,0.30);
   color: rgba(192,170,255,0.90);
 }
-.theme-dark .mae-ccm-cmd-box {
+.theme-dark .prm-ccm-cmd-box {
   background: var(--background-secondary);
 }
-.theme-dark .mae-ccm-warning {
+.theme-dark .prm-ccm-warning {
   background: rgba(251,146,60,0.10);
   border-color: rgba(251,146,60,0.25);
 }
-.theme-dark .mae-ccm-warning-icon {
+.theme-dark .prm-ccm-warning-icon {
   color: rgba(251,170,100,0.90);
 }
-.theme-dark .mae-ccm-agent-badge.installed {
+.theme-dark .prm-ccm-agent-badge.installed {
   background: rgba(74,222,128,0.12);
   color: rgba(110,220,140,0.90);
   border-color: rgba(74,222,128,0.25);
@@ -1441,8 +1441,8 @@
  * Light-mode first (white surface, colored borders)
  * ============================================================ */
 
-.modal.mae-diff-modal .modal-close-button { display: none; }
-.modal.mae-diff-modal {
+.modal.prm-diff-modal .modal-close-button { display: none; }
+.modal.prm-diff-modal {
   max-width: 820px;
   width: 92vw;
   max-height: 88vh;
@@ -1457,7 +1457,7 @@
 }
 
 /* Header */
-.mae-dm-header {
+.prm-dm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1466,8 +1466,8 @@
   flex-shrink: 0;
   background: var(--background-primary);
 }
-.mae-dm-header-left { display: flex; align-items: center; gap: 10px; }
-.mae-dm-icon {
+.prm-dm-header-left { display: flex; align-items: center; gap: 10px; }
+.prm-dm-icon {
   width: 24px; height: 24px;
   border-radius: 6px;
   background: rgba(59,130,246,0.08);
@@ -1476,23 +1476,23 @@
   color: rgba(59,130,246,0.85);
   flex-shrink: 0;
 }
-.mae-dm-title {
+.prm-dm-title {
   font-size: 13px; font-weight: 600;
   color: var(--text-normal); line-height: 1.2;
 }
-.mae-dm-subtitle {
+.prm-dm-subtitle {
   font-size: 10px; font-family: var(--font-monospace);
   color: var(--text-muted); margin-top: 2px;
 }
-.mae-dm-header-right { display: flex; align-items: center; gap: 8px; }
-.mae-dm-hunk-badge {
+.prm-dm-header-right { display: flex; align-items: center; gap: 8px; }
+.prm-dm-hunk-badge {
   font-size: 9px; font-family: var(--font-monospace);
   padding: 2px 8px; border-radius: 4px;
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
   color: var(--text-muted);
 }
-.mae-dm-close {
+.prm-dm-close {
   width: 28px; height: 28px;
   border-radius: 6px;
   background: transparent; border: none;
@@ -1501,10 +1501,10 @@
   transition: background 0.12s, color 0.12s;
   flex-shrink: 0;
 }
-.mae-dm-close:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.prm-dm-close:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
 
 /* Scrollable hunk list */
-.mae-dm-content {
+.prm-dm-content {
   flex: 1;
   min-height: 0;
   overflow-y: auto;
@@ -1514,147 +1514,147 @@
   gap: 14px;
   background: var(--background-secondary);
 }
-.mae-dm-content::-webkit-scrollbar { width: 6px; }
-.mae-dm-content::-webkit-scrollbar-thumb { background: var(--background-modifier-border); border-radius: 3px; }
-.mae-dm-empty { color: var(--text-muted); font-size: 13px; padding: 24px; text-align: center; }
+.prm-dm-content::-webkit-scrollbar { width: 6px; }
+.prm-dm-content::-webkit-scrollbar-thumb { background: var(--background-modifier-border); border-radius: 3px; }
+.prm-dm-empty { color: var(--text-muted); font-size: 13px; padding: 24px; text-align: center; }
 
 /* Hunk block */
-.mae-dm-hunk {
+.prm-dm-hunk {
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px; overflow: hidden;
   background: var(--background-primary);
   transition: opacity 0.2s, transform 0.2s;
 }
-.mae-dm-hunk.mae-dm-hunk-decided {
+.prm-dm-hunk.prm-dm-hunk-decided {
   opacity: 0;
   transform: translateY(-4px);
   pointer-events: none;
 }
-.mae-dm-hunk-header {
+.prm-dm-hunk-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 6px 12px;
   background: var(--background-secondary);
   border-bottom: 1px solid var(--background-modifier-border);
 }
-.mae-dm-hunk-header-left { display: flex; align-items: center; gap: 8px; }
-.mae-dm-hunk-pos {
+.prm-dm-hunk-header-left { display: flex; align-items: center; gap: 8px; }
+.prm-dm-hunk-pos {
   font-size: 9px; font-family: var(--font-monospace);
   padding: 1px 6px; border-radius: 3px;
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   color: var(--text-muted);
 }
-.mae-dm-hunk-actions { display: flex; align-items: center; gap: 6px; }
+.prm-dm-hunk-actions { display: flex; align-items: center; gap: 6px; }
 
 /* Hunk-level Accept / Reject buttons — design matches html spec */
-.mae-dm-hunk-btn {
+.prm-dm-hunk-btn {
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 9px; font-family: var(--font-monospace); font-weight: 600;
   padding: 3px 9px; border-radius: 5px; cursor: pointer;
   border: 1px solid transparent; transition: all 0.12s;
   line-height: 1.4;
 }
-.mae-dm-hunk-btn svg { display: block; flex-shrink: 0; }
+.prm-dm-hunk-btn svg { display: block; flex-shrink: 0; }
 
 /* Reject left, Accept right — matches design html order */
-.mae-dm-hunk-btn.reject {
+.prm-dm-hunk-btn.reject {
   background: rgba(215,58,73,0.06);
   border-color: rgba(215,58,73,0.22);
   color: rgba(180,40,55,0.90);
 }
-.mae-dm-hunk-btn.reject:hover {
+.prm-dm-hunk-btn.reject:hover {
   background: rgba(215,58,73,0.14);
   border-color: rgba(215,58,73,0.40);
 }
-.mae-dm-hunk-btn.accept {
+.prm-dm-hunk-btn.accept {
   background: rgba(52,168,83,0.07);
   border-color: rgba(52,168,83,0.28);
   color: rgba(30,120,50,0.90);
 }
-.mae-dm-hunk-btn.accept:hover {
+.prm-dm-hunk-btn.accept:hover {
   background: rgba(52,168,83,0.16);
   border-color: rgba(52,168,83,0.45);
 }
-.theme-dark .mae-dm-hunk-btn.reject {
+.theme-dark .prm-dm-hunk-btn.reject {
   background: rgba(248,113,113,0.08); border-color: rgba(248,113,113,0.22);
   color: rgba(248,150,150,0.90);
 }
-.theme-dark .mae-dm-hunk-btn.reject:hover {
+.theme-dark .prm-dm-hunk-btn.reject:hover {
   background: rgba(248,113,113,0.18);
 }
-.theme-dark .mae-dm-hunk-btn.accept {
+.theme-dark .prm-dm-hunk-btn.accept {
   background: rgba(74,222,128,0.08); border-color: rgba(74,222,128,0.22);
   color: rgba(110,220,140,0.90);
 }
-.theme-dark .mae-dm-hunk-btn.accept:hover {
+.theme-dark .prm-dm-hunk-btn.accept:hover {
   background: rgba(74,222,128,0.18);
 }
 
 /* Diff lines */
-.mae-dm-lines {
+.prm-dm-lines {
   font-family: var(--font-monospace);
   font-size: 11px; line-height: 1.7;
 }
-.mae-dm-line {
+.prm-dm-line {
   display: flex; align-items: baseline;
   padding: 0 12px;
 }
-.mae-dm-line-unchanged {
+.prm-dm-line-unchanged {
   color: var(--text-normal);
   opacity: 0.65;
 }
-.mae-dm-line-removed {
+.prm-dm-line-removed {
   background: #fff0f0;
   border-left: 2px solid #d73a49;
 }
-.mae-dm-line-removed .mae-dm-text { color: #b31d28; }
-.mae-dm-line-removed .mae-dm-linenum { color: #cf9ba3; }
-.mae-dm-line-added {
+.prm-dm-line-removed .prm-dm-text { color: #b31d28; }
+.prm-dm-line-removed .prm-dm-linenum { color: #cf9ba3; }
+.prm-dm-line-added {
   background: #e6ffec;
   border-left: 2px solid #34a853;
 }
-.mae-dm-line-added .mae-dm-text { color: #22863a; }
-.mae-dm-line-added .mae-dm-linenum { color: #7bc88a; }
+.prm-dm-line-added .prm-dm-text { color: #22863a; }
+.prm-dm-line-added .prm-dm-linenum { color: #7bc88a; }
 
-.theme-dark .mae-dm-line-removed {
+.theme-dark .prm-dm-line-removed {
   background: rgba(215,58,73,0.10);
   border-left-color: rgba(215,58,73,0.55);
 }
-.theme-dark .mae-dm-line-removed .mae-dm-text { color: rgba(248,150,150,0.85); }
-.theme-dark .mae-dm-line-added {
+.theme-dark .prm-dm-line-removed .prm-dm-text { color: rgba(248,150,150,0.85); }
+.theme-dark .prm-dm-line-added {
   background: rgba(52,168,83,0.08);
   border-left-color: rgba(52,168,83,0.55);
 }
-.theme-dark .mae-dm-line-added .mae-dm-text { color: rgba(110,220,140,0.90); }
+.theme-dark .prm-dm-line-added .prm-dm-text { color: rgba(110,220,140,0.90); }
 
-.mae-dm-linenum {
+.prm-dm-linenum {
   min-width: 28px; text-align: right;
   padding-right: 8px; flex-shrink: 0;
   color: var(--text-faint); font-size: 10px; user-select: none;
 }
-.mae-dm-prefix {
+.prm-dm-prefix {
   min-width: 14px; flex-shrink: 0; user-select: none;
   color: var(--text-faint);
 }
-.mae-dm-text { white-space: pre-wrap; word-break: break-all; flex: 1; }
+.prm-dm-text { white-space: pre-wrap; word-break: break-all; flex: 1; }
 
 /* Footer */
-.mae-dm-footer {
+.prm-dm-footer {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 18px;
   border-top: 1px solid var(--background-modifier-border);
   background: var(--background-primary);
   flex-shrink: 0;
 }
-.mae-dm-stats { display: flex; align-items: center; gap: 6px; }
-.mae-dm-stat-label { font-size: 9px; font-family: var(--font-monospace); color: var(--text-muted); }
-.mae-dm-stat-add  { font-size: 9px; font-family: var(--font-monospace); color: #34a853; }
-.mae-dm-stat-del  { font-size: 9px; font-family: var(--font-monospace); color: #d73a49; }
-.theme-dark .mae-dm-stat-add  { color: rgba(74,222,128,0.80); }
-.theme-dark .mae-dm-stat-del  { color: rgba(248,113,113,0.80); }
-.mae-dm-btns { display: flex; align-items: center; gap: 8px; }
+.prm-dm-stats { display: flex; align-items: center; gap: 6px; }
+.prm-dm-stat-label { font-size: 9px; font-family: var(--font-monospace); color: var(--text-muted); }
+.prm-dm-stat-add  { font-size: 9px; font-family: var(--font-monospace); color: #34a853; }
+.prm-dm-stat-del  { font-size: 9px; font-family: var(--font-monospace); color: #d73a49; }
+.theme-dark .prm-dm-stat-add  { color: rgba(74,222,128,0.80); }
+.theme-dark .prm-dm-stat-del  { color: rgba(248,113,113,0.80); }
+.prm-dm-btns { display: flex; align-items: center; gap: 8px; }
 
-.mae-dm-btn-rollback {
+.prm-dm-btn-rollback {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 10px; font-family: var(--font-monospace); font-weight: 500;
   padding: 6px 12px; border-radius: 6px; cursor: pointer;
@@ -1663,14 +1663,14 @@
   color: rgba(180,40,55,0.90);
   transition: all 0.12s;
 }
-.mae-dm-btn-rollback:hover { background: rgba(215,58,73,0.07); }
-.mae-dm-btn-rollback svg { display: block; }
-.theme-dark .mae-dm-btn-rollback {
+.prm-dm-btn-rollback:hover { background: rgba(215,58,73,0.07); }
+.prm-dm-btn-rollback svg { display: block; }
+.theme-dark .prm-dm-btn-rollback {
   border-color: rgba(248,113,113,0.25); color: rgba(248,150,150,0.90);
 }
-.theme-dark .mae-dm-btn-rollback:hover { background: rgba(248,113,113,0.10); }
+.theme-dark .prm-dm-btn-rollback:hover { background: rgba(248,113,113,0.10); }
 
-.mae-dm-btn-accept {
+.prm-dm-btn-accept {
   display: inline-flex; align-items: center; gap: 6px;
   font-size: 10px; font-family: var(--font-monospace); font-weight: 600;
   padding: 6px 12px; border-radius: 6px; cursor: pointer;
@@ -1679,22 +1679,22 @@
   color: rgba(30,120,50,0.92);
   transition: all 0.12s;
 }
-.mae-dm-btn-accept:hover { background: rgba(52,168,83,0.16); }
-.mae-dm-btn-accept svg { display: block; }
-.theme-dark .mae-dm-btn-accept {
+.prm-dm-btn-accept:hover { background: rgba(52,168,83,0.16); }
+.prm-dm-btn-accept svg { display: block; }
+.theme-dark .prm-dm-btn-accept {
   background: rgba(74,222,128,0.10);
   border-color: rgba(74,222,128,0.28);
   color: rgba(110,220,140,0.95);
 }
-.theme-dark .mae-dm-btn-accept:hover { background: rgba(74,222,128,0.20); }
+.theme-dark .prm-dm-btn-accept:hover { background: rgba(74,222,128,0.20); }
 
 
 /* ============================================================
  * Agent Select Modal — matches Select Agent.html design
  * ============================================================ */
 
-.modal.mae-agent-select-modal .modal-close-button { display: none; }
-.modal.mae-agent-select-modal {
+.modal.prm-agent-select-modal .modal-close-button { display: none; }
+.modal.prm-agent-select-modal {
   width: 400px;
   border-radius: 12px;
   background: var(--background-primary);
@@ -1706,27 +1706,27 @@
 }
 
 /* Header */
-.mae-asm-header {
+.prm-asm-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 16px 18px 12px;
   border-bottom: 1px solid rgba(var(--background-modifier-border-rgb), 0.6);
 }
-.mae-asm-header-left { display: flex; align-items: center; gap: 10px; }
-.mae-asm-icon {
+.prm-asm-header-left { display: flex; align-items: center; gap: 10px; }
+.prm-asm-icon {
   width: 24px; height: 24px; border-radius: 7px;
   background: rgba(167,139,250,0.12);
   border: 1px solid rgba(167,139,250,0.20);
   display: flex; align-items: center; justify-content: center;
   font-size: 13px; color: rgba(167,139,250,0.85);
 }
-.mae-asm-title {
+.prm-asm-title {
   font-size: 13px; font-weight: 600; color: var(--text-normal); line-height: 1.2;
 }
-.mae-asm-subtitle {
+.prm-asm-subtitle {
   font-size: 10px; font-family: var(--font-monospace);
   color: var(--text-muted); margin-top: 2px;
 }
-.mae-asm-close {
+.prm-asm-close {
   width: 28px; height: 28px;
   border-radius: 6px;
   background: transparent; border: none;
@@ -1735,16 +1735,16 @@
   transition: background 0.12s, color 0.12s;
   flex-shrink: 0;
 }
-.mae-asm-close:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
+.prm-asm-close:hover { background: var(--background-modifier-hover); color: var(--text-normal); }
 
 /* Agent list */
-.mae-asm-list {
+.prm-asm-list {
   padding: 10px 12px;
   display: flex; flex-direction: column; gap: 6px;
 }
 
 /* Agent row */
-.mae-asm-row {
+.prm-asm-row {
   display: flex; align-items: center; gap: 10px;
   padding: 12px 14px;
   border-radius: 8px;
@@ -1753,76 +1753,76 @@
   cursor: pointer;
   transition: border-color 0.12s, box-shadow 0.12s;
 }
-.mae-asm-row:hover { border-color: var(--text-muted); }
-.mae-asm-row.active {
+.prm-asm-row:hover { border-color: var(--text-muted); }
+.prm-asm-row.active {
   border-color: rgba(167,139,250,0.35);
   box-shadow: 0 0 0 1px rgba(167,139,250,0.12);
 }
-.mae-asm-row.disabled {
+.prm-asm-row.disabled {
   opacity: 0.55; cursor: not-allowed;
 }
-.mae-asm-row.disabled:hover { border-color: var(--background-modifier-border); }
+.prm-asm-row.disabled:hover { border-color: var(--background-modifier-border); }
 
 /* Avatar */
-.mae-asm-avatar {
+.prm-asm-avatar {
   width: 36px; height: 36px; border-radius: 8px;
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; border: 1px solid transparent;
 }
-.mae-asm-avatar-char {
+.prm-asm-avatar-char {
   font-size: 14px; font-weight: 700; font-family: var(--font-monospace);
   letter-spacing: -0.5px;
 }
 
 /* Info */
-.mae-asm-info { flex: 1; min-width: 0; }
-.mae-asm-name-row { display: flex; align-items: center; gap: 7px; }
-.mae-asm-name { font-size: 13px; font-weight: 600; color: var(--text-normal); }
-.mae-asm-badge {
+.prm-asm-info { flex: 1; min-width: 0; }
+.prm-asm-name-row { display: flex; align-items: center; gap: 7px; }
+.prm-asm-name { font-size: 13px; font-weight: 600; color: var(--text-normal); }
+.prm-asm-badge {
   font-size: 8px; font-family: var(--font-monospace);
   padding: 1px 6px; border-radius: 20px; border: 1px solid transparent;
 }
-.mae-asm-badge.installed {
+.prm-asm-badge.installed {
   background: rgba(74,222,128,0.12); color: rgba(74,222,128,0.85);
   border-color: rgba(74,222,128,0.22);
 }
-.mae-asm-badge.missing {
+.prm-asm-badge.missing {
   background: rgba(107,114,128,0.10); color: var(--text-muted);
   border-color: var(--background-modifier-border);
 }
-.mae-asm-meta {
+.prm-asm-meta {
   font-size: 10px; font-family: var(--font-monospace);
   color: var(--text-muted); margin-top: 2px;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 
 /* Radio */
-.mae-asm-radio {
+.prm-asm-radio {
   width: 16px; height: 16px; border-radius: 50%;
   border: 2px solid var(--background-modifier-border);
   display: flex; align-items: center; justify-content: center;
   flex-shrink: 0; transition: border-color 0.12s;
 }
-.mae-asm-radio.selected { border-color: rgba(167,139,250,0.60); }
-.mae-asm-radio-dot {
+.prm-asm-radio.selected { border-color: rgba(167,139,250,0.60); }
+.prm-asm-radio-dot {
   width: 8px; height: 8px; border-radius: 50%;
   background: rgba(167,139,250,0.85);
 }
 
 /* Footer */
-.mae-asm-footer {
+.prm-asm-footer {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 18px 14px;
   border-top: 1px solid rgba(var(--background-modifier-border-rgb), 0.6);
 }
-.mae-asm-config-btn {
+.prm-asm-config-btn {
   background: none; border: none; cursor: pointer;
   font-size: 10px; font-family: var(--font-monospace);
   color: var(--text-muted); transition: color 0.12s;
   display: flex; align-items: center; gap: 4px;
 }
-.mae-asm-config-btn:hover { color: var(--text-normal); }
-.mae-asm-confirm-btn {
+.prm-asm-config-btn:hover { color: var(--text-normal); }
+.prm-asm-confirm-btn {
   font-size: 11px; font-family: var(--font-monospace); font-weight: 600;
   padding: 7px 16px; border-radius: 6px; cursor: pointer;
   background: rgba(167,139,250,0.12);
@@ -1830,7 +1830,7 @@
   color: rgba(200,185,255,0.92);
   transition: all 0.12s;
 }
-.mae-asm-confirm-btn:hover { background: rgba(167,139,250,0.22); }
+.prm-asm-confirm-btn:hover { background: rgba(167,139,250,0.22); }
 
 
 /* ============================================================
@@ -1839,7 +1839,7 @@
  * ============================================================ */
 
 /* --- Page header --- */
-.mae-settings-header {
+.prm-settings-header {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -1847,18 +1847,18 @@
   margin-bottom: 8px;
   border-bottom: 1px solid var(--background-modifier-border);
 }
-.mae-settings-header-left {
+.prm-settings-header-left {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.mae-settings-page-icon {
+.prm-settings-page-icon {
   width: 36px; height: 36px;
   border-radius: 9px;
   display: flex; align-items: center; justify-content: center;
   overflow: hidden;
 }
-.mae-settings-page-title {
+.prm-settings-page-title {
   font-size: 16px; font-weight: 700;
   color: var(--text-normal);
   font-family: var(--font-monospace);
@@ -1866,14 +1866,14 @@
 }
 
 /* --- Section wrapper --- */
-.mae-settings-section {
+.prm-settings-section {
   margin-bottom: 6px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 10px;
   overflow: hidden;
   background: var(--background-secondary);
 }
-.mae-settings-section-header {
+.prm-settings-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1882,15 +1882,15 @@
   transition: background 0.12s;
   user-select: none;
 }
-.mae-settings-section-header:hover {
+.prm-settings-section-header:hover {
   background: var(--background-modifier-hover);
 }
-.mae-settings-section-left {
+.prm-settings-section-left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.mae-settings-section-icon {
+.prm-settings-section-icon {
   width: 28px; height: 28px;
   border-radius: 7px;
   background: var(--background-primary);
@@ -1899,56 +1899,56 @@
   font-size: 15px;
   flex-shrink: 0;
 }
-.mae-settings-section-text {
+.prm-settings-section-text {
   display: flex;
   flex-direction: column;
   gap: 1px;
 }
-.mae-settings-section-title {
+.prm-settings-section-title {
   font-size: 13px; font-weight: 600;
   color: var(--text-normal);
   font-family: var(--font-monospace);
 }
-.mae-settings-section-desc {
+.prm-settings-section-desc {
   font-size: 11px;
   color: var(--text-muted);
   font-family: var(--font-monospace);
 }
-.mae-settings-section-chevron {
+.prm-settings-section-chevron {
   font-size: 11px;
   color: var(--text-muted);
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
-.mae-settings-section-chevron.is-open {
+.prm-settings-section-chevron.is-open {
   transform: rotate(0deg);
 }
-.mae-settings-section-chevron:not(.is-open) {
+.prm-settings-section-chevron:not(.is-open) {
   transform: rotate(-90deg);
 }
 
 /* Collapsible body */
-.mae-settings-section-body {
+.prm-settings-section-body {
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.3s ease-out, padding 0.2s ease;
   padding: 0 16px;
 }
-.mae-settings-section-body.is-open {
+.prm-settings-section-body.is-open {
   max-height: 3000px;
   padding: 4px 16px 14px;
   transition: max-height 0.4s ease-in;
 }
 
 /* Remove h2 from Obsidian default (we have our own header) */
-.mae-settings-section-body h2 { display: none; }
+.prm-settings-section-body h2 { display: none; }
 /* Tighter spacing inside section */
-.mae-settings-section-body .setting-item {
+.prm-settings-section-body .setting-item {
   padding: 8px 0;
 }
 
 /* --- Sub-section header (e.g. "自定义命令规则") --- */
-.mae-settings-sub-header {
+.prm-settings-sub-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1957,12 +1957,12 @@
   padding-top: 8px;
   border-top: 1px solid var(--background-modifier-border);
 }
-.mae-settings-sub-title {
+.prm-settings-sub-title {
   font-size: 12px; font-weight: 600;
   color: var(--text-normal);
   font-family: var(--font-monospace);
 }
-.mae-settings-sub-btn {
+.prm-settings-sub-btn {
   background: rgba(167,139,250,0.10);
   border: 1px solid rgba(167,139,250,0.20);
   color: rgba(167,139,250,0.85);
@@ -1974,19 +1974,19 @@
   font-weight: 600;
   transition: all 0.12s;
 }
-.mae-settings-sub-btn:hover {
+.prm-settings-sub-btn:hover {
   background: rgba(167,139,250,0.20);
   border-color: rgba(167,139,250,0.35);
 }
 
 /* --- Agent detection cards --- */
-.mae-agent-cards {
+.prm-agent-cards {
   display: flex;
   flex-direction: column;
   gap: 6px;
   padding: 4px 0 8px;
 }
-.mae-agent-card {
+.prm-agent-card {
   display: flex;
   align-items: center;
   gap: 12px;
@@ -1996,13 +1996,13 @@
   background: var(--background-primary);
   transition: border-color 0.12s;
 }
-.mae-agent-card:hover {
+.prm-agent-card:hover {
   border-color: var(--text-muted);
 }
-.mae-agent-card.not-installed {
+.prm-agent-card.not-installed {
   opacity: 0.70;
 }
-.mae-agent-card-avatar {
+.prm-agent-card-avatar {
   width: 32px; height: 32px;
   border-radius: 8px;
   background: rgba(167,139,250,0.10);
@@ -2013,27 +2013,27 @@
   color: rgba(167,139,250,0.85);
   flex-shrink: 0;
 }
-.mae-agent-card.not-installed .mae-agent-card-avatar {
+.prm-agent-card.not-installed .prm-agent-card-avatar {
   background: rgba(107,114,128,0.08);
   border-color: rgba(107,114,128,0.15);
   color: var(--text-muted);
 }
-.mae-agent-card-info {
+.prm-agent-card-info {
   flex: 1; min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 2px;
 }
-.mae-agent-card-name-row {
+.prm-agent-card-name-row {
   display: flex;
   align-items: center;
   gap: 8px;
 }
-.mae-agent-card-name {
+.prm-agent-card-name {
   font-size: 13px; font-weight: 600;
   color: var(--text-normal);
 }
-.mae-agent-card-badge {
+.prm-agent-card-badge {
   font-size: 9px;
   font-family: var(--font-monospace);
   padding: 1px 7px;
@@ -2041,22 +2041,22 @@
   border: 1px solid transparent;
   white-space: nowrap;
 }
-.mae-agent-card-badge.installed {
+.prm-agent-card-badge.installed {
   background: rgba(74,222,128,0.10);
   color: rgba(74,222,128,0.85);
   border-color: rgba(74,222,128,0.20);
 }
-.mae-agent-card-badge.missing {
+.prm-agent-card-badge.missing {
   background: rgba(107,114,128,0.08);
   color: var(--text-muted);
   border-color: var(--background-modifier-border);
 }
-.mae-agent-card-vendor {
+.prm-agent-card-vendor {
   font-size: 10px;
   color: var(--text-muted);
   font-family: var(--font-monospace);
 }
-.mae-agent-card-hint {
+.prm-agent-card-hint {
   font-size: 10px;
   color: var(--text-muted);
   font-family: var(--font-monospace);
@@ -2064,12 +2064,12 @@
 }
 
 /* --- Custom rule cards --- */
-.mae-rule-cards {
+.prm-rule-cards {
   display: flex;
   flex-direction: column;
   gap: 6px;
 }
-.mae-rule-card {
+.prm-rule-card {
   display: flex;
   align-items: center;
   gap: 10px;
@@ -2079,20 +2079,20 @@
   background: var(--background-primary);
   transition: border-color 0.12s;
 }
-.mae-rule-card:hover {
+.prm-rule-card:hover {
   border-color: var(--text-muted);
 }
-.mae-rule-card-info {
+.prm-rule-card-info {
   flex: 1; min-width: 0;
   display: flex;
   flex-direction: column;
   gap: 3px;
 }
-.mae-rule-card-label {
+.prm-rule-card-label {
   font-size: 13px; font-weight: 600;
   color: var(--text-normal);
 }
-.mae-rule-card-meta {
+.prm-rule-card-meta {
   display: flex;
   flex-direction: column;
   gap: 1px;
@@ -2100,10 +2100,10 @@
   color: var(--text-muted);
   font-family: var(--font-monospace);
 }
-.mae-rule-card-template {
+.prm-rule-card-template {
   opacity: 0.7;
 }
-.mae-rule-card-del {
+.prm-rule-card-del {
   background: transparent;
   border: 1px solid transparent;
   color: var(--text-faint);
@@ -2115,14 +2115,14 @@
   transition: all 0.12s;
   flex-shrink: 0;
 }
-.mae-rule-card-del:hover {
+.prm-rule-card-del:hover {
   color: var(--text-error);
   background: rgba(239,68,68,0.08);
   border-color: rgba(239,68,68,0.15);
 }
 
 /* --- Empty state --- */
-.mae-settings-empty {
+.prm-settings-empty {
   color: var(--text-muted);
   font-size: 12px;
   font-style: italic;
@@ -2131,7 +2131,7 @@
 }
 
 /* --- Template variables reference --- */
-.mae-settings-var-details {
+.prm-settings-var-details {
   margin-top: 8px;
   border: 1px solid var(--background-modifier-border);
   border-radius: 6px;
@@ -2139,7 +2139,7 @@
   background: var(--background-primary);
   overflow: hidden;
 }
-.mae-settings-var-details summary {
+.prm-settings-var-details summary {
   padding: 8px 12px;
   font-size: 11px;
   font-family: var(--font-monospace);
@@ -2147,33 +2147,33 @@
   cursor: pointer;
   transition: background 0.12s;
 }
-.mae-settings-var-details summary:hover {
+.prm-settings-var-details summary:hover {
   background: var(--background-modifier-hover);
 }
-.mae-settings-var-table {
+.prm-settings-var-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 11px;
   font-family: var(--font-monospace);
 }
-.mae-settings-var-table td {
+.prm-settings-var-table td {
   padding: 5px 12px;
   border-top: 1px solid var(--background-modifier-border);
 }
-.mae-settings-var-table td:first-child {
+.prm-settings-var-table td:first-child {
   color: rgba(167,139,250,0.85);
   white-space: nowrap;
   width: 40%;
 }
-.mae-settings-var-table td:last-child {
+.prm-settings-var-table td:last-child {
   color: var(--text-muted);
 }
 
 /* --- API Key visibility toggle --- */
-.mae-api-key-input {
+.prm-api-key-input {
   padding-right: 36px !important;
 }
-.mae-api-key-toggle {
+.prm-api-key-toggle {
   position: absolute;
   right: 4px;
   top: 50%;
@@ -2187,7 +2187,7 @@
   box-shadow: none !important;
   line-height: 1;
 }
-.mae-api-key-toggle:hover {
+.prm-api-key-toggle:hover {
   color: var(--text-normal);
 }
 
@@ -2195,8 +2195,8 @@
  * Add Rule Modal
  * ============================================================ */
 
-.modal.mae-add-rule-modal .modal-close-button { display: none; }
-.modal.mae-add-rule-modal {
+.modal.prm-add-rule-modal .modal-close-button { display: none; }
+.modal.prm-add-rule-modal {
   width: 460px;
   border-radius: 12px;
   background: var(--background-primary);
@@ -2208,19 +2208,19 @@
 }
 
 /* Header */
-.mae-arm-header {
+.prm-arm-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 16px 18px 12px;
   border-bottom: 1px solid var(--background-modifier-border);
 }
-.mae-arm-header-left {
+.prm-arm-header-left {
   display: flex;
   align-items: center;
   gap: 10px;
 }
-.mae-arm-icon {
+.prm-arm-icon {
   width: 24px; height: 24px;
   border-radius: 7px;
   background: rgba(167,139,250,0.12);
@@ -2228,11 +2228,11 @@
   display: flex; align-items: center; justify-content: center;
   font-size: 13px;
 }
-.mae-arm-title {
+.prm-arm-title {
   font-size: 13px; font-weight: 600;
   color: var(--text-normal); line-height: 1.2;
 }
-.mae-arm-subtitle {
+.prm-arm-subtitle {
   font-size: 10px;
   font-family: var(--font-monospace);
   color: var(--text-muted);
@@ -2240,21 +2240,21 @@
 }
 
 /* Form */
-.mae-arm-form {
+.prm-arm-form {
   padding: 12px 18px;
   max-height: 55vh;
   overflow-y: auto;
 }
 
 /* Template variables reference (inside modal) */
-.mae-arm-var-ref {
+.prm-arm-var-ref {
   margin-top: 10px;
   padding: 10px 12px;
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 6px;
 }
-.mae-arm-var-title {
+.prm-arm-var-title {
   font-size: 10px;
   font-family: var(--font-monospace);
   font-weight: 600;
@@ -2263,28 +2263,28 @@
   text-transform: uppercase;
   letter-spacing: 0.04em;
 }
-.mae-arm-var-grid {
+.prm-arm-var-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 4px 12px;
 }
-.mae-arm-var-item {
+.prm-arm-var-item {
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 10px;
   font-family: var(--font-monospace);
 }
-.mae-arm-var-code {
+.prm-arm-var-code {
   color: rgba(167,139,250,0.85);
   white-space: nowrap;
 }
-.mae-arm-var-desc {
+.prm-arm-var-desc {
   color: var(--text-muted);
 }
 
 /* Footer */
-.mae-arm-footer {
+.prm-arm-footer {
   display: flex;
   align-items: center;
   justify-content: flex-end;
@@ -2292,7 +2292,7 @@
   padding: 10px 18px 14px;
   border-top: 1px solid var(--background-modifier-border);
 }
-.mae-arm-btn-cancel {
+.prm-arm-btn-cancel {
   background: transparent;
   border: 1px solid var(--background-modifier-border);
   color: var(--text-muted);
@@ -2303,11 +2303,11 @@
   font-family: var(--font-monospace);
   transition: all 0.12s;
 }
-.mae-arm-btn-cancel:hover {
+.prm-arm-btn-cancel:hover {
   color: var(--text-normal);
   border-color: var(--text-muted);
 }
-.mae-arm-btn-save {
+.prm-arm-btn-save {
   background: rgba(167,139,250,0.12);
   border: 1px solid rgba(167,139,250,0.25);
   color: rgba(167,139,250,0.90);
@@ -2319,13 +2319,13 @@
   font-weight: 600;
   transition: all 0.12s;
 }
-.mae-arm-btn-save:hover {
+.prm-arm-btn-save:hover {
   background: rgba(167,139,250,0.22);
   border-color: rgba(167,139,250,0.40);
 }
 
 /* --- Legacy (kept for backwards compat with runtime styles) --- */
-.mae-empty-hint {
+.prm-empty-hint {
   color: var(--text-muted);
   font-size: 12px;
   font-style: italic;
@@ -2339,56 +2339,56 @@
 
 body:not(.theme-dark) {
   /* 暖米色体系（设计稿 @theme tokens 复刻） */
-  --mae-surface: #fefefe;
-  --mae-surface-hover: #f5f3f0;
-  --mae-bg-base: #faf9f7;
-  --mae-border: #e5e2de;
-  --mae-border-subtle: #ece9e5;
-  --mae-text-primary: #1c1917;
-  --mae-text-secondary: #44403c;
-  --mae-text-muted: #78716c;
-  --mae-quote-bg: #f5f3f0;
+  --prm-surface: #fefefe;
+  --prm-surface-hover: #f5f3f0;
+  --prm-bg-base: #faf9f7;
+  --prm-border: #e5e2de;
+  --prm-border-subtle: #ece9e5;
+  --prm-text-primary: #1c1917;
+  --prm-text-secondary: #44403c;
+  --prm-text-muted: #78716c;
+  --prm-quote-bg: #f5f3f0;
   /* 深紫 accent —— 设计稿 #6d5acd（不是浅薰衣草 rgba(167,139,250)） */
-  --mae-accent: #6d5acd;
-  --mae-accent-hover: #5b49bd;
-  --mae-accent-soft: rgba(109, 90, 205, 0.08);
+  --prm-accent: #6d5acd;
+  --prm-accent-hover: #5b49bd;
+  --prm-accent-soft: rgba(109, 90, 205, 0.08);
 }
 
 /* ---- 6.1 容器：底色改成暖米基底，去除冷白默认 ---- */
-body:not(.theme-dark) .multiaiedit-sidebar {
-  background: var(--mae-bg-base);
+body:not(.theme-dark) .promptuary-sidebar {
+  background: var(--prm-bg-base);
 }
-body:not(.theme-dark) .mae-sidebar-action-bar {
+body:not(.theme-dark) .prm-sidebar-action-bar {
   background: rgba(254, 254, 254, 0.6);
   backdrop-filter: blur(6px);
   -webkit-backdrop-filter: blur(6px);
-  border-top-color: var(--mae-border-subtle);
+  border-top-color: var(--prm-border-subtle);
 }
 
 /* ---- 6.2 Header：icon 用 accent-soft，标题用 primary 文字色 ---- */
-body:not(.theme-dark) .mae-header-icon {
-  background: var(--mae-accent-soft);
-  color: var(--mae-accent);
+body:not(.theme-dark) .prm-header-icon {
+  background: var(--prm-accent-soft);
+  color: var(--prm-accent);
 }
-body:not(.theme-dark) .mae-header-title {
-  color: var(--mae-text-primary);
+body:not(.theme-dark) .prm-header-title {
+  color: var(--prm-text-primary);
 }
 
 /* ---- 6.3 Mode capsule：底用 border-subtle 暖米调 ---- */
-body:not(.theme-dark) .mae-mode-capsule,
-body:not(.theme-dark) .mae-popover-capsule {
+body:not(.theme-dark) .prm-mode-capsule,
+body:not(.theme-dark) .prm-popover-capsule {
   background: rgba(236, 233, 229, 0.8);
 }
-body:not(.theme-dark) .mae-mode-capsule button.active,
-body:not(.theme-dark) .mae-popover-capsule button.active {
-  background: var(--mae-surface);
-  color: var(--mae-text-primary);
+body:not(.theme-dark) .prm-mode-capsule button.active,
+body:not(.theme-dark) .prm-popover-capsule button.active {
+  background: var(--prm-surface);
+  color: var(--prm-text-primary);
   box-shadow: 0 1px 2px rgba(28, 25, 23, 0.06);
 }
 
 /* ---- 6.4 卡片：白底 + 双层阴影（核心改动）---- */
-body:not(.theme-dark) .mae-card {
-  background: var(--mae-surface);
+body:not(.theme-dark) .prm-card {
+  background: var(--prm-surface);
   /* 阴影同时充当极细描边，去掉原 1px 实边框的"嵌进底色"感 */
   border-color: transparent;
   box-shadow:
@@ -2396,159 +2396,159 @@ body:not(.theme-dark) .mae-card {
     0 0 0 1px rgba(28, 25, 23, 0.03);
   transition: box-shadow 0.15s, background 0.15s;
 }
-body:not(.theme-dark) .mae-card:hover {
-  background: var(--mae-surface);
+body:not(.theme-dark) .prm-card:hover {
+  background: var(--prm-surface);
   box-shadow:
     0 2px 8px rgba(28, 25, 23, 0.06),
     0 0 0 1px rgba(28, 25, 23, 0.05);
 }
 
 /* 引用块：暖米色而非紫灰 */
-body:not(.theme-dark) .mae-card-quote {
-  background: var(--mae-quote-bg);
-  color: var(--mae-text-secondary);
+body:not(.theme-dark) .prm-card-quote {
+  background: var(--prm-quote-bg);
+  color: var(--prm-text-secondary);
   opacity: 1;
 }
 
 /* ---- 6.5 CTA 主按钮：实心紫 + 白字（核心改动）---- */
-body:not(.theme-dark) .mae-action-execute {
-  background: var(--mae-accent);
-  border-color: var(--mae-accent);
+body:not(.theme-dark) .prm-action-execute {
+  background: var(--prm-accent);
+  border-color: var(--prm-accent);
   color: #ffffff;
   box-shadow: 0 1px 2px rgba(109, 90, 205, 0.15);
 }
-body:not(.theme-dark) .mae-action-execute:hover {
-  background: var(--mae-accent-hover);
-  border-color: var(--mae-accent-hover);
+body:not(.theme-dark) .prm-action-execute:hover {
+  background: var(--prm-accent-hover);
+  border-color: var(--prm-accent-hover);
   color: #ffffff;
 }
 
 /* 次按钮（Export / Copy Prompt）：白底 + 暖米边框 */
-body:not(.theme-dark) .mae-action-btn {
-  background: var(--mae-surface);
-  border-color: var(--mae-border);
-  color: var(--mae-text-muted);
+body:not(.theme-dark) .prm-action-btn {
+  background: var(--prm-surface);
+  border-color: var(--prm-border);
+  color: var(--prm-text-muted);
 }
-body:not(.theme-dark) .mae-action-btn:hover {
-  background: var(--mae-surface-hover);
-  color: var(--mae-text-primary);
-  border-color: var(--mae-border);
+body:not(.theme-dark) .prm-action-btn:hover {
+  background: var(--prm-surface-hover);
+  color: var(--prm-text-primary);
+  border-color: var(--prm-border);
 }
 
 /* ---- 6.6 Note input：focus 用深紫 ---- */
-body:not(.theme-dark) .mae-popover-note-input-wrap:focus-within {
-  border-color: var(--mae-accent);
+body:not(.theme-dark) .prm-popover-note-input-wrap:focus-within {
+  border-color: var(--prm-accent);
 }
-body:not(.theme-dark) .multiaiedit-popover input[type="text"]:focus {
-  border-color: var(--mae-accent);
+body:not(.theme-dark) .promptuary-popover input[type="text"]:focus {
+  border-color: var(--prm-accent);
 }
 
 /* Note Save 按钮：用深紫 accent，淡底 */
-body:not(.theme-dark) .mae-popover-note-save {
-  background: var(--mae-accent-soft);
+body:not(.theme-dark) .prm-popover-note-save {
+  background: var(--prm-accent-soft);
   border-color: rgba(109, 90, 205, 0.20);
-  color: var(--mae-accent);
+  color: var(--prm-accent);
 }
-body:not(.theme-dark) .mae-popover-note-save:hover {
+body:not(.theme-dark) .prm-popover-note-save:hover {
   background: rgba(109, 90, 205, 0.16);
   border-color: rgba(109, 90, 205, 0.35);
 }
 
 /* 浮窗提交按钮：深紫描边 */
-body:not(.theme-dark) .multiaiedit-popover .mae-submit-btn {
-  background: var(--mae-accent-soft);
+body:not(.theme-dark) .promptuary-popover .prm-submit-btn {
+  background: var(--prm-accent-soft);
   border-color: rgba(109, 90, 205, 0.20);
-  color: var(--mae-accent);
+  color: var(--prm-accent);
 }
-body:not(.theme-dark) .multiaiedit-popover .mae-submit-btn:hover {
+body:not(.theme-dark) .promptuary-popover .prm-submit-btn:hover {
   background: rgba(109, 90, 205, 0.16);
 }
 
 /* Agent 按钮 hover 边框：深紫 */
-body:not(.theme-dark) .mae-agent-btn:hover {
+body:not(.theme-dark) .prm-agent-btn:hover {
   border-color: rgba(109, 90, 205, 0.40) !important;
 }
 
 
 /* Diff 复选框 accent */
-body:not(.theme-dark) .mae-diff-toggle input[type="checkbox"] {
-  accent-color: var(--mae-accent);
+body:not(.theme-dark) .prm-diff-toggle input[type="checkbox"] {
+  accent-color: var(--prm-accent);
 }
 
 /* ---- 6.7 Settings page: warm tones ---- */
-body:not(.theme-dark) .mae-settings-section {
-  background: var(--mae-bg-base);
-  border-color: var(--mae-border);
+body:not(.theme-dark) .prm-settings-section {
+  background: var(--prm-bg-base);
+  border-color: var(--prm-border);
 }
-body:not(.theme-dark) .mae-settings-section-header:hover {
-  background: var(--mae-surface-hover);
+body:not(.theme-dark) .prm-settings-section-header:hover {
+  background: var(--prm-surface-hover);
 }
-body:not(.theme-dark) .mae-settings-section-icon {
-  background: var(--mae-surface);
-  border-color: var(--mae-border);
+body:not(.theme-dark) .prm-settings-section-icon {
+  background: var(--prm-surface);
+  border-color: var(--prm-border);
 }
-body:not(.theme-dark) .mae-settings-section-title {
-  color: var(--mae-text-primary);
+body:not(.theme-dark) .prm-settings-section-title {
+  color: var(--prm-text-primary);
 }
-body:not(.theme-dark) .mae-settings-section-desc {
-  color: var(--mae-text-muted);
+body:not(.theme-dark) .prm-settings-section-desc {
+  color: var(--prm-text-muted);
 }
-body:not(.theme-dark) .mae-settings-page-icon {
+body:not(.theme-dark) .prm-settings-page-icon {
   /* Logo SVG has its own background, no need for extra styling */
 }
 
-body:not(.theme-dark) .mae-agent-card {
-  background: var(--mae-surface);
-  border-color: var(--mae-border);
+body:not(.theme-dark) .prm-agent-card {
+  background: var(--prm-surface);
+  border-color: var(--prm-border);
 }
-body:not(.theme-dark) .mae-agent-card:hover {
-  border-color: var(--mae-border);
+body:not(.theme-dark) .prm-agent-card:hover {
+  border-color: var(--prm-border);
   box-shadow: 0 1px 4px rgba(28,25,23,0.05);
 }
-body:not(.theme-dark) .mae-agent-card-avatar {
-  background: var(--mae-accent-soft);
+body:not(.theme-dark) .prm-agent-card-avatar {
+  background: var(--prm-accent-soft);
   border-color: rgba(109, 90, 205, 0.18);
-  color: var(--mae-accent);
+  color: var(--prm-accent);
 }
-body:not(.theme-dark) .mae-agent-card.not-installed .mae-agent-card-avatar {
+body:not(.theme-dark) .prm-agent-card.not-installed .prm-agent-card-avatar {
   background: rgba(107,114,128,0.06);
-  border-color: var(--mae-border);
-  color: var(--mae-text-muted);
+  border-color: var(--prm-border);
+  color: var(--prm-text-muted);
 }
 
-body:not(.theme-dark) .mae-rule-card {
-  background: var(--mae-surface);
-  border-color: var(--mae-border);
+body:not(.theme-dark) .prm-rule-card {
+  background: var(--prm-surface);
+  border-color: var(--prm-border);
 }
-body:not(.theme-dark) .mae-rule-card:hover {
-  border-color: var(--mae-border);
+body:not(.theme-dark) .prm-rule-card:hover {
+  border-color: var(--prm-border);
   box-shadow: 0 1px 4px rgba(28,25,23,0.05);
 }
-body:not(.theme-dark) .mae-rule-card-del:hover {
+body:not(.theme-dark) .prm-rule-card-del:hover {
   background: rgba(239,68,68,0.06);
 }
 
-body:not(.theme-dark) .mae-settings-sub-btn {
-  background: var(--mae-accent-soft);
+body:not(.theme-dark) .prm-settings-sub-btn {
+  background: var(--prm-accent-soft);
   border-color: rgba(109, 90, 205, 0.20);
-  color: var(--mae-accent);
+  color: var(--prm-accent);
 }
-body:not(.theme-dark) .mae-settings-sub-btn:hover {
+body:not(.theme-dark) .prm-settings-sub-btn:hover {
   background: rgba(109, 90, 205, 0.16);
   border-color: rgba(109, 90, 205, 0.35);
 }
 
-body:not(.theme-dark) .mae-settings-var-details {
-  background: var(--mae-surface);
-  border-color: var(--mae-border);
+body:not(.theme-dark) .prm-settings-var-details {
+  background: var(--prm-surface);
+  border-color: var(--prm-border);
 }
 
-body:not(.theme-dark) .mae-arm-btn-save {
-  background: var(--mae-accent-soft);
+body:not(.theme-dark) .prm-arm-btn-save {
+  background: var(--prm-accent-soft);
   border-color: rgba(109, 90, 205, 0.20);
-  color: var(--mae-accent);
+  color: var(--prm-accent);
 }
-body:not(.theme-dark) .mae-arm-btn-save:hover {
+body:not(.theme-dark) .prm-arm-btn-save:hover {
   background: rgba(109, 90, 205, 0.16);
   border-color: rgba(109, 90, 205, 0.35);
 }
@@ -2559,7 +2559,7 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
  * ============================================================ */
 
 /* Header icon (logo) */
-.mae-logo-img {
+.prm-logo-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -2567,30 +2567,30 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
 }
 
 /* Settings button (⚙) */
-.mae-header-settings svg {
+.prm-header-settings svg {
   width: 14px;
   height: 14px;
 }
 
 /* Action bar buttons with icons */
-.mae-action-btn svg {
+.prm-action-btn svg {
   width: 14px;
   height: 14px;
 }
-.mae-action-execute svg {
+.prm-action-execute svg {
   width: 14px;
   height: 14px;
 }
 
 /* Inline status badges (⚠/🔧) */
-.mae-card-status-inline svg {
+.prm-card-status-inline svg {
   width: 11px;
   height: 11px;
   vertical-align: -1px;
 }
 
 /* Confirm warning icon */
-.mae-confirm-warning svg {
+.prm-confirm-warning svg {
   width: 14px;
   height: 14px;
   vertical-align: -2px;
@@ -2600,8 +2600,8 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
  * API Confirm Modal — matches API Confirm.html
  * ============================================================ */
 
-.modal.mae-api-confirm-modal .modal-close-button { display: none; }
-.modal.mae-api-confirm-modal {
+.modal.prm-api-confirm-modal .modal-close-button { display: none; }
+.modal.prm-api-confirm-modal {
   width: 500px;
   border-radius: 12px;
   background: var(--background-primary);
@@ -2613,14 +2613,14 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
 }
 
 /* Header */
-.mae-apm-header {
+.prm-apm-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 18px;
   border-bottom: 1px solid var(--background-modifier-border);
   flex-shrink: 0;
 }
-.mae-apm-header-left { display: flex; align-items: center; gap: 10px; }
-.mae-apm-icon {
+.prm-apm-header-left { display: flex; align-items: center; gap: 10px; }
+.prm-apm-icon {
   width: 24px; height: 24px; border-radius: 7px;
   background: rgba(96,165,250,0.12);
   border: 1px solid rgba(96,165,250,0.20);
@@ -2628,36 +2628,36 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
   color: rgba(96,165,250,0.85);
   flex-shrink: 0;
 }
-.mae-apm-title {
+.prm-apm-title {
   font-size: 13px; font-weight: 600;
   color: var(--text-normal); line-height: 1.2;
 }
-.mae-apm-subtitle {
+.prm-apm-subtitle {
   font-size: 10px; font-family: var(--font-monospace);
   color: var(--text-muted); margin-top: 2px;
 }
 
 /* Provider badge row */
-.mae-apm-provider-row {
+.prm-apm-provider-row {
   display: flex; align-items: center; gap: 8px;
   padding: 10px 18px 4px;
 }
-.mae-apm-provider-avatar {
+.prm-apm-provider-avatar {
   width: 20px; height: 20px;
   border-radius: 5px;
   display: flex; align-items: center; justify-content: center;
   border: 1px solid transparent;
   flex-shrink: 0;
 }
-.mae-apm-provider-char {
+.prm-apm-provider-char {
   font-size: 10px; font-weight: 700;
   font-family: var(--font-monospace);
 }
-.mae-apm-provider-name {
+.prm-apm-provider-name {
   font-size: 12px; font-weight: 600;
   color: var(--text-normal);
 }
-.mae-apm-provider-badge {
+.prm-apm-provider-badge {
   font-size: 8px; font-family: var(--font-monospace);
   padding: 1px 6px; border-radius: 999px;
   border: 1px solid transparent;
@@ -2665,36 +2665,36 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
 }
 
 /* Info table */
-.mae-apm-info-wrap { padding: 4px 18px 8px; }
-.mae-apm-info-box {
+.prm-apm-info-wrap { padding: 4px 18px 8px; }
+.prm-apm-info-box {
   background: var(--background-secondary);
   border: 1px solid var(--background-modifier-border);
   border-radius: 8px;
   overflow: hidden;
 }
-.mae-apm-info-row {
+.prm-apm-info-row {
   display: flex; align-items: center;
   padding: 7px 12px;
   border-bottom: 1px solid var(--background-modifier-border);
 }
-.mae-apm-info-row:last-child { border-bottom: none; }
-.mae-apm-info-label {
+.prm-apm-info-row:last-child { border-bottom: none; }
+.prm-apm-info-label {
   font-size: 9px; font-family: var(--font-monospace);
   color: var(--text-muted); opacity: 0.6;
   text-transform: uppercase; letter-spacing: 0.06em;
   width: 80px; flex-shrink: 0;
 }
-.mae-apm-info-value {
+.prm-apm-info-value {
   font-size: 12px; font-family: var(--font-monospace);
   color: var(--text-normal);
 }
-.mae-apm-info-warn {
+.prm-apm-info-warn {
   color: rgba(251,146,60,0.90);
   font-weight: 600;
 }
 
 /* Warning */
-.mae-apm-warning {
+.prm-apm-warning {
   display: flex; align-items: flex-start; gap: 8px;
   background: rgba(251,146,60,0.08);
   border: 1px solid rgba(251,146,60,0.20);
@@ -2702,12 +2702,12 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
   padding: 10px 12px;
   margin: 4px 18px 0;
 }
-.mae-apm-warning-icon {
+.prm-apm-warning-icon {
   color: rgba(251,146,60,0.85);
   flex-shrink: 0;
   margin-top: 1px;
 }
-.mae-apm-warning-text {
+.prm-apm-warning-text {
   font-size: 11px;
   color: var(--text-normal);
   opacity: 0.80;
@@ -2716,7 +2716,7 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
 }
 
 /* Footer */
-.mae-apm-footer {
+.prm-apm-footer {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 18px 14px;
   border-top: 1px solid var(--background-modifier-border);
@@ -2724,84 +2724,84 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
 }
 
 /* API confirm buttons */
-.mae-apm-btn {
+.prm-apm-btn {
   display: inline-flex; align-items: center;
   font-family: var(--font-monospace); cursor: pointer;
   border-radius: 6px; transition: all 0.12s;
 }
-.mae-apm-btn-inner {
+.prm-apm-btn-inner {
   display: flex; align-items: center; gap: 6px;
 }
-.mae-apm-btn-icon svg, .mae-apm-btn-icon .svg-icon {
+.prm-apm-btn-icon svg, .prm-apm-btn-icon .svg-icon {
   width: 12px !important; height: 12px !important;
 }
 
 /* Cancel */
-.mae-apm-btn-cancel {
+.prm-apm-btn-cancel {
   font-size: 10px; font-weight: 500;
   padding: 6px 12px;
   background: var(--background-primary);
   border: 1px solid var(--background-modifier-border);
   color: var(--text-muted);
 }
-.mae-apm-btn-cancel:hover {
+.prm-apm-btn-cancel:hover {
   color: rgba(180,40,55,0.90);
   border-color: rgba(215,58,73,0.25);
   background: rgba(215,58,73,0.06);
 }
-.theme-dark .mae-apm-btn-cancel:hover {
+.theme-dark .prm-apm-btn-cancel:hover {
   color: rgba(248,150,150,0.90);
   border-color: rgba(248,113,113,0.25);
   background: rgba(248,113,113,0.08);
 }
 
 /* Execute (green CTA) */
-.mae-apm-btn-exec {
+.prm-apm-btn-exec {
   font-size: 11px; font-weight: 600;
   padding: 7px 14px;
   background: rgba(52,168,83,0.08);
   border: 1px solid rgba(52,168,83,0.30);
   color: rgba(30,120,50,0.92);
 }
-.mae-apm-btn-exec:hover {
+.prm-apm-btn-exec:hover {
   background: rgba(52,168,83,0.16);
   border-color: rgba(52,168,83,0.45);
 }
-.theme-dark .mae-apm-btn-exec {
+.theme-dark .prm-apm-btn-exec {
   background: rgba(74,222,128,0.10);
   border-color: rgba(74,222,128,0.28);
   color: rgba(110,220,140,0.95);
 }
-.theme-dark .mae-apm-btn-exec:hover {
+.theme-dark .prm-apm-btn-exec:hover {
   background: rgba(74,222,128,0.20);
 }
 
 /* Dark mode overrides for API Confirm Modal */
-.theme-dark .modal.mae-api-confirm-modal {
+.theme-dark .modal.prm-api-confirm-modal {
   background: var(--background-primary);
   box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.12);
 }
-.theme-dark .mae-apm-icon {
+.theme-dark .prm-apm-icon {
   background: rgba(96,165,250,0.18);
   border-color: rgba(96,165,250,0.30);
   color: rgba(150,190,255,0.90);
 }
-.theme-dark .mae-apm-info-box {
+.theme-dark .prm-apm-info-box {
   background: var(--background-secondary);
 }
-.theme-dark .mae-apm-warning {
+.theme-dark .prm-apm-warning {
   background: rgba(251,146,60,0.10);
   border-color: rgba(251,146,60,0.25);
 }
-.theme-dark .mae-apm-warning-icon {
+.theme-dark .prm-apm-warning-icon {
   color: rgba(251,170,100,0.90);
 }
 
 /* API Confirm icon sizing */
-.mae-apm-icon svg, .mae-apm-icon .svg-icon {
+.prm-apm-icon svg, .prm-apm-icon .svg-icon {
   width: 14px; height: 14px;
 }
-.mae-apm-warning-icon svg, .mae-apm-warning-icon .svg-icon {
+.prm-apm-warning-icon svg, .prm-apm-warning-icon .svg-icon {
   width: 14px; height: 14px;
 }
 
@@ -2809,8 +2809,8 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
  * API Progress Modal — matches API Confirm.html (progress variant)
  * ============================================================ */
 
-.modal.mae-api-progress-modal .modal-close-button { display: none; }
-.modal.mae-api-progress-modal {
+.modal.prm-api-progress-modal .modal-close-button { display: none; }
+.modal.prm-api-progress-modal {
   width: 400px;
   border-radius: 12px;
   background: var(--background-primary);
@@ -2822,14 +2822,14 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
 }
 
 /* Header */
-.mae-ppm-header {
+.prm-ppm-header {
   display: flex; align-items: center; justify-content: space-between;
   padding: 14px 18px;
   border-bottom: 1px solid var(--background-modifier-border);
   flex-shrink: 0;
 }
-.mae-ppm-header-left { display: flex; align-items: center; gap: 10px; }
-.mae-ppm-icon {
+.prm-ppm-header-left { display: flex; align-items: center; gap: 10px; }
+.prm-ppm-icon {
   width: 24px; height: 24px; border-radius: 7px;
   background: rgba(96,165,250,0.12);
   border: 1px solid rgba(96,165,250,0.20);
@@ -2837,34 +2837,34 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
   color: rgba(96,165,250,0.85);
   flex-shrink: 0;
 }
-.mae-ppm-title {
+.prm-ppm-title {
   font-size: 13px; font-weight: 600;
   color: var(--text-normal); line-height: 1.2;
 }
-.mae-ppm-subtitle {
+.prm-ppm-subtitle {
   font-size: 10px; font-family: var(--font-monospace);
   color: var(--text-muted); margin-top: 2px;
 }
 
 /* Content area */
-.mae-ppm-content {
+.prm-ppm-content {
   padding: 12px 18px;
   flex: 1;
 }
 
 /* Spinner state */
-.mae-ppm-spinner {
+.prm-ppm-spinner {
   width: 32px; height: 32px;
   border: 2px solid rgba(96,165,250,0.20);
   border-top-color: rgba(96,165,250,0.85);
   border-radius: 50%;
-  animation: mae-spin 0.8s linear infinite;
+  animation: prm-spin 0.8s linear infinite;
   margin: 16px auto 12px;
 }
-@keyframes mae-spin {
+@keyframes prm-spin {
   to { transform: rotate(360deg); }
 }
-.mae-ppm-calling-text {
+.prm-ppm-calling-text {
   text-align: center;
   font-size: 12px;
   color: var(--text-muted);
@@ -2872,22 +2872,22 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
 }
 
 /* Error state */
-.mae-ppm-error {
+.prm-ppm-error {
   display: flex; align-items: flex-start; gap: 8px;
   background: rgba(215,58,73,0.06);
   border: 1px solid rgba(215,58,73,0.20);
   border-radius: 8px;
   padding: 10px 12px;
 }
-.mae-ppm-error-icon {
+.prm-ppm-error-icon {
   color: rgba(215,58,73,0.80);
   flex-shrink: 0;
   margin-top: 1px;
 }
-.mae-ppm-error-icon svg, .mae-ppm-error-icon .svg-icon {
+.prm-ppm-error-icon svg, .prm-ppm-error-icon .svg-icon {
   width: 14px; height: 14px;
 }
-.mae-ppm-error-text {
+.prm-ppm-error-text {
   font-size: 11px;
   color: var(--text-normal);
   opacity: 0.85;
@@ -2896,22 +2896,22 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
 }
 
 /* Success state */
-.mae-ppm-success {
+.prm-ppm-success {
   display: flex; align-items: flex-start; gap: 8px;
   background: rgba(52,168,83,0.06);
   border: 1px solid rgba(52,168,83,0.20);
   border-radius: 8px;
   padding: 10px 12px;
 }
-.mae-ppm-success-icon {
+.prm-ppm-success-icon {
   color: rgba(52,168,83,0.85);
   flex-shrink: 0;
   margin-top: 1px;
 }
-.mae-ppm-success-icon svg, .mae-ppm-success-icon .svg-icon {
+.prm-ppm-success-icon svg, .prm-ppm-success-icon .svg-icon {
   width: 14px; height: 14px;
 }
-.mae-ppm-success-text {
+.prm-ppm-success-text {
   font-size: 11px;
   color: var(--text-normal);
   opacity: 0.85;
@@ -2920,29 +2920,29 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
 }
 
 /* Footer */
-.mae-ppm-footer {
+.prm-ppm-footer {
   display: flex; align-items: center; justify-content: flex-end;
   padding: 10px 18px 14px;
   border-top: 1px solid var(--background-modifier-border);
   margin-top: auto;
 }
-.mae-ppm-footer-right { display: flex; align-items: center; gap: 8px; }
+.prm-ppm-footer-right { display: flex; align-items: center; gap: 8px; }
 
 /* Progress modal buttons */
-.mae-ppm-btn {
+.prm-ppm-btn {
   display: inline-flex; align-items: center;
   font-family: var(--font-monospace); cursor: pointer;
   border-radius: 6px; transition: all 0.12s;
 }
-.mae-ppm-btn-inner {
+.prm-ppm-btn-inner {
   display: flex; align-items: center; gap: 6px;
 }
-.mae-ppm-btn-icon svg, .mae-ppm-btn-icon .svg-icon {
+.prm-ppm-btn-icon svg, .prm-ppm-btn-icon .svg-icon {
   width: 12px !important; height: 12px !important;
 }
 
 /* Close button */
-.mae-ppm-btn-close {
+.prm-ppm-btn-close {
   font-size: 10px; font-weight: 500;
   padding: 6px 12px;
   background: var(--background-primary);
@@ -2951,104 +2951,104 @@ body:not(.theme-dark) .mae-arm-btn-save:hover {
 }
 
 /* Diff button (green CTA) */
-.mae-ppm-btn-diff {
+.prm-ppm-btn-diff {
   font-size: 11px; font-weight: 600;
   padding: 7px 14px;
   background: rgba(52,168,83,0.08);
   border: 1px solid rgba(52,168,83,0.30);
   color: rgba(30,120,50,0.92);
 }
-.mae-ppm-btn-diff:hover {
+.prm-ppm-btn-diff:hover {
   background: rgba(52,168,83,0.16);
   border-color: rgba(52,168,83,0.45);
 }
-.theme-dark .mae-ppm-btn-diff {
+.theme-dark .prm-ppm-btn-diff {
   background: rgba(74,222,128,0.10);
   border-color: rgba(74,222,128,0.28);
   color: rgba(110,220,140,0.95);
 }
-.theme-dark .mae-ppm-btn-diff:hover {
+.theme-dark .prm-ppm-btn-diff:hover {
   background: rgba(74,222,128,0.20);
 }
 
 /* Dark mode for progress modal */
-.theme-dark .modal.mae-api-progress-modal {
+.theme-dark .modal.prm-api-progress-modal {
   background: var(--background-primary);
   box-shadow: 0 8px 24px rgba(0,0,0,0.25), 0 2px 8px rgba(0,0,0,0.12);
 }
-.theme-dark .mae-ppm-icon {
+.theme-dark .prm-ppm-icon {
   background: rgba(96,165,250,0.18);
   border-color: rgba(96,165,250,0.30);
   color: rgba(150,190,255,0.90);
 }
-.theme-dark .mae-ppm-error {
+.theme-dark .prm-ppm-error {
   background: rgba(248,113,113,0.08);
   border-color: rgba(248,113,113,0.22);
 }
-.theme-dark .mae-ppm-error-icon {
+.theme-dark .prm-ppm-error-icon {
   color: rgba(248,113,113,0.85);
 }
-.theme-dark .mae-ppm-success {
+.theme-dark .prm-ppm-success {
   background: rgba(74,222,128,0.08);
   border-color: rgba(74,222,128,0.22);
 }
-.theme-dark .mae-ppm-success-icon {
+.theme-dark .prm-ppm-success-icon {
   color: rgba(110,220,140,0.90);
 }
 
 /* Progress modal icon sizing */
-.mae-ppm-icon svg, .mae-ppm-icon .svg-icon {
+.prm-ppm-icon svg, .prm-ppm-icon .svg-icon {
   width: 14px; height: 14px;
 }
 
 /* Diff modal icons */
-.mae-dm-icon svg, .mae-dm-icon .svg-icon {
+.prm-dm-icon svg, .prm-dm-icon .svg-icon {
   width: 14px;
   height: 14px;
 }
-.mae-dm-btn-icon svg, .mae-dm-btn-icon .svg-icon {
+.prm-dm-btn-icon svg, .prm-dm-btn-icon .svg-icon {
   width: 12px;
   height: 12px;
 }
-.mae-dm-hunk-btn-icon svg, .mae-dm-hunk-btn-icon .svg-icon {
+.prm-dm-hunk-btn-icon svg, .prm-dm-hunk-btn-icon .svg-icon {
   width: 10px;
   height: 10px;
 }
 
 /* Agent select modal icons */
-.mae-asm-icon svg, .mae-asm-icon .svg-icon {
+.prm-asm-icon svg, .prm-asm-icon .svg-icon {
   width: 14px;
   height: 14px;
 }
 
 /* Add Rule Modal icons */
-.mae-arm-icon svg, .mae-arm-icon .svg-icon {
+.prm-arm-icon svg, .prm-arm-icon .svg-icon {
   width: 14px;
   height: 14px;
 }
 
 /* Confirm Modal icons — override .svg-icon default sizing */
-.mae-ccm-icon svg, .mae-ccm-icon .svg-icon {
+.prm-ccm-icon svg, .prm-ccm-icon .svg-icon {
   width: 14px;
   height: 14px;
 }
-.mae-ccm-warning-icon svg, .mae-ccm-warning-icon .svg-icon {
+.prm-ccm-warning-icon svg, .prm-ccm-warning-icon .svg-icon {
   width: 14px;
   height: 14px;
 }
-.mae-ccm-hint-icon svg, .mae-ccm-hint-icon .svg-icon {
+.prm-ccm-hint-icon svg, .prm-ccm-hint-icon .svg-icon {
   width: 12px;
   height: 12px;
 }
-.mae-ccm-btn-icon svg, .mae-ccm-btn-icon .svg-icon {
+.prm-ccm-btn-icon svg, .prm-ccm-btn-icon .svg-icon {
   width: 12px;
   height: 12px;
 }
 
 /* Modal close buttons — hard reset Obsidian's default button chrome */
-button.mae-ccm-close,
-button.mae-dm-close,
-button.mae-asm-close {
+button.prm-ccm-close,
+button.prm-dm-close,
+button.prm-asm-close {
   appearance: none;
   -webkit-appearance: none;
   box-shadow: none !important;
@@ -3070,23 +3070,23 @@ button.mae-asm-close {
   line-height: 0;
   font-size: 0;
 }
-button.mae-ccm-close:hover,
-button.mae-dm-close:hover,
-button.mae-asm-close:hover {
+button.prm-ccm-close:hover,
+button.prm-dm-close:hover,
+button.prm-asm-close:hover {
   background: var(--background-modifier-hover) !important;
   color: var(--text-normal);
 }
-button.mae-ccm-close:focus-visible,
-button.mae-dm-close:focus-visible,
-button.mae-asm-close:focus-visible {
+button.prm-ccm-close:focus-visible,
+button.prm-dm-close:focus-visible,
+button.prm-asm-close:focus-visible {
   box-shadow: 0 0 0 2px rgba(167,139,250,0.35) !important;
 }
-button.mae-ccm-close svg,
-button.mae-dm-close svg,
-button.mae-asm-close svg,
-button.mae-ccm-close .svg-icon,
-button.mae-dm-close .svg-icon,
-button.mae-asm-close .svg-icon {
+button.prm-ccm-close svg,
+button.prm-dm-close svg,
+button.prm-asm-close svg,
+button.prm-ccm-close .svg-icon,
+button.prm-dm-close .svg-icon,
+button.prm-asm-close .svg-icon {
   display: block;
   width: 14px !important;
   height: 14px !important;
@@ -3094,7 +3094,7 @@ button.mae-asm-close .svg-icon {
 }
 
 /* Settings page icon */
-.mae-settings-page-icon .mae-logo-img {
+.prm-settings-page-icon .prm-logo-img {
   width: 100%;
   height: 100%;
   object-fit: contain;
@@ -3102,19 +3102,19 @@ button.mae-asm-close .svg-icon {
 }
 
 /* Settings section icons */
-.mae-settings-section-icon svg {
+.prm-settings-section-icon svg {
   width: 18px;
   height: 18px;
 }
 
 /* Settings section chevron */
-.mae-settings-section-chevron svg {
+.prm-settings-section-chevron svg {
   width: 12px;
   height: 12px;
 }
 
 /* API key toggle icon */
-.mae-api-key-toggle svg {
+.prm-api-key-toggle svg {
   width: 14px;
   height: 14px;
 }

@@ -9,6 +9,10 @@ import {
 } from "obsidian";
 import { registerIcons } from "./utils/icons";
 
+// Inline SVG assets at build time via esbuild text loader
+import logoSvg from "../img/logo.svg";
+import emptyStateSvg from "../img/empty-state.svg";
+
 import {
   Annotation,
   AnnotationType,
@@ -33,7 +37,7 @@ import { BottomToolbar } from "./editor/BottomToolbar";
 import { NoteModal, ReviewModal } from "./editor/NoteModal";
 import {
   DEFAULT_SETTINGS,
-  MultiAIEditSettings,
+  PromptuarySettings,
   SettingsTab,
 } from "./settings/SettingsTab";
 import { SIDEBAR_VIEW_TYPE, SidebarView } from "./sidebar/SidebarView";
@@ -45,6 +49,7 @@ import {
 } from "./export/Exporters";
 import { newAnnotationId, sha256 } from "./utils/hash";
 import { isMobile } from "./utils/platform";
+import { openFolderInSystem, revealInFileManager } from "./utils/FolderOpener";
 import { EditorView } from "@codemirror/view";
 
 // v0.2 Agent bridge imports
@@ -74,8 +79,8 @@ import {
 import { APIConfirmModal, APIProgressModal } from "./api/APIExecuteModal";
 import { buildReviewMarkdown, estimateTokens } from "./export/Exporters";
 
-export default class MultiAIEditPlugin extends Plugin {
-  settings: MultiAIEditSettings = DEFAULT_SETTINGS;
+export default class PromptuaryPlugin extends Plugin {
+  settings: PromptuarySettings = DEFAULT_SETTINGS;
   store!: AnnotationStore;
   popover: SelectionPopover | null = null;
   private toolbar: BottomToolbar | null = null;
@@ -88,11 +93,11 @@ export default class MultiAIEditPlugin extends Plugin {
   private fileChangeMonitor: FileChangeMonitor | null = null;
   private originalTextBeforeAgent: string | null = null;
 
-  /** Logo SVG data URI (read once at load) */
-  logoUrl = "";
+  /** Logo SVG data URI (inlined at build time) */
+  logoUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(logoSvg)))}`;
 
-  /** Empty state SVG data URI for sidebar placeholder */
-  emptyStateUrl = "";
+  /** Empty state SVG data URI (inlined at build time) */
+  emptyStateUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(emptyStateSvg)))}`;
 
   /** Execution state visible to sidebar for status display */
   executionState: null | { type: "agent" | "api" } = null;
@@ -102,18 +107,6 @@ export default class MultiAIEditPlugin extends Plugin {
 
     // Register custom icons
     registerIcons();
-
-    // Load plugin logo as data URI for sidebar & settings
-    try {
-      const svgContent = await this.app.vault.adapter.read(`${this.manifest.dir}/img/logo.svg`);
-      this.logoUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgContent)))}`;
-    } catch { /* logo optional */ }
-
-    // Load empty state illustration as data URI
-    try {
-      const svgContent = await this.app.vault.adapter.read(`${this.manifest.dir}/img/empty-state.svg`);
-      this.emptyStateUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgContent)))}`;
-    } catch { /* empty state optional */ }
 
     this.store = new AnnotationStore(this.app, () => this.settings.sidecarDir);
     this.store.registerVaultEvents();
@@ -130,10 +123,10 @@ export default class MultiAIEditPlugin extends Plugin {
 
     // Sidebar view
     this.registerView(SIDEBAR_VIEW_TYPE, (leaf) => new SidebarView(leaf, this));
-    this.addRibbonIcon("highlighter", "MultiAIEdit 侧边栏", () => this.openSidebar());
+    this.addRibbonIcon("highlighter", "Promptuary 侧边栏", () => this.openSidebar());
     this.addCommand({
       id: "open-sidebar",
-      name: "打开 MultiAIEdit 侧边栏",
+      name: "打开 Promptuary 侧边栏",
       callback: () => this.openSidebar(),
     });
 
@@ -152,7 +145,7 @@ export default class MultiAIEditPlugin extends Plugin {
     this.registerDomEvent(document, "mousedown", (e) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
-      if (target.closest(".multiaiedit-popover")) return;
+      if (target.closest(".promptuary-popover")) return;
       if (target.closest(".cm-editor")) {
         this.isDraggingSelection = true;
         this.popover?.hide();
@@ -250,9 +243,15 @@ export default class MultiAIEditPlugin extends Plugin {
 
   async loadSettings(): Promise<void> {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
-    // Migration: auto-migrate from hidden .multiaiedit/exports to visible MultiAIEdit/exports
-    if (this.settings.exportDir === ".multiaiedit/exports") {
+    // Migration: auto-migrate from visible export dirs to hidden .promptuary/exports
+    const legacyExportDirs = ["Promptuary/exports", "MultiAIEdit/exports", ".multiaiedit/exports"];
+    if (legacyExportDirs.includes(this.settings.exportDir)) {
       this.settings.exportDir = DEFAULT_SETTINGS.exportDir;
+      await this.saveSettings();
+    }
+    // Migration: sidecarDir .multiaiedit → .promptuary
+    if (this.settings.sidecarDir === ".multiaiedit/annotations") {
+      this.settings.sidecarDir = DEFAULT_SETTINGS.sidecarDir;
       await this.saveSettings();
     }
   }
@@ -1222,10 +1221,14 @@ export default class MultiAIEditPlugin extends Plugin {
       includeReadingNotes: this.settings.includeReadingNotesInExport,
     });
     if (target) {
-      const file = this.app.vault.getAbstractFileByPath(target);
-      if (file instanceof TFile) {
-        await this.app.workspace.getLeaf(false).openFile(file);
+      new Notice(`导出成功，正在打开: ${target}`);
+      // Reveal the exported file in Finder / Explorer
+      const result = await revealInFileManager(this.app, target);
+      if (!result.success) {
+        new Notice(`打开文件夹失败: ${result.error ?? "未知错误"}`);
       }
+    } else {
+      new Notice("导出失败：未生成文件");
     }
   }
 

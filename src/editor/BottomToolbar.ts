@@ -27,7 +27,7 @@ export class BottomToolbar {
 
   constructor(private app: App, private cb: PopoverCallbacks) {
     this.el = document.createElement("div");
-    this.el.className = "multiaiedit-bottom-toolbar";
+    this.el.className = "promptuary-bottom-toolbar";
     this.el.style.display = "none";
     document.body.appendChild(this.el);
   }
@@ -77,7 +77,7 @@ export class BottomToolbar {
   }
 
   private renderModeCapsule(): void {
-    const wrap = this.el.createDiv({ cls: "mae-popover-capsule" });
+    const wrap = this.el.createDiv({ cls: "prm-popover-capsule" });
     const modes: Array<[ViewMode, string]> = [
       ["reading", "阅读"],
       ["reviewing", "批阅"],
@@ -94,10 +94,10 @@ export class BottomToolbar {
   }
 
   private renderReadingActions(): void {
-    const row = this.el.createDiv({ cls: "mae-popover-actions" });
+    const row = this.el.createDiv({ cls: "prm-popover-actions" });
     const colors: HighlightColor[] = ["yellow", "blue", "green", "purple"];
     for (const color of colors) {
-      const dot = row.createDiv({ cls: `mae-color ${color}` });
+      const dot = row.createDiv({ cls: `prm-color ${color}` });
       dot.title = `${color} 高亮`;
       dot.onclick = () => {
         this.selectedColor = color;
@@ -118,10 +118,10 @@ export class BottomToolbar {
   }
 
   private renderReviewingActions(): void {
-    const row = this.el.createDiv({ cls: "mae-popover-actions" });
+    const row = this.el.createDiv({ cls: "prm-popover-actions" });
 
     // Delete button (toggle)
-    const deleteBtn = row.createEl("button", { cls: "mae-delete-btn", text: "Delete" });
+    const deleteBtn = row.createEl("button", { cls: "prm-delete-btn", text: "Delete" });
     deleteBtn.title = "标记为删除";
     deleteBtn.onclick = () => {
       this.strikePending = !this.strikePending;
@@ -143,14 +143,14 @@ export class BottomToolbar {
     };
 
     // Note button
-    const noteBtn = row.createEl("button", { cls: "mae-note-btn", text: "Add Note" });
+    const noteBtn = row.createEl("button", { cls: "prm-note-btn", text: "Add Note" });
     noteBtn.title = "添加批阅意见";
     noteBtn.onclick = () => {
       this.toggleNoteArea();
     };
 
     // Confirm button
-    const confirmBtn = row.createEl("button", { cls: "mae-review-confirm-btn", text: "✓" });
+    const confirmBtn = row.createEl("button", { cls: "prm-review-confirm-btn", text: "✓" });
     confirmBtn.title = "确认删除";
     confirmBtn.style.display = "none";
     confirmBtn.onclick = () => {
@@ -164,7 +164,7 @@ export class BottomToolbar {
   }
 
   private updateReviewConfirmState(): void {
-    const confirmBtn = this.el.querySelector(".mae-review-confirm-btn") as HTMLElement;
+    const confirmBtn = this.el.querySelector(".prm-review-confirm-btn") as HTMLElement;
     if (confirmBtn) {
       confirmBtn.style.display = (this.strikePending && !this.noteExpanded) ? "" : "none";
     }
@@ -172,13 +172,13 @@ export class BottomToolbar {
 
   /** Update "删除" indicator in Note area header when Delete is toggled */
   private updateStrikeIndicator(): void {
-    const header = this.el.querySelector(".mae-popover-note-header");
+    const header = this.el.querySelector(".prm-popover-note-header");
     if (!header) return;
 
-    let indicator = header.querySelector(".mae-strike-indicator") as HTMLElement;
+    let indicator = header.querySelector(".prm-strike-indicator") as HTMLElement;
     if (this.strikePending) {
       if (!indicator) {
-        indicator = header.createSpan({ cls: "mae-strike-indicator", text: "删除" });
+        indicator = header.createSpan({ cls: "prm-strike-indicator", text: "删除" });
       }
     } else {
       if (indicator) indicator.remove();
@@ -186,8 +186,8 @@ export class BottomToolbar {
   }
 
   private updateNoteColorIndicator(): void {
-    const dot = this.el.querySelector(".mae-popover-note-header .mae-note-dot") as HTMLElement;
-    const label = this.el.querySelector(".mae-popover-note-header .mae-note-label") as HTMLElement;
+    const dot = this.el.querySelector(".prm-popover-note-header .prm-note-dot") as HTMLElement;
+    const label = this.el.querySelector(".prm-popover-note-header .prm-note-label") as HTMLElement;
     if (!dot || !label) return;
     const colorClasses = ["yellow", "blue", "green", "purple", "orange"];
     for (const c of colorClasses) {
@@ -200,7 +200,7 @@ export class BottomToolbar {
 
   private toggleNoteArea(): void {
     if (this.noteExpanded) {
-      const area = this.el.querySelector(".mae-popover-note-area");
+      const area = this.el.querySelector(".prm-popover-note-area");
       if (area) area.remove();
       this.noteExpanded = false;
       this.updateReviewConfirmState();
@@ -210,36 +210,36 @@ export class BottomToolbar {
     this.noteExpanded = true;
     this.updateReviewConfirmState();
 
-    const area = this.el.createDiv({ cls: "mae-popover-note-area" });
+    const area = this.el.createDiv({ cls: "prm-popover-note-area" });
 
     // Header row
-    const header = area.createDiv({ cls: "mae-popover-note-header" });
+    const header = area.createDiv({ cls: "prm-popover-note-header" });
     if (this.mode === "reviewing") {
-      header.createDiv({ cls: "mae-note-dot orange" });
-      header.createDiv({ cls: "mae-divider" });
-      header.createSpan({ cls: "mae-note-label orange", text: "批阅" });
+      header.createDiv({ cls: "prm-note-dot orange" });
+      header.createDiv({ cls: "prm-divider" });
+      header.createSpan({ cls: "prm-note-label orange", text: "批阅" });
       if (this.strikePending) {
-        header.createSpan({ cls: "mae-strike-indicator", text: "删除" });
+        header.createSpan({ cls: "prm-strike-indicator", text: "删除" });
       }
     } else {
-      header.createDiv({ cls: `mae-note-dot ${this.selectedColor}` });
-      header.createDiv({ cls: "mae-divider" });
-      header.createSpan({ cls: `mae-note-label ${this.selectedColor}`, text: "笔记" });
+      header.createDiv({ cls: `prm-note-dot ${this.selectedColor}` });
+      header.createDiv({ cls: "prm-divider" });
+      header.createSpan({ cls: `prm-note-label ${this.selectedColor}`, text: "笔记" });
     }
 
     // Input wrapper
-    const inputWrap = area.createDiv({ cls: "mae-popover-note-input-wrap" });
+    const inputWrap = area.createDiv({ cls: "prm-popover-note-input-wrap" });
     const input = inputWrap.createEl("input", {
       type: "text",
-      cls: "mae-popover-note-input",
+      cls: "prm-popover-note-input",
     });
     input.placeholder = this.mode === "reviewing"
       ? "输入批阅意见…"
       : "为这段高亮添加笔记…";
 
     // Footer row
-    const footer = area.createDiv({ cls: "mae-popover-note-footer" });
-    const saveBtn = footer.createEl("button", { cls: "mae-popover-note-save", text: "Save" });
+    const footer = area.createDiv({ cls: "prm-popover-note-footer" });
+    const saveBtn = footer.createEl("button", { cls: "prm-popover-note-save", text: "Save" });
 
     input.onkeydown = (e) => {
       if (e.key === "Enter") {

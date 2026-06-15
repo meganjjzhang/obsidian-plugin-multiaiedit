@@ -61,7 +61,7 @@ function launchMacOS(opts: LaunchOptions): void {
 
 	// Write the command to a temp shell script to avoid all AppleScript quoting issues.
 	// The script path is safe ASCII — no special chars to escape.
-	const tmpScript = nodePath.join(os.tmpdir(), `mae-agent-${Date.now()}.sh`);
+	const tmpScript = nodePath.join(os.tmpdir(), `prm-agent-${Date.now()}.sh`);
 	fs.writeFileSync(tmpScript, `#!/bin/bash\n${opts.command}\n`, { mode: 0o755 });
 
 	// Schedule cleanup after 60 s (well after execution starts)

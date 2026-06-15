@@ -2,11 +2,11 @@ import { ItemView, Menu, MarkdownView, Notice, TFile, WorkspaceLeaf, setIcon } f
 import { Annotation, ViewMode } from "../annotation/AnnotationModel";
 import { AnnotationStore } from "../annotation/AnnotationStore";
 import { locate, fuzzyLocate, computeLineHint, computeOccurrenceIndex } from "../annotation/AnnotationLocator";
-import type MultiAIEditPlugin from "../main";
+import type PromptuaryPlugin from "../main";
 import { isMobile } from "../utils/platform";
 import { EditorView } from "@codemirror/view";
 
-export const SIDEBAR_VIEW_TYPE = "multiaiedit-sidebar";
+export const SIDEBAR_VIEW_TYPE = "promptuary-sidebar";
 
 export class SidebarView extends ItemView {
   private mode: ViewMode = "reading";
@@ -21,7 +21,7 @@ export class SidebarView extends ItemView {
   private modifyDebounceTimer: number | null = null;
   private lastReviewCount = 0;
 
-  constructor(leaf: WorkspaceLeaf, private plugin: MultiAIEditPlugin) {
+  constructor(leaf: WorkspaceLeaf, private plugin: PromptuaryPlugin) {
     super(leaf);
   }
 
@@ -29,7 +29,7 @@ export class SidebarView extends ItemView {
     return SIDEBAR_VIEW_TYPE;
   }
   getDisplayText(): string {
-    return "MultiAIEdit";
+    return "Promptuary";
   }
   getIcon(): string {
     return "highlighter";
@@ -37,13 +37,13 @@ export class SidebarView extends ItemView {
 
   async onOpen(): Promise<void> {
     this.contentEl.empty();
-    this.container = this.contentEl.createDiv({ cls: "multiaiedit-sidebar" });
+    this.container = this.contentEl.createDiv({ cls: "promptuary-sidebar" });
     this.mode = this.plugin.settings.defaultMode;
 
     // Three-section layout: Header → Scrollable content → Bottom action bar
-    this.headerEl = this.container.createDiv({ cls: "mae-sidebar-header" });
-    this.contentEl2 = this.container.createDiv({ cls: "mae-sidebar-content" });
-    this.actionBarEl = this.container.createDiv({ cls: "mae-sidebar-action-bar" });
+    this.headerEl = this.container.createDiv({ cls: "prm-sidebar-header" });
+    this.contentEl2 = this.container.createDiv({ cls: "prm-sidebar-content" });
+    this.actionBarEl = this.container.createDiv({ cls: "prm-sidebar-action-bar" });
 
     this.registerEvent(
       this.app.workspace.on("active-leaf-change", () => this.onActiveLeafChange()),
@@ -298,39 +298,39 @@ export class SidebarView extends ItemView {
 
   /** Render empty state: illustration + hint text */
   private renderEmptyState(parent: HTMLElement, text: string): void {
-    const wrap = parent.createDiv({ cls: "mae-empty-state" });
+    const wrap = parent.createDiv({ cls: "prm-empty-state" });
     if (this.plugin.emptyStateUrl) {
-      const img = wrap.createEl("img", { cls: "mae-empty-state-img" });
+      const img = wrap.createEl("img", { cls: "prm-empty-state-img" });
       img.src = this.plugin.emptyStateUrl;
       img.alt = "";
     }
-    wrap.createDiv({ cls: "mae-empty-state-text", text });
+    wrap.createDiv({ cls: "prm-empty-state-text", text });
   }
 
   /** Render sidebar header: icon + title + settings */
   private renderHeader(parent: HTMLElement): void {
-    const row = parent.createDiv({ cls: "mae-header-row" });
-    const left = row.createDiv({ cls: "mae-header-left" });
-    const iconWrap = left.createDiv({ cls: "mae-header-icon" });
+    const row = parent.createDiv({ cls: "prm-header-row" });
+    const left = row.createDiv({ cls: "prm-header-left" });
+    const iconWrap = left.createDiv({ cls: "prm-header-icon" });
     if (this.plugin.logoUrl) {
-      const img = iconWrap.createEl("img", { cls: "mae-logo-img" });
+      const img = iconWrap.createEl("img", { cls: "prm-logo-img" });
       img.src = this.plugin.logoUrl;
-      img.alt = "MultiAIEdit";
+      img.alt = "Promptuary";
     } else {
-      setIcon(iconWrap, "mae-highlighter");
+      setIcon(iconWrap, "prm-highlighter");
     }
-    left.createSpan({ cls: "mae-header-title", text: "MultiAIEdit" });
+    left.createSpan({ cls: "prm-header-title", text: "Promptuary" });
 
-    const settingsBtn = row.createEl("button", { cls: "mae-header-settings" });
+    const settingsBtn = row.createEl("button", { cls: "prm-header-settings" });
     setIcon(settingsBtn, "settings");
     settingsBtn.onclick = () => {
       // Open plugin settings
       (this.app as any).setting?.open();
-      (this.app as any).setting?.openTabById?.("multiaiedit");
+      (this.app as any).setting?.openTabById?.("promptuary");
     };
 
     // Mode capsule (inside header, below title row)
-    const capsule = parent.createDiv({ cls: "mae-mode-capsule" });
+    const capsule = parent.createDiv({ cls: "prm-mode-capsule" });
     const modes: Array<[ViewMode, string]> = [
       ["reading", "阅读"],
       ["reviewing", "批阅"],
@@ -351,7 +351,7 @@ export class SidebarView extends ItemView {
 
     // Row 1: Agent 批阅（紫色 CTA 主按钮，桌面端）
     if (!isMobile()) {
-      const execBtn = parent.createEl("button", { cls: "mae-action-execute" });
+      const execBtn = parent.createEl("button", { cls: "prm-action-execute" });
       setIcon(execBtn, "sparkles");
       execBtn.title = "选择 Agent CLI 执行批阅修改";
       const isAgentExecuting = isExecuting && executing.type === "agent";
@@ -361,7 +361,7 @@ export class SidebarView extends ItemView {
         execBtn.createSpan({ text: "Agent 批阅" });
       }
       execBtn.disabled = !hasReviews || isExecuting;
-      if (isAgentExecuting) execBtn.addClass("mae-executing");
+      if (isAgentExecuting) execBtn.addClass("prm-executing");
       execBtn.onclick = async () => {
         if (!hasReviews || isExecuting) return;
         if (!hasReviews) { new Notice("当前文件没有批阅意见"); return; }
@@ -377,23 +377,23 @@ export class SidebarView extends ItemView {
     }
 
     // Row 2: API批阅 + 复制Prompt + 查看批注文件
-    const row2 = parent.createDiv({ cls: "mae-action-row" });
+    const row2 = parent.createDiv({ cls: "prm-action-row" });
 
     // API 批阅
     const hasApiKey = !!this.plugin.settings.apiSettings?.apiKey;
     const isApiExecuting = isExecuting && executing.type === "api";
-    const apiBtn = row2.createEl("button", { cls: "mae-action-btn" });
+    const apiBtn = row2.createEl("button", { cls: "prm-action-btn" });
     setIcon(apiBtn, "zap");
     if (isApiExecuting) {
-      apiBtn.createSpan({ cls: "mae-action-short", text: "API" });
-      apiBtn.createSpan({ cls: "mae-action-long", text: " 批阅中…" });
+      apiBtn.createSpan({ cls: "prm-action-short", text: "API" });
+      apiBtn.createSpan({ cls: "prm-action-long", text: " 批阅中…" });
     } else {
-      apiBtn.createSpan({ cls: "mae-action-short", text: "API" });
-      apiBtn.createSpan({ cls: "mae-action-long", text: " 批阅" });
+      apiBtn.createSpan({ cls: "prm-action-short", text: "API" });
+      apiBtn.createSpan({ cls: "prm-action-long", text: " 批阅" });
     }
     apiBtn.title = hasApiKey ? "通过 API 直调执行批阅修改" : "请先在设置中配置 API Key";
     apiBtn.disabled = !hasApiKey || isExecuting;
-    if (isApiExecuting) apiBtn.addClass("mae-executing");
+    if (isApiExecuting) apiBtn.addClass("prm-executing");
     apiBtn.onclick = async () => {
       if (!hasApiKey || isExecuting) return;
       this.plugin.executionState = { type: "api" };
@@ -407,10 +407,10 @@ export class SidebarView extends ItemView {
     };
 
     // 复制 Prompt
-    const copyBtn = row2.createEl("button", { cls: "mae-action-btn" });
+    const copyBtn = row2.createEl("button", { cls: "prm-action-btn" });
     setIcon(copyBtn, "clipboard-copy");
-    copyBtn.createSpan({ cls: "mae-action-short", text: "Prompt" });
-    copyBtn.createSpan({ cls: "mae-action-long", text: " 复制" });
+    copyBtn.createSpan({ cls: "prm-action-short", text: "Prompt" });
+    copyBtn.createSpan({ cls: "prm-action-long", text: " 复制" });
     copyBtn.title = "复制批阅 Prompt 到剪贴板";
     copyBtn.disabled = !hasReviews || isExecuting;
     copyBtn.onclick = () => {
@@ -419,7 +419,7 @@ export class SidebarView extends ItemView {
     };
 
     // … 按钮（下拉菜单：导出批注文件）
-    const moreBtn = row2.createEl("button", { cls: "mae-action-btn mae-more-btn" });
+    const moreBtn = row2.createEl("button", { cls: "prm-action-btn prm-more-btn" });
     setIcon(moreBtn, "more-horizontal");
     moreBtn.title = "导出批注文件";
     moreBtn.disabled = !hasReviews || isExecuting;
@@ -439,12 +439,12 @@ export class SidebarView extends ItemView {
     };
 
     // Status hint
-    const status = parent.createDiv({ cls: "mae-action-status" });
+    const status = parent.createDiv({ cls: "prm-action-status" });
     if (isExecuting) {
-      status.createSpan({ cls: "mae-status-dot mae-status-dot-executing" });
+      status.createSpan({ cls: "prm-status-dot prm-status-dot-executing" });
       status.createSpan({ text: executing.type === "agent" ? "Agent 批阅中…" : "API 批阅中…" });
     } else {
-      status.createSpan({ cls: "mae-status-dot" });
+      status.createSpan({ cls: "prm-status-dot" });
       status.createSpan({ text: `${reviewCount} 条批阅待执行` });
     }
   }
@@ -459,7 +459,7 @@ export class SidebarView extends ItemView {
 
   /** Render banner inside a given parent element */
   private renderBannerIn(parent: HTMLElement, affected: { fuzzy: number; drifted: number }): void {
-    const banner = parent.createDiv({ cls: "mae-banner" });
+    const banner = parent.createDiv({ cls: "prm-banner" });
     const parts: string[] = [];
     if (affected.drifted > 0) parts.push(`${affected.drifted} 条已漂移`);
     if (affected.fuzzy > 0) parts.push(`${affected.fuzzy} 条位置存在歧义`);
@@ -504,7 +504,7 @@ export class SidebarView extends ItemView {
 
   private renderCard(parent: HTMLElement, ann: Annotation, docText: string | null): void {
     const r = docText ? locate(docText, ann) : null;
-    const card = parent.createDiv({ cls: "mae-card" });
+    const card = parent.createDiv({ cls: "prm-card" });
 
     // 卡片左侧色条 class
     const colorClass = colorClassFor(ann);
@@ -517,17 +517,17 @@ export class SidebarView extends ItemView {
     }
 
     // ── meta 行：类型 chip + 漂移标记 + 删除按钮（所有类型统一） ──
-    const meta = card.createDiv({ cls: "mae-card-meta" });
+    const meta = card.createDiv({ cls: "prm-card-meta" });
     const tagClass = tagColorClassFor(ann);
-    meta.createSpan({ cls: `mae-tag ${tagClass}`, text: tagLabelFor(ann) });
+    meta.createSpan({ cls: `prm-tag ${tagClass}`, text: tagLabelFor(ann) });
     // 漂移状态
-    if (r?.status === "fuzzy")       { const s = meta.createSpan({ cls: "mae-card-status-inline" }); setIcon(s, "alert-triangle"); s.createSpan({ text: " 位置歧义" }); }
-    if (r?.status === "auto-healed") { const s = meta.createSpan({ cls: "mae-card-status-inline" }); setIcon(s, "wrench"); s.createSpan({ text: " 已自动修复" }); }
-    if (r?.status === "drifted")     { const s = meta.createSpan({ cls: "mae-card-status-inline" }); setIcon(s, "alert-triangle"); s.createSpan({ text: " 已漂移" }); }
+    if (r?.status === "fuzzy")       { const s = meta.createSpan({ cls: "prm-card-status-inline" }); setIcon(s, "alert-triangle"); s.createSpan({ text: " 位置歧义" }); }
+    if (r?.status === "auto-healed") { const s = meta.createSpan({ cls: "prm-card-status-inline" }); setIcon(s, "wrench"); s.createSpan({ text: " 已自动修复" }); }
+    if (r?.status === "drifted")     { const s = meta.createSpan({ cls: "prm-card-status-inline" }); setIcon(s, "alert-triangle"); s.createSpan({ text: " 已漂移" }); }
     // 删除按钮（右推）
-    const spacer = meta.createDiv({ cls: "mae-card-meta-spacer" });
+    const spacer = meta.createDiv({ cls: "prm-card-meta-spacer" });
     void spacer;
-    const delBtn = meta.createEl("button", { cls: "mae-card-del-btn", text: "删除" });
+    const delBtn = meta.createEl("button", { cls: "prm-card-del-btn", text: "删除" });
     delBtn.onclick = (e) => {
       e.stopPropagation();
       this.plugin.deleteAnnotation(ann);
@@ -537,32 +537,32 @@ export class SidebarView extends ItemView {
     if (ann.type === "review") {
       // Quote + review text + source（no icon badge）
       const quote = card.createDiv({
-        cls: "mae-card-quote mae-quote-orange" + (ann.strike ? " strike" : ""),
+        cls: "prm-card-quote prm-quote-orange" + (ann.strike ? " strike" : ""),
       });
       quote.setText(ann.selectedText);
 
       if (ann.reviewText) {
-        const review = card.createDiv({ cls: "mae-card-text mae-text-purple" });
+        const review = card.createDiv({ cls: "prm-card-text prm-text-purple" });
         review.setText(ann.reviewText);
       }
 
       const fileName = (this.currentFilePath ?? "").split("/").pop() ?? "";
-      const source = card.createDiv({ cls: "mae-card-source" });
+      const source = card.createDiv({ cls: "prm-card-source" });
       source.createSpan({ text: fileName });
       source.createSpan({ text: ` · L.${ann.lineHint}` });
     } else {
       // highlight / note
       const quote = card.createDiv({
-        cls: "mae-card-quote" + (ann.strike ? " strike" : ""),
+        cls: "prm-card-quote" + (ann.strike ? " strike" : ""),
       });
       quote.setText(ann.selectedText);
 
       if (ann.type === "note" && ann.noteText) {
-        card.createDiv({ cls: "mae-card-text", text: ann.noteText });
+        card.createDiv({ cls: "prm-card-text", text: ann.noteText });
       }
 
       const fileName = (this.currentFilePath ?? "").split("/").pop() ?? "";
-      const source = card.createDiv({ cls: "mae-card-source" });
+      const source = card.createDiv({ cls: "prm-card-source" });
       source.createSpan({ text: fileName });
       source.createSpan({ text: ` · L.${ann.lineHint}` });
     }
@@ -606,7 +606,7 @@ function emptyText(mode: ViewMode): string {
   return "这个文档还没有任何标注。";
 }
 
-/** 卡片左侧色条的 class（与 .mae-card.color-* 配套）。 */
+/** 卡片左侧色条的 class（与 .prm-card.color-* 配套）。 */
 function colorClassFor(ann: Annotation): string | null {
   if (ann.type === "highlight") {
     return `color-${ann.highlightColor ?? "yellow"}`;

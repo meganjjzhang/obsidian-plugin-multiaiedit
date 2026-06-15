@@ -53,7 +53,7 @@ export class SelectionPopover {
 
   constructor(private app: App, private cb: PopoverCallbacks) {
     this.el = document.createElement("div");
-    this.el.className = "multiaiedit-popover";
+    this.el.className = "promptuary-popover";
     this.el.style.display = "none";
     document.body.appendChild(this.el);
   }
@@ -68,7 +68,7 @@ export class SelectionPopover {
     if (mode === this.mode) return;
     // Preserve any text the user has typed into the note input before re-rendering
     const savedNoteText = this.noteExpanded
-      ? (this.el.querySelector(".mae-popover-note-input") as HTMLInputElement | null)?.value ?? ""
+      ? (this.el.querySelector(".prm-popover-note-input") as HTMLInputElement | null)?.value ?? ""
       : "";
     this.mode = mode;
     // Mode changed → DOM is stale, force re-render on the next show().
@@ -214,9 +214,9 @@ export class SelectionPopover {
 
   /** Title row: label left + mode capsule right */
   private renderTitleRow(): void {
-    const row = this.el.createDiv({ cls: "mae-popover-title-row" });
+    const row = this.el.createDiv({ cls: "prm-popover-title-row" });
     const title = row.createSpan({
-      cls: "mae-popover-title",
+      cls: "prm-popover-title",
       text: this.editingAnnotationId ? "编辑记录" : "添加记录",
     });
     void title;
@@ -225,7 +225,7 @@ export class SelectionPopover {
 
   /** Build the inline mode-switching capsule */
   private buildModeCapsule(parent: HTMLElement): void {
-    const wrap = parent.createDiv({ cls: "mae-popover-capsule" });
+    const wrap = parent.createDiv({ cls: "prm-popover-capsule" });
     const modes: Array<[ViewMode, string]> = [
       ["reading", "阅读"],
       ["reviewing", "批阅"],
@@ -244,16 +244,16 @@ export class SelectionPopover {
 
   /** Render reading mode action buttons: 4 color dots + divider + Note button + mode capsule */
   private renderReadingActions(): void {
-    const row = this.el.createDiv({ cls: "mae-popover-actions" });
+    const row = this.el.createDiv({ cls: "prm-popover-actions" });
     const colors: HighlightColor[] = ["yellow", "blue", "green", "purple"];
     for (const color of colors) {
-      const dot = row.createDiv({ cls: `mae-color ${color}` });
+      const dot = row.createDiv({ cls: `prm-color ${color}` });
       if (color === this.selectedColor) dot.addClass("active");
       dot.title = `${color} 高亮`;
       dot.onmousedown = (e) => {
         e.preventDefault();
         // Update active state on all dots
-        row.querySelectorAll(".mae-color").forEach(d => d.removeClass("active"));
+        row.querySelectorAll(".prm-color").forEach(d => d.removeClass("active"));
         dot.addClass("active");
         this.selectedColor = color;
         if (this.noteExpanded) {
@@ -268,8 +268,8 @@ export class SelectionPopover {
       };
     }
     // Vertical divider
-    row.createDiv({ cls: "mae-divider" });
-    const noteBtn = row.createEl("button", { cls: "mae-note-btn", text: "Add Note" });
+    row.createDiv({ cls: "prm-divider" });
+    const noteBtn = row.createEl("button", { cls: "prm-note-btn", text: "Add Note" });
     noteBtn.title = "添加笔记";
     noteBtn.onmousedown = (e) => {
       e.preventDefault();
@@ -279,10 +279,10 @@ export class SelectionPopover {
 
   /** Render reviewing mode action buttons: Delete (toggle) + Note + confirm ✓ + mode capsule */
   private renderReviewingActions(): void {
-    const row = this.el.createDiv({ cls: "mae-popover-actions" });
+    const row = this.el.createDiv({ cls: "prm-popover-actions" });
 
     // Delete button (toggle — marks selection as strikethrough)
-    const deleteBtn = row.createEl("button", { cls: "mae-delete-btn", text: "Delete" });
+    const deleteBtn = row.createEl("button", { cls: "prm-delete-btn", text: "Delete" });
     deleteBtn.title = "标记为删除";
     deleteBtn.onmousedown = (e) => {
       e.preventDefault();
@@ -307,7 +307,7 @@ export class SelectionPopover {
     };
 
     // Note button
-    const noteBtn = row.createEl("button", { cls: "mae-note-btn", text: "Add Note" });
+    const noteBtn = row.createEl("button", { cls: "prm-note-btn", text: "Add Note" });
     noteBtn.title = "添加批阅意见";
     noteBtn.onmousedown = (e) => {
       e.preventDefault();
@@ -315,7 +315,7 @@ export class SelectionPopover {
     };
 
     // Confirm button — visible only when Delete is on and Note is NOT expanded
-    const confirmBtn = row.createEl("button", { cls: "mae-review-confirm-btn", text: "✓" });
+    const confirmBtn = row.createEl("button", { cls: "prm-review-confirm-btn", text: "✓" });
     confirmBtn.title = "确认删除";
     confirmBtn.style.display = "none";
     confirmBtn.onmousedown = (e) => {
@@ -332,7 +332,7 @@ export class SelectionPopover {
 
   /** Update confirm button visibility based on strike state and note expansion */
   private updateReviewConfirmState(): void {
-    const confirmBtn = this.el.querySelector(".mae-review-confirm-btn") as HTMLElement;
+    const confirmBtn = this.el.querySelector(".prm-review-confirm-btn") as HTMLElement;
     if (confirmBtn) {
       confirmBtn.style.display = (this.strikePending && !this.noteExpanded) ? "" : "none";
     }
@@ -354,7 +354,7 @@ export class SelectionPopover {
     this.selectedColor = color;
     this.toggleNoteArea();
     // Pre-fill the input with existing text
-    const input = this.el.querySelector(".mae-popover-note-input") as HTMLInputElement;
+    const input = this.el.querySelector(".prm-popover-note-input") as HTMLInputElement;
     if (input) {
       input.value = text;
       requestAnimationFrame(() => {
@@ -368,7 +368,7 @@ export class SelectionPopover {
   private toggleNoteArea(): void {
     if (this.noteExpanded) {
       // Collapse: remove note area
-      const area = this.el.querySelector(".mae-popover-note-area");
+      const area = this.el.querySelector(".prm-popover-note-area");
       if (area) area.remove();
       this.noteExpanded = false;
       // Show confirm button again if strike is pending
@@ -383,21 +383,21 @@ export class SelectionPopover {
     // Hide confirm button (note area has its own Save)
     this.updateReviewConfirmState();
 
-    const area = this.el.createDiv({ cls: "mae-popover-note-area" });
+    const area = this.el.createDiv({ cls: "prm-popover-note-area" });
 
     // Input wrapper (no header — color is shown via active state on dots above)
-    const inputWrap = area.createDiv({ cls: "mae-popover-note-input-wrap" });
+    const inputWrap = area.createDiv({ cls: "prm-popover-note-input-wrap" });
     const input = inputWrap.createEl("input", {
       type: "text",
-      cls: "mae-popover-note-input",
+      cls: "prm-popover-note-input",
     });
     input.placeholder = this.mode === "reviewing"
       ? "输入批阅意见，AI 会推断要怎么改…"
       : "为这段高亮添加笔记…";
 
     // Footer row: Save button
-    const footer = area.createDiv({ cls: "mae-popover-note-footer" });
-    const saveBtn = footer.createEl("button", { cls: "mae-popover-note-save", text: "Save" });
+    const footer = area.createDiv({ cls: "prm-popover-note-footer" });
+    const saveBtn = footer.createEl("button", { cls: "prm-popover-note-save", text: "Save" });
 
     // Wire events
     input.onkeydown = (e) => {

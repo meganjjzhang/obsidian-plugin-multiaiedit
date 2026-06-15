@@ -9,7 +9,6 @@ export interface AgentSelectResult {
 /** Initial char → accent color bucket */
 const AGENT_COLORS: Record<string, { bg: string; border: string; text: string }> = {
 	C: { bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.20)", text: "rgba(167,139,250,0.90)" },
-	I: { bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.20)", text: "rgba(167,139,250,0.90)" },
 	O: { bg: "rgba(74,222,128,0.08)",  border: "rgba(74,222,128,0.15)",  text: "rgba(74,222,128,0.80)"  },
 	A: { bg: "rgba(96,165,250,0.08)",  border: "rgba(96,165,250,0.15)",  text: "rgba(96,165,250,0.80)"  },
 	G: { bg: "rgba(251,191,36,0.08)",  border: "rgba(251,191,36,0.15)",  text: "rgba(251,191,36,0.80)"  },
@@ -46,18 +45,18 @@ export class AgentSelectModal extends Modal {
 	onOpen(): void {
 		const { modalEl } = this;
 		modalEl.empty();
-		modalEl.addClass("mae-agent-select-modal");
+		modalEl.addClass("prm-agent-select-modal");
 
 		// ── Header ──
-		const header = modalEl.createDiv({ cls: "mae-asm-header" });
-		const headerLeft = header.createDiv({ cls: "mae-asm-header-left" });
-		const iconWrap = headerLeft.createDiv({ cls: "mae-asm-icon" });
+		const header = modalEl.createDiv({ cls: "prm-asm-header" });
+		const headerLeft = header.createDiv({ cls: "prm-asm-header-left" });
+		const iconWrap = headerLeft.createDiv({ cls: "prm-asm-icon" });
 		setIcon(iconWrap, "bot");
 		const titleWrap = headerLeft.createDiv();
-		titleWrap.createDiv({ cls: "mae-asm-title", text: "Select Agent" });
-		titleWrap.createDiv({ cls: "mae-asm-subtitle", text: "Choose an AI agent to execute edits" });
+		titleWrap.createDiv({ cls: "prm-asm-title", text: "Select Agent" });
+		titleWrap.createDiv({ cls: "prm-asm-subtitle", text: "Choose an AI agent to execute edits" });
 
-		const closeBtn = header.createEl("button", { cls: "mae-asm-close" });
+		const closeBtn = header.createEl("button", { cls: "prm-asm-close" });
 		closeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 		closeBtn.onclick = () => {
 			this.resolve?.({ rule: null });
@@ -65,7 +64,7 @@ export class AgentSelectModal extends Modal {
 		};
 
 		// ── Agent list ──
-		const list = modalEl.createDiv({ cls: "mae-asm-list" });
+		const list = modalEl.createDiv({ cls: "prm-asm-list" });
 
 		// Pre-select first installed agent
 		const firstInstalled = this.agents.find((a) => a.installed);
@@ -79,36 +78,34 @@ export class AgentSelectModal extends Modal {
 			const isActive = this.selected?.id === rule.id;
 
 			const row = list.createDiv({
-				cls: "mae-asm-row" + (isActive ? " active" : "") + (!installed ? " disabled" : ""),
+				cls: "prm-asm-row" + (isActive ? " active" : "") + (!installed ? " disabled" : ""),
 			});
 			rowEls.set(rule.id, row);
 
 			// Avatar
-			const avatar = row.createDiv({ cls: "mae-asm-avatar" });
+			const avatar = row.createDiv({ cls: "prm-asm-avatar" });
 			avatar.style.background = col.bg;
 			avatar.style.borderColor = col.border;
-			// Use "CI" for Claude Internal to distinguish from Claude Code
-			const avatarChar = rule.id === "claude-internal" ? "CI" : rule.label[0];
-			avatar.createSpan({ cls: "mae-asm-avatar-char", text: avatarChar });
-			(avatar.querySelector(".mae-asm-avatar-char") as HTMLElement).style.color = col.text;
+			avatar.createSpan({ cls: "prm-asm-avatar-char", text: rule.label[0] });
+			(avatar.querySelector(".prm-asm-avatar-char") as HTMLElement).style.color = col.text;
 
 			// Info
-			const info2 = row.createDiv({ cls: "mae-asm-info" });
-			const nameRow = info2.createDiv({ cls: "mae-asm-name-row" });
-			nameRow.createSpan({ cls: "mae-asm-name", text: rule.label });
+			const info2 = row.createDiv({ cls: "prm-asm-info" });
+			const nameRow = info2.createDiv({ cls: "prm-asm-name-row" });
+			nameRow.createSpan({ cls: "prm-asm-name", text: rule.label });
 			const badge = nameRow.createSpan({
-				cls: "mae-asm-badge " + (installed ? "installed" : "missing"),
+				cls: "prm-asm-badge " + (installed ? "installed" : "missing"),
 				text: installed ? "installed" : "missing",
 			});
 
 			info2.createDiv({
-				cls: "mae-asm-meta",
+				cls: "prm-asm-meta",
 				text: rule.vendor ? `${rule.vendor} · ${rule.installHint}` : rule.installHint,
 			});
 
 			// Radio
-			const radio = row.createDiv({ cls: "mae-asm-radio" + (isActive ? " selected" : "") });
-			if (isActive) radio.createDiv({ cls: "mae-asm-radio-dot" });
+			const radio = row.createDiv({ cls: "prm-asm-radio" + (isActive ? " selected" : "") });
+			if (isActive) radio.createDiv({ cls: "prm-asm-radio-dot" });
 
 			if (installed) {
 				row.onclick = () => {
@@ -116,31 +113,31 @@ export class AgentSelectModal extends Modal {
 					// Update all rows
 					for (const [id, el] of rowEls) {
 						el.removeClass("active");
-						const r = el.querySelector(".mae-asm-radio");
+						const r = el.querySelector(".prm-asm-radio");
 						r?.removeClass("selected");
-						r?.querySelector(".mae-asm-radio-dot")?.remove();
+						r?.querySelector(".prm-asm-radio-dot")?.remove();
 					}
 					row.addClass("active");
 					radio.addClass("selected");
-					if (!radio.querySelector(".mae-asm-radio-dot")) {
-						radio.createDiv({ cls: "mae-asm-radio-dot" });
+					if (!radio.querySelector(".prm-asm-radio-dot")) {
+						radio.createDiv({ cls: "prm-asm-radio-dot" });
 					}
 				};
 			}
 		}
 
 		// ── Footer ──
-		const footer = modalEl.createDiv({ cls: "mae-asm-footer" });
+		const footer = modalEl.createDiv({ cls: "prm-asm-footer" });
 
-		const configBtn = footer.createEl("button", { cls: "mae-asm-config-btn", text: "+ Configure custom agent" });
+		const configBtn = footer.createEl("button", { cls: "prm-asm-config-btn", text: "+ Configure custom agent" });
 		configBtn.onclick = () => {
 			(this.app as any).setting?.open();
-			(this.app as any).setting?.openTabById?.("multiaiedit");
+			(this.app as any).setting?.openTabById?.("promptuary");
 			this.resolve?.({ rule: null });
 			this.close();
 		};
 
-		const confirmBtn = footer.createEl("button", { cls: "mae-asm-confirm-btn", text: "Confirm" });
+		const confirmBtn = footer.createEl("button", { cls: "prm-asm-confirm-btn", text: "Confirm" });
 		confirmBtn.onclick = () => {
 			this.resolve?.({ rule: this.selected });
 			this.close();

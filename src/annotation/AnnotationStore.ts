@@ -1,6 +1,6 @@
 import { App, TAbstractFile, TFile, EventRef, Events } from "obsidian";
 import { Annotation, AnnotationFile, emptyAnnotationFile, FILE_VERSION } from "./AnnotationModel";
-import { sidecarPath } from "../utils/path";
+import { sidecarPath, ensureDir, removeEmptyAncestors } from "../utils/path";
 import { sha256 } from "../utils/hash";
 
 const WRITE_DEBOUNCE_MS = 300;
@@ -138,7 +138,7 @@ export class AnnotationStore extends Events {
       json.filePath = filePath;
       return json;
     } catch (e) {
-      console.warn("[MultiAIEdit] failed to load sidecar", path, e);
+      console.warn("[Promptuary] failed to load sidecar", path, e);
       return emptyAnnotationFile(filePath);
     }
   }
@@ -148,13 +148,11 @@ export class AnnotationStore extends Events {
     const path = sidecarPath(this.rootDir, filePath);
     const dir = path.slice(0, path.lastIndexOf("/"));
     try {
-      if (!(await adapter.exists(dir))) {
-        await adapter.mkdir(dir);
-      }
+      await ensureDir(adapter, dir);
       const json = JSON.stringify(data, null, 2);
       await adapter.write(path, json);
     } catch (e) {
-      console.error("[MultiAIEdit] failed to write sidecar", path, e);
+      console.error("[Promptuary] failed to write sidecar", path, e);
     }
   }
 
@@ -175,11 +173,17 @@ export class AnnotationStore extends Events {
         const data = JSON.parse(raw) as AnnotationFile;
         data.filePath = file.path;
         for (const ann of data.annotations) ann.filePath = file.path;
+        // Ensure new directory structure exists
+        const newDir = newSidecar.slice(0, newSidecar.lastIndexOf("/"));
+        await ensureDir(adapter, newDir);
         await adapter.write(newSidecar, JSON.stringify(data, null, 2));
         await adapter.remove(oldSidecar);
+        // Clean up empty ancestor directories left by the old path
+        const oldDir = oldSidecar.slice(0, oldSidecar.lastIndexOf("/"));
+        await removeEmptyAncestors(adapter, this.rootDir, oldDir);
       }
     } catch (e) {
-      console.warn("[MultiAIEdit] rename sidecar failed", e);
+      console.warn("[Promptuary] rename sidecar failed", e);
     }
     if (this.cache.has(oldPath)) {
       const data = this.cache.get(oldPath)!;
@@ -201,12 +205,21 @@ export class AnnotationStore extends Events {
     const orphans = `${this.rootDir}/orphans`;
     try {
       if (await adapter.exists(sidecar)) {
-        if (!(await adapter.exists(orphans))) await adapter.mkdir(orphans);
-        const target = `${orphans}/${sidecar.split("/").pop()}`;
+        await ensureDir(adapter, orphans);
+        // Preserve the original path structure in orphans for readability:
+        //   .promptuary/annotations/笔记/文档.md.json
+        //   → .promptuary/annotations/orphans/笔记/文档.md.json
+        const relativePath = sidecar.slice(this.rootDir.length + 1);
+        const target = `${orphans}/${relativePath}`;
+        const targetDir = target.slice(0, target.lastIndexOf("/"));
+        await ensureDir(adapter, targetDir);
         await adapter.rename(sidecar, target);
+        // Clean up empty ancestor directories left by the deleted file
+        const fileDir = sidecar.slice(0, sidecar.lastIndexOf("/"));
+        await removeEmptyAncestors(adapter, this.rootDir, fileDir);
       }
     } catch (e) {
-      console.warn("[MultiAIEdit] orphan sidecar move failed", e);
+      console.warn("[Promptuary] orphan sidecar move failed", e);
     }
     this.cache.delete(file.path);
     this.trigger("change", file.path);

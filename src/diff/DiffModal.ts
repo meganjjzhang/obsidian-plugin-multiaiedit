@@ -89,27 +89,27 @@ export class DiffModal extends Modal {
 	onOpen(): void {
 		const { modalEl } = this;
 		modalEl.empty();
-		modalEl.addClass("mae-diff-modal");
+		modalEl.addClass("prm-diff-modal");
 
 		const { added, removed } = countChangedLines(this.blocks);
 
 		// ── Header ──
-		const header = modalEl.createDiv({ cls: "mae-dm-header" });
-		const headerLeft = header.createDiv({ cls: "mae-dm-header-left" });
-		const iconWrap = headerLeft.createDiv({ cls: "mae-dm-icon" });
+		const header = modalEl.createDiv({ cls: "prm-dm-header" });
+		const headerLeft = header.createDiv({ cls: "prm-dm-header-left" });
+		const iconWrap = headerLeft.createDiv({ cls: "prm-dm-icon" });
 		iconWrap.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="6" y1="20" x2="6" y2="4"/><line x1="18" y1="4" x2="12" y2="4"/><polyline points="12 4 9 7 12 10"/><line x1="6" y1="14" x2="12" y2="14"/><polyline points="12 14 15 11 12 8" transform="rotate(180 12 11)"/></svg>`;
 		const titleWrap = headerLeft.createDiv();
-		titleWrap.createDiv({ cls: "mae-dm-title", text: "Diff Preview" });
+		titleWrap.createDiv({ cls: "prm-dm-title", text: "Diff Preview" });
 		titleWrap.createDiv({
-			cls: "mae-dm-subtitle",
+			cls: "prm-dm-subtitle",
 			text: `${this.fileName} — ${this.hunks.length} changes proposed`,
 		});
 
-		const headerRight = header.createDiv({ cls: "mae-dm-header-right" });
-		const hunkBadge = headerRight.createSpan({ cls: "mae-dm-hunk-badge" });
+		const headerRight = header.createDiv({ cls: "prm-dm-header-right" });
+		const hunkBadge = headerRight.createSpan({ cls: "prm-dm-hunk-badge" });
 		hunkBadge.setText(`${this.hunks.length} hunks`);
 
-		const closeBtn = headerRight.createEl("button", { cls: "mae-dm-close" });
+		const closeBtn = headerRight.createEl("button", { cls: "prm-dm-close" });
 		closeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
 		closeBtn.onclick = () => {
 			this.result = { action: "reject" };
@@ -117,10 +117,10 @@ export class DiffModal extends Modal {
 		};
 
 		// ── Hunk list ──
-		const content = modalEl.createDiv({ cls: "mae-dm-content" });
+		const content = modalEl.createDiv({ cls: "prm-dm-content" });
 
 		if (this.hunks.length === 0) {
-			content.createDiv({ cls: "mae-dm-empty", text: "No changes detected." });
+			content.createDiv({ cls: "prm-dm-empty", text: "No changes detected." });
 		} else {
 			this.hunks.forEach((hunk, idx) => {
 				this.renderHunk(content, hunk, idx);
@@ -128,23 +128,23 @@ export class DiffModal extends Modal {
 		}
 
 		// ── Footer ──
-		const footer = modalEl.createDiv({ cls: "mae-dm-footer" });
+		const footer = modalEl.createDiv({ cls: "prm-dm-footer" });
 
-		const statsEl = footer.createDiv({ cls: "mae-dm-stats" });
-		statsEl.createSpan({ cls: "mae-dm-stat-label", text: "Changes: " });
-		statsEl.createSpan({ cls: "mae-dm-stat-add", text: `+${added} lines` });
-		statsEl.createSpan({ cls: "mae-dm-stat-del", text: `-${removed} lines` });
+		const statsEl = footer.createDiv({ cls: "prm-dm-stats" });
+		statsEl.createSpan({ cls: "prm-dm-stat-label", text: "Changes: " });
+		statsEl.createSpan({ cls: "prm-dm-stat-add", text: `+${added} lines` });
+		statsEl.createSpan({ cls: "prm-dm-stat-del", text: `-${removed} lines` });
 
-		const btns = footer.createDiv({ cls: "mae-dm-btns" });
+		const btns = footer.createDiv({ cls: "prm-dm-btns" });
 
-		const rollbackBtn = btns.createEl("button", { cls: "mae-dm-btn-rollback" });
+		const rollbackBtn = btns.createEl("button", { cls: "prm-dm-btn-rollback" });
 		rollbackBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5h-2"/></svg> Rollback all`;
 		rollbackBtn.onclick = () => {
 			this.result = { action: "reject" };
 			this.close();
 		};
 
-		const applyBtn = btns.createEl("button", { cls: "mae-dm-btn-accept" });
+		const applyBtn = btns.createEl("button", { cls: "prm-dm-btn-accept" });
 		applyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Apply selected`;
 		applyBtn.onclick = () => {
 			this.result = this.buildResultFromAcceptMap();
@@ -179,53 +179,53 @@ export class DiffModal extends Modal {
 	}
 
 	private renderHunk(parent: HTMLElement, hunk: Hunk, idx: number): void {
-		const wrap = parent.createDiv({ cls: "mae-dm-hunk" });
+		const wrap = parent.createDiv({ cls: "prm-dm-hunk" });
 
 		// Hunk header
-		const hunkHeader = wrap.createDiv({ cls: "mae-dm-hunk-header" });
-		const hunkLeft = hunkHeader.createDiv({ cls: "mae-dm-hunk-header-left" });
-		hunkLeft.createSpan({ cls: "mae-dm-hunk-pos", text: hunk.header });
+		const hunkHeader = wrap.createDiv({ cls: "prm-dm-hunk-header" });
+		const hunkLeft = hunkHeader.createDiv({ cls: "prm-dm-hunk-header-left" });
+		hunkLeft.createSpan({ cls: "prm-dm-hunk-pos", text: hunk.header });
 
-		const hunkActions = hunkHeader.createDiv({ cls: "mae-dm-hunk-actions" });
+		const hunkActions = hunkHeader.createDiv({ cls: "prm-dm-hunk-actions" });
 
 		// Reject first, Accept second (right of Reject per design spec)
-		const rejectBtn = hunkActions.createEl("button", { cls: "mae-dm-hunk-btn reject" });
+		const rejectBtn = hunkActions.createEl("button", { cls: "prm-dm-hunk-btn reject" });
 		rejectBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Reject`;
 
-		const acceptBtn = hunkActions.createEl("button", { cls: "mae-dm-hunk-btn accept" });
+		const acceptBtn = hunkActions.createEl("button", { cls: "prm-dm-hunk-btn accept" });
 		acceptBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Accept`;
 
 		acceptBtn.onclick = () => {
 			hunk.changeIndices.forEach(i => this.acceptMap.set(i, true));
 			this.hunkDecisions.set(idx, true);
 			// Hide the hunk with a brief fade
-			wrap.addClass("mae-dm-hunk-decided");
+			wrap.addClass("prm-dm-hunk-decided");
 			setTimeout(() => wrap.remove(), 220);
 		};
 
 		rejectBtn.onclick = () => {
 			hunk.changeIndices.forEach(i => this.acceptMap.set(i, false));
 			this.hunkDecisions.set(idx, false);
-			wrap.addClass("mae-dm-hunk-decided");
+			wrap.addClass("prm-dm-hunk-decided");
 			setTimeout(() => wrap.remove(), 220);
 		};
 
 		// Diff lines
-		const linesWrap = wrap.createDiv({ cls: "mae-dm-lines" });
+		const linesWrap = wrap.createDiv({ cls: "prm-dm-lines" });
 
 		for (const block of hunk.blocks) {
-			const row = linesWrap.createDiv({ cls: "mae-dm-line mae-dm-line-" + block.type });
+			const row = linesWrap.createDiv({ cls: "prm-dm-line prm-dm-line-" + block.type });
 
-			const lineNum = row.createSpan({ cls: "mae-dm-linenum" });
+			const lineNum = row.createSpan({ cls: "prm-dm-linenum" });
 			const n = block.type === "removed" ? block.oldLineNumber
 				: block.type === "added" ? block.newLineNumber
 				: (block.oldLineNumber ?? "");
 			lineNum.setText(String(n ?? ""));
 
-			const prefix = row.createSpan({ cls: "mae-dm-prefix" });
+			const prefix = row.createSpan({ cls: "prm-dm-prefix" });
 			prefix.setText(block.type === "added" ? "+" : block.type === "removed" ? "-" : " ");
 
-			row.createSpan({ cls: "mae-dm-text", text: block.content });
+			row.createSpan({ cls: "prm-dm-text", text: block.content });
 		}
 	}
 }
