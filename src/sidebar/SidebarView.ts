@@ -1,4 +1,4 @@
-import { ItemView, Menu, MarkdownView, Notice, TFile, WorkspaceLeaf } from "obsidian";
+import { ItemView, Menu, MarkdownView, Notice, TFile, WorkspaceLeaf, setIcon } from "obsidian";
 import { Annotation, ViewMode } from "../annotation/AnnotationModel";
 import { AnnotationStore } from "../annotation/AnnotationStore";
 import { locate, fuzzyLocate, computeLineHint, computeOccurrenceIndex } from "../annotation/AnnotationLocator";
@@ -264,11 +264,11 @@ export class SidebarView extends ItemView {
     const row = parent.createDiv({ cls: "mae-header-row" });
     const left = row.createDiv({ cls: "mae-header-left" });
     const iconWrap = left.createDiv({ cls: "mae-header-icon" });
-    iconWrap.setText("✦");
+    setIcon(iconWrap, "mae-highlighter");
     left.createSpan({ cls: "mae-header-title", text: "MultiAIEdit" });
 
     const settingsBtn = row.createEl("button", { cls: "mae-header-settings" });
-    settingsBtn.setText("⚙");
+    setIcon(settingsBtn, "settings");
     settingsBtn.onclick = () => {
       // Open plugin settings
       (this.app as any).setting?.open();
@@ -309,14 +309,16 @@ export class SidebarView extends ItemView {
     // Row 2: 复制 Prompt + 更多
     const row2 = parent.createDiv({ cls: "mae-action-row" });
 
-    const copyBtn = row2.createEl("button", { cls: "mae-action-btn", text: "📋 复制 Prompt" });
+    const copyBtn = row2.createEl("button", { cls: "mae-action-btn", text: "复制 Prompt" });
+    setIcon(copyBtn, "clipboard-copy");
     copyBtn.disabled = !hasReviews;
     copyBtn.onclick = () => {
       if (this.currentFilePath) this.plugin.runCopyPrompt(this.currentFilePath);
       else this.plugin.runCopyPrompt();
     };
 
-    const moreBtn = row2.createEl("button", { cls: "mae-action-btn mae-more-btn", text: "更多 ▾" });
+    const moreBtn = row2.createEl("button", { cls: "mae-action-btn mae-more-btn", text: "更多" });
+    setIcon(moreBtn, "chevron-down");
     moreBtn.disabled = !hasReviews;
     moreBtn.onclick = (ev) => {
       if (!hasReviews) return;
@@ -324,7 +326,8 @@ export class SidebarView extends ItemView {
 
       // 导出批注文件
       menu.addItem((item) => {
-        item.setTitle("📄 导出批注文件")
+        item.setTitle("导出批注文件")
+          .setIcon("file-text")
           .onClick(() => {
             if (this.currentFilePath) this.plugin.runExport(this.currentFilePath);
             else this.plugin.runExport();
@@ -336,7 +339,8 @@ export class SidebarView extends ItemView {
         menu.addSeparator();
         const hasApiKey = !!this.plugin.settings.apiSettings?.apiKey;
         menu.addItem((item) => {
-          item.setTitle(hasApiKey ? "⚡ API 执行" : "⚡ API（未配置）")
+          item.setTitle(hasApiKey ? "API 执行" : "API（未配置）")
+            .setIcon("zap")
             .setChecked(hasApiKey)
             .onClick(() => {
               if (!hasApiKey) { new Notice("请先在设置中配置 API Key"); return; }
@@ -419,9 +423,9 @@ export class SidebarView extends ItemView {
     const tagClass = tagColorClassFor(ann);
     meta.createSpan({ cls: `mae-tag ${tagClass}`, text: tagLabelFor(ann) });
     // 漂移状态
-    if (r?.status === "fuzzy")       meta.createSpan({ cls: "mae-card-status-inline", text: "⚠ 位置歧义" });
-    if (r?.status === "auto-healed") meta.createSpan({ cls: "mae-card-status-inline", text: "🔧 已自动修复" });
-    if (r?.status === "drifted")     meta.createSpan({ cls: "mae-card-status-inline", text: "⚠ 已漂移" });
+    if (r?.status === "fuzzy")       { const s = meta.createSpan({ cls: "mae-card-status-inline" }); setIcon(s, "alert-triangle"); s.createSpan({ text: " 位置歧义" }); }
+    if (r?.status === "auto-healed") { const s = meta.createSpan({ cls: "mae-card-status-inline" }); setIcon(s, "wrench"); s.createSpan({ text: " 已自动修复" }); }
+    if (r?.status === "drifted")     { const s = meta.createSpan({ cls: "mae-card-status-inline" }); setIcon(s, "alert-triangle"); s.createSpan({ text: " 已漂移" }); }
     // 删除按钮（右推）
     const spacer = meta.createDiv({ cls: "mae-card-meta-spacer" });
     void spacer;

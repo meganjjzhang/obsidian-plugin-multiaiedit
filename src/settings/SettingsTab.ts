@@ -1,4 +1,4 @@
-import { App, Modal, Notice, PluginSettingTab, Setting } from "obsidian";
+import { App, Modal, Notice, PluginSettingTab, Setting, setIcon } from "obsidian";
 import type MultiAIEditPlugin from "../main";
 import { ViewMode } from "../annotation/AnnotationModel";
 import { CommandRule, CommandRuleStore, PRESET_RULES } from "../agent/CommandRuleStore";
@@ -72,12 +72,13 @@ class AddRuleModal extends Modal {
     const header = contentEl.createDiv({ cls: "mae-arm-header" });
     const headerLeft = header.createDiv({ cls: "mae-arm-header-left" });
     const icon = headerLeft.createDiv({ cls: "mae-arm-icon" });
-    icon.setText("⚡");
+    setIcon(icon, "zap");
     const titleWrap = headerLeft.createDiv({});
     titleWrap.createDiv({ cls: "mae-arm-title", text: "添加命令规则" });
     titleWrap.createDiv({ cls: "mae-arm-subtitle", text: "自定义 Agent CLI 命令模板" });
     const closeBtn = header.createDiv({ cls: "mae-arm-close" });
-    closeBtn.setText("✕");
+    closeBtn.setText("");
+    setIcon(closeBtn, "x");
     closeBtn.onclick = () => this.close();
 
     // Form
@@ -207,12 +208,12 @@ export class SettingsTab extends PluginSettingTab {
     const pageHeader = containerEl.createDiv({ cls: "mae-settings-header" });
     const pageHeaderLeft = pageHeader.createDiv({ cls: "mae-settings-header-left" });
     const pageIcon = pageHeaderLeft.createDiv({ cls: "mae-settings-page-icon" });
-    pageIcon.setText("🪔");
+    setIcon(pageIcon, "mae-diya");
     pageHeaderLeft.createDiv({ cls: "mae-settings-page-title", text: "MultiAIEdit" });
 
     // --- Section 1: Basic ---
     this.renderSection(containerEl, {
-      icon: "📝",
+      icon: "file-text",
       title: "基础设置",
       desc: "批注存储、导出路径与默认模式",
       open: true,
@@ -222,7 +223,7 @@ export class SettingsTab extends PluginSettingTab {
     // --- Section 2: Agent (desktop only) ---
     if (!isMobile()) {
       this.renderSection(containerEl, {
-        icon: "🤖",
+        icon: "bot",
         title: "Agent 与终端",
         desc: "CLI Agent 检测、命令规则与终端配置",
         open: true,
@@ -230,7 +231,7 @@ export class SettingsTab extends PluginSettingTab {
       });
 
       this.renderSection(containerEl, {
-        icon: "🔑",
+        icon: "key-round",
         title: "API 直调",
         desc: "配置 API Key 后无需安装 CLI，直接在插件内调用模型",
         open: !this.plugin.settings.apiSettings.apiKey, // open if no key yet
@@ -257,12 +258,12 @@ export class SettingsTab extends PluginSettingTab {
     const header = section.createDiv({ cls: "mae-settings-section-header" });
     const headerLeft = header.createDiv({ cls: "mae-settings-section-left" });
     const iconEl = headerLeft.createDiv({ cls: "mae-settings-section-icon" });
-    iconEl.setText(opts.icon);
+    setIcon(iconEl, opts.icon);
     const textWrap = headerLeft.createDiv({ cls: "mae-settings-section-text" });
     textWrap.createDiv({ cls: "mae-settings-section-title", text: opts.title });
     textWrap.createDiv({ cls: "mae-settings-section-desc", text: opts.desc });
     const chevron = header.createDiv({ cls: "mae-settings-section-chevron" });
-    chevron.setText("▾");
+    setIcon(chevron, "chevron-down");
 
     // Collapsible body
     const body = section.createDiv({ cls: "mae-settings-section-body" });
@@ -544,15 +545,15 @@ export class SettingsTab extends PluginSettingTab {
           cls: "mae-api-key-toggle",
         });
         if (toggleBtn) {
-          toggleBtn.setText("👁");
+          setIcon(toggleBtn, "eye");
           toggleBtn.onclick = () => {
             const input = t.inputEl;
             if (input.type === "password") {
               input.type = "text";
-              toggleBtn.setText("🔒");
+              setIcon(toggleBtn, "eye-off");
             } else {
               input.type = "password";
-              toggleBtn.setText("👁");
+              setIcon(toggleBtn, "eye");
             }
           };
         }
@@ -623,10 +624,10 @@ export class SettingsTab extends PluginSettingTab {
         b.setButtonText("测试").setDisabled(false);
         if (result.success) {
           lastTestResult = "success";
-          new Notice(`✅ 连接成功：${result.text?.slice(0, 30)}`);
+          new Notice(`连接成功：${result.text?.slice(0, 30)}`);
         } else {
           lastTestResult = "fail";
-          new Notice(`❌ 连接失败：${result.error}`);
+          new Notice(`连接失败：${result.error}`);
         }
         this.display();
       });

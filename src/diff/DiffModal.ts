@@ -1,4 +1,4 @@
-import { App, Modal } from "obsidian";
+import { App, Modal, setIcon } from "obsidian";
 import {
 	DiffBlock,
 	computeDiff,
@@ -102,7 +102,7 @@ export class DiffModal extends Modal {
 		const header = modalEl.createDiv({ cls: "mae-dm-header" });
 		const headerLeft = header.createDiv({ cls: "mae-dm-header-left" });
 		const iconWrap = headerLeft.createDiv({ cls: "mae-dm-icon" });
-		iconWrap.setText("⇄");
+		setIcon(iconWrap, "mae-diff");
 		const titleWrap = headerLeft.createDiv();
 		titleWrap.createDiv({ cls: "mae-dm-title", text: "Diff Preview" });
 		titleWrap.createDiv({
@@ -112,7 +112,8 @@ export class DiffModal extends Modal {
 
 		const headerRight = header.createDiv({ cls: "mae-dm-header-right" });
 		headerRight.createSpan({ cls: "mae-dm-hunk-badge", text: `${this.hunks.length} hunks` });
-		const closeBtn = headerRight.createEl("button", { cls: "mae-dm-close", text: "✕" });
+		const closeBtn = headerRight.createEl("button", { cls: "mae-dm-close" });
+		setIcon(closeBtn, "x");
 		closeBtn.onclick = () => {
 			this.result = { action: "reject" };
 			this.close();
@@ -140,14 +141,16 @@ export class DiffModal extends Modal {
 		const btns = footer.createDiv({ cls: "mae-dm-btns" });
 
 		const rollbackBtn = btns.createEl("button", { cls: "mae-dm-btn-rollback" });
-		rollbackBtn.innerHTML = `<span class="mae-dm-btn-icon">↺</span> Rollback all`;
+		rollbackBtn.innerHTML = `<span class="mae-dm-btn-icon"></span> Rollback all`;
+		setIcon(rollbackBtn.querySelector(".mae-dm-btn-icon")!, "rotate-ccw");
 		rollbackBtn.onclick = () => {
 			this.result = { action: "reject" };
 			this.close();
 		};
 
 		const acceptBtn = btns.createEl("button", { cls: "mae-dm-btn-accept" });
-		acceptBtn.innerHTML = `<span class="mae-dm-btn-icon">✓✓</span> Accept all`;
+		acceptBtn.innerHTML = `<span class="mae-dm-btn-icon"></span> Accept all`;
+		setIcon(acceptBtn.querySelector(".mae-dm-btn-icon")!, "mae-check-check");
 		acceptBtn.onclick = () => {
 			this.result = { action: "accept-all" };
 			this.close();
@@ -184,9 +187,11 @@ export class DiffModal extends Modal {
 		const hunkActions = hunkHeader.createDiv({ cls: "mae-dm-hunk-actions" });
 
 		const acceptHunkBtn = hunkActions.createEl("button", { cls: "mae-dm-hunk-btn accept" });
-		acceptHunkBtn.innerHTML = `<span>✓</span> Accept`;
+		acceptHunkBtn.innerHTML = `<span class="mae-dm-hunk-btn-icon"></span> Accept`;
+		setIcon(acceptHunkBtn.querySelector(".mae-dm-hunk-btn-icon")!, "check");
 		const rejectHunkBtn = hunkActions.createEl("button", { cls: "mae-dm-hunk-btn reject" });
-		rejectHunkBtn.innerHTML = `<span>✕</span> Reject`;
+		rejectHunkBtn.innerHTML = `<span class="mae-dm-hunk-btn-icon"></span> Reject`;
+		setIcon(rejectHunkBtn.querySelector(".mae-dm-hunk-btn-icon")!, "x");
 
 		// Wire hunk-level accept/reject
 		acceptHunkBtn.onclick = () => {

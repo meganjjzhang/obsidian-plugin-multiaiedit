@@ -1,4 +1,4 @@
-import { App, Notice, TFile } from "obsidian";
+import { App, Notice } from "obsidian";
 import { isMobile } from "../utils/platform";
 import { copyToClipboard } from "../export/Exporters";
 
@@ -52,35 +52,40 @@ export function launchInTerminal(opts: LaunchOptions): void {
 function launchMacOS(opts: LaunchOptions): void {
 	// eslint-disable-next-line @typescript-eslint/no-var-requires
 	const { execSync } = require("child_process") as typeof import("child_process");
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	const fs = require("fs") as typeof import("fs");
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	const os = require("os") as typeof import("os");
+	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	const nodePath = require("path") as typeof import("path");
 
-	const app = opts.terminalApp === "iTerm2" ? "iTerm2" : "Terminal";
-	const escapedCmd = opts.command.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+	// Write the command to a temp shell script to avoid all AppleScript quoting issues.
+	// The script path is safe ASCII — no special chars to escape.
+	const tmpScript = nodePath.join(os.tmpdir(), `mae-agent-${Date.now()}.sh`);
+	fs.writeFileSync(tmpScript, `#!/bin/bash\n${opts.command}\n`, { mode: 0o755 });
 
-	const script = `
-tell application "${app}"
-	activate
-	if application "${app}" is running then
-		tell application "System Events"
-			keystroke "t" using command down
-		end tell
-		delay 0.3
-		do script "${escapedCmd}" in front window
-	else
-		do script "${escapedCmd}"
-	end if
-end tell`;
+	// Schedule cleanup after 60 s (well after execution starts)
+	setTimeout(() => { try { fs.unlinkSync(tmpScript); } catch { /* ignore */ } }, 60_000);
+
+	let appleScript: string;
+
+	if (opts.terminalApp === "iTerm2") {
+		appleScript = `tell application "iTerm"\nactivate\ncreate window with default profile command "${tmpScript}"\nend tell`;
+	} else {
+		appleScript = `tell application "Terminal"\ndo script "${tmpScript}"\nactivate\nend tell`;
+	}
 
 	try {
-		execSync(`osascript -e '${script.replace(/'/g, "'\\''")}'`, {
+		execSync(`osascript -e '${appleScript}'`, {
 			encoding: "utf-8",
-			timeout: 10000,
+			timeout: 10_000,
+			stdio: "pipe",
 		});
-		new Notice(`已通过 ${app} 执行命令`);
+		new Notice(`已通过 ${opts.terminalApp} 执行命令`);
 		opts.onLaunched?.();
 	} catch (err) {
-		// Fallback: copy to clipboard
 		copyToClipboard(opts.command);
-		new Notice(`终端启动失败，命令已复制到剪贴板`);
+		new Notice("终端启动失败，命令已复制到剪贴板");
 		opts.onCopied?.();
 	}
 }
@@ -93,44 +98,59 @@ export class FileChangeMonitor {
 	private status: ChangeStatus = "idle";
 	private timer: ReturnType<typeof setTimeout> | null = null;
 	private resolve: ((detected: boolean) => void) | null = null;
+	private watchedAbsPath: string | null = null;
 
 	/**
-	 * Start monitoring a file for changes. Resolves `true` if the file
-	 * changes within the timeout, `false` on timeout.
+	 * Start monitoring a file for changes made by an external process.
+	 *
+	 * Uses fs.watchFile (stat polling every 1 s) instead of vault.on("modify")
+	 * because vault events are only fired for writes Obsidian itself initiates —
+	 * external CLI Agents write directly to disk and vault events are unreliable.
+	 *
+	 * Resolves `true` when mtime changes, `false` on timeout.
 	 */
 	startMonitor(
 		app: App,
 		filePath: string,
-		timeoutMs = 5 * 60 * 1000, // 5 min
+		timeoutMs = 5 * 60 * 1000,
 	): Promise<boolean> {
 		this.status = "running";
+
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const fs = require("fs") as typeof import("fs");
+		// eslint-disable-next-line @typescript-eslint/no-var-requires
+		const nodePath = require("path") as typeof import("path");
+
+		const vaultPath = (app.vault.adapter as unknown as { basePath?: string }).basePath ?? "";
+		const absPath = nodePath.join(vaultPath, filePath);
+		this.watchedAbsPath = absPath;
 
 		return new Promise<boolean>((resolve) => {
 			this.resolve = resolve;
 
-			// Timeout
+			// Timeout guard
 			this.timer = setTimeout(() => {
 				this.cleanup();
 				this.status = "timeout";
 				resolve(false);
 			}, timeoutMs);
 
-			// Listen for vault modify events
-			const handler = (file: TFile) => {
-				if (file.path === filePath && this.status === "running") {
+			// Poll every 1 s using fs.watchFile
+			const listener = (curr: import("fs").Stats, prev: import("fs").Stats) => {
+				if (curr.mtimeMs !== prev.mtimeMs && this.status === "running") {
 					this.cleanup();
 					this.status = "detected";
 					resolve(true);
 				}
 			};
 
-			// We use vault.on but need to clean up — store a ref
-			app.vault.on("modify", handler);
-			// Store cleanup
+			fs.watchFile(absPath, { persistent: false, interval: 1000 }, listener);
+
+			// Override cleanup to also stop the watcher
 			const origCleanup = this.cleanup.bind(this);
 			this.cleanup = () => {
 				origCleanup();
-				app.vault.off("modify", handler);
+				try { fs.unwatchFile(absPath, listener); } catch { /* ignore */ }
 			};
 		});
 	}
@@ -155,3 +175,4 @@ export class FileChangeMonitor {
 		}
 	};
 }
+

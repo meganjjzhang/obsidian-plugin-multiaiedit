@@ -1,4 +1,4 @@
-import { App, Modal, Setting, Notice } from "obsidian";
+import { App, Modal, Setting, Notice, setIcon } from "obsidian";
 import { APIProviderConfig, APIProviderType, PROVIDER_DEFAULTS } from "./APIProvider";
 
 export interface APIExecuteResult {
@@ -60,10 +60,11 @@ export class APIConfirmModal extends Modal {
 			cls: this.estimatedTokens > 50_000 ? "mae-warn-text" : "",
 		});
 
-		containerEl.createEl("p", {
+		const warnP = containerEl.createEl("p", {
 			cls: "mae-confirm-warning",
-			text: "⚠️ 原文与批阅意见将发送至所选 Provider，请确认不含敏感信息。",
 		});
+		setIcon(warnP, "alert-triangle");
+		warnP.appendText(" 原文与批阅意见将发送至所选 Provider，请确认不含敏感信息。");
 
 		new Setting(containerEl)
 			.addButton((b) =>
@@ -149,9 +150,8 @@ export class APIProgressModal extends Modal {
 
 		if (this.state.phase === "error") {
 			area.createEl("p", {
-				text: `❌ 调用失败：${this.state.message}`,
 				cls: "mae-error-text",
-			});
+			}).setText(`调用失败：${this.state.message}`);
 			new Setting(area).addButton((b) =>
 				b.setButtonText("关闭").onClick(() => {
 					this.resolve?.(null);
@@ -162,7 +162,9 @@ export class APIProgressModal extends Modal {
 		}
 
 		// done
-		area.createEl("p", { text: "✅ API 返回成功，即将打开 Diff 预览" });
+		const successP = area.createEl("p");
+		setIcon(successP, "check-circle");
+		successP.appendText(" API 返回成功，即将打开 Diff 预览");
 		new Setting(area).addButton((b) =>
 			b
 				.setButtonText("查看 Diff")

@@ -7,6 +7,7 @@ import {
   TFile,
   WorkspaceLeaf,
 } from "obsidian";
+import { registerIcons } from "./utils/icons";
 
 import {
   Annotation,
@@ -89,6 +90,9 @@ export default class MultiAIEditPlugin extends Plugin {
 
   async onload(): Promise<void> {
     await this.loadSettings();
+
+    // Register custom icons
+    registerIcons();
 
     this.store = new AnnotationStore(this.app, () => this.settings.sidecarDir);
     this.store.registerVaultEvents();

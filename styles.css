@@ -252,7 +252,7 @@
   color: var(--text-normal);
 }
 .mae-popover-capsule button.active {
-  background: var(--background-primary);
+  background: var(--background-primary) !important;
   color: var(--text-normal);
   font-weight: 600;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -596,6 +596,7 @@
   flex: 1;
   background: transparent;
   border: none;
+  box-shadow: none;
   padding: 5px 10px;
   border-radius: 6px;
   cursor: pointer;
@@ -609,10 +610,10 @@
   color: var(--text-normal);
 }
 .mae-mode-capsule button.active {
-  background: var(--background-primary);
+  background: var(--background-primary) !important;
   color: var(--text-normal);
   font-weight: 600;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
 }
 .theme-dark .mae-mode-capsule button.active {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.30);
@@ -911,19 +912,19 @@
   background: rgba(251, 146, 60, 0.06);
 }
 
-/* Purple review text block */
+/* Review text block — aligned with reading note style (no purple bg) */
 .mae-text-purple {
-  background: rgba(168, 85, 247, 0.08);
-  border-left: 2px solid rgba(168, 85, 247, 0.25);
-  color: rgba(168, 85, 247, 0.85);
-  border-radius: 4px;
-  padding: 5px 8px;
-  font-size: 11px;
-  line-height: 1.5;
+  background: transparent;
+  border-left: none;
+  color: var(--text-normal);
+  border-radius: 0;
+  padding: 0 4px;
+  font-size: 11.5px;
+  line-height: 1.55;
 }
 .theme-dark .mae-text-purple {
-  background: rgba(168, 85, 247, 0.06);
-  color: rgba(192, 132, 252, 0.80);
+  background: transparent;
+  color: var(--text-normal);
 }
 
 /* Status hint for review cards */
@@ -1043,14 +1044,22 @@
   align-items: flex-start;
 }
 .mae-card-text::before {
-  content: "✎";
-  font-size: 10px;
-  color: var(--text-muted);
-  margin-top: 2px;
+  content: "";
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
+  margin-top: 1px;
+  background-color: var(--text-muted);
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21.174 6.812a1 1 0 0 0-3.986-3.987L3.842 16.174a2 2 0 0 0-.5.83l-1.321 4.352a.5.5 0 0 0 .623.622l4.353-1.32a2 2 0 0 0 .83-.497z'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-size: contain;
 }
 .mae-card-text.review::before {
-  content: "💬";
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");
 }
 
 /* 文件名 / 行号（卡片底部） */
@@ -1064,8 +1073,18 @@
   font-family: var(--font-monospace);
 }
 .mae-card-source::before {
-  content: "📄";
-  font-size: 9px;
+  content: "";
+  width: 12px;
+  height: 12px;
+  flex-shrink: 0;
+  background-color: var(--text-muted);
+  opacity: 0.65;
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3C/svg%3E");
+  -webkit-mask-repeat: no-repeat;
+  -webkit-mask-size: contain;
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M15 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7Z'/%3E%3Cpath d='M14 2v4a2 2 0 0 0 2 2h4'/%3E%3C/svg%3E");
+  mask-repeat: no-repeat;
+  mask-size: contain;
 }
 
 /* 空状态 */
@@ -1400,6 +1419,7 @@
 }
 .mae-asm-avatar-char {
   font-size: 14px; font-weight: 700; font-family: var(--font-monospace);
+  letter-spacing: -0.5px;
 }
 
 /* Info */
@@ -2195,4 +2215,118 @@ body:not(.theme-dark) .mae-arm-btn-save {
 body:not(.theme-dark) .mae-arm-btn-save:hover {
   background: rgba(109, 90, 205, 0.16);
   border-color: rgba(109, 90, 205, 0.35);
+}
+
+/* ============================================================
+ * 7. Icon sizing — setIcon SVG适配
+ *    Obsidian setIcon() 会插入 <svg>，需控制尺寸
+ * ============================================================ */
+
+/* Header icon (✦ → mae-highlighter) */
+.mae-header-icon svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Settings button (⚙) */
+.mae-header-settings svg {
+  width: 14px;
+  height: 14px;
+}
+
+/* Action bar buttons with icons */
+.mae-action-btn svg {
+  width: 14px;
+  height: 14px;
+}
+.mae-action-execute svg {
+  width: 14px;
+  height: 14px;
+}
+.mae-more-btn svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Inline status badges (⚠/🔧) */
+.mae-card-status-inline svg {
+  width: 11px;
+  height: 11px;
+  vertical-align: -1px;
+}
+
+/* Confirm warning icon */
+.mae-confirm-warning svg {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+}
+
+/* API progress modal icons */
+.mae-api-progress-modal svg {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+}
+
+/* Diff modal icons */
+.mae-dm-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.mae-dm-close svg {
+  width: 12px;
+  height: 12px;
+}
+.mae-dm-btn-icon svg {
+  width: 12px;
+  height: 12px;
+}
+.mae-dm-hunk-btn-icon svg {
+  width: 10px;
+  height: 10px;
+}
+
+/* Agent select modal icons */
+.mae-asm-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.mae-asm-close svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Add Rule Modal icons */
+.mae-arm-icon svg {
+  width: 14px;
+  height: 14px;
+}
+.mae-arm-close svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* Settings page icon */
+.mae-settings-page-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Settings section icons */
+.mae-settings-section-icon svg {
+  width: 16px;
+  height: 16px;
+}
+
+/* Settings section chevron */
+.mae-settings-section-chevron svg {
+  width: 12px;
+  height: 12px;
+}
+
+/* API key toggle icon */
+.mae-api-key-toggle svg {
+  width: 14px;
+  height: 14px;
 }

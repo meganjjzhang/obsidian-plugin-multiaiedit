@@ -1,4 +1,4 @@
-import { App, Modal } from "obsidian";
+import { App, Modal, setIcon } from "obsidian";
 import { CommandRule } from "./CommandRuleStore";
 import { AgentInfo } from "./AgentDetector";
 
@@ -9,6 +9,7 @@ export interface AgentSelectResult {
 /** Initial char → accent color bucket */
 const AGENT_COLORS: Record<string, { bg: string; border: string; text: string }> = {
 	C: { bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.20)", text: "rgba(167,139,250,0.90)" },
+	I: { bg: "rgba(167,139,250,0.10)", border: "rgba(167,139,250,0.20)", text: "rgba(167,139,250,0.90)" },
 	O: { bg: "rgba(74,222,128,0.08)",  border: "rgba(74,222,128,0.15)",  text: "rgba(74,222,128,0.80)"  },
 	A: { bg: "rgba(96,165,250,0.08)",  border: "rgba(96,165,250,0.15)",  text: "rgba(96,165,250,0.80)"  },
 	G: { bg: "rgba(251,191,36,0.08)",  border: "rgba(251,191,36,0.15)",  text: "rgba(251,191,36,0.80)"  },
@@ -51,12 +52,13 @@ export class AgentSelectModal extends Modal {
 		const header = modalEl.createDiv({ cls: "mae-asm-header" });
 		const headerLeft = header.createDiv({ cls: "mae-asm-header-left" });
 		const iconWrap = headerLeft.createDiv({ cls: "mae-asm-icon" });
-		iconWrap.setText("⬡");
+		setIcon(iconWrap, "bot");
 		const titleWrap = headerLeft.createDiv();
 		titleWrap.createDiv({ cls: "mae-asm-title", text: "Select Agent" });
 		titleWrap.createDiv({ cls: "mae-asm-subtitle", text: "Choose an AI agent to execute edits" });
 
-		const closeBtn = header.createEl("button", { cls: "mae-asm-close", text: "✕" });
+		const closeBtn = header.createEl("button", { cls: "mae-asm-close" });
+		setIcon(closeBtn, "x");
 		closeBtn.onclick = () => {
 			this.resolve?.({ rule: null });
 			this.close();
@@ -85,7 +87,9 @@ export class AgentSelectModal extends Modal {
 			const avatar = row.createDiv({ cls: "mae-asm-avatar" });
 			avatar.style.background = col.bg;
 			avatar.style.borderColor = col.border;
-			avatar.createSpan({ cls: "mae-asm-avatar-char", text: rule.label[0] });
+			// Use "CI" for Claude Internal to distinguish from Claude Code
+			const avatarChar = rule.id === "claude-internal" ? "CI" : rule.label[0];
+			avatar.createSpan({ cls: "mae-asm-avatar-char", text: avatarChar });
 			(avatar.querySelector(".mae-asm-avatar-char") as HTMLElement).style.color = col.text;
 
 			// Info
