@@ -389,7 +389,7 @@ export class SidebarView extends ItemView {
       apiBtn.createSpan({ cls: "mae-action-long", text: " 批阅中…" });
     } else {
       apiBtn.createSpan({ cls: "mae-action-short", text: "API" });
-      apiBtn.createSpan({ cls: "mae-action-long", text: hasApiKey ? " 批阅" : "…" });
+      apiBtn.createSpan({ cls: "mae-action-long", text: " 批阅" });
     }
     apiBtn.title = hasApiKey ? "通过 API 直调执行批阅修改" : "请先在设置中配置 API Key";
     apiBtn.disabled = !hasApiKey || isExecuting;
@@ -429,9 +429,9 @@ export class SidebarView extends ItemView {
       menu.addItem((item) => {
         item.setTitle("导出批注文件")
           .setIcon("file-text")
-          .onClick(() => {
-            if (this.currentFilePath) this.plugin.runExport(this.currentFilePath);
-            else this.plugin.runExport();
+          .onClick(async () => {
+            if (this.currentFilePath) await this.plugin.runExport(this.currentFilePath);
+            else await this.plugin.runExport();
           });
       });
       const rect = moreBtn.getBoundingClientRect();

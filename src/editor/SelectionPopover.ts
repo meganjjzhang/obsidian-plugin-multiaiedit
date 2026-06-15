@@ -152,8 +152,30 @@ export class SelectionPopover {
   }
 
   private position(view: EditorView, from: number, to: number): void {
-    // Use the end of selection for positioning — show popover below the
-    // selection end so it never overlaps the highlighted text.
+    // Prefer DOM selection coordinates — they are accurate for text inside
+    // table widgets (rendered HTML) where view.coordsAtPos() may return the
+    // widget's bounding edge instead of the actual text position.
+    // See: https://github.com/Antony-bit375/axl-light (selectionToolbar.ts)
+    const domSel = window.getSelection();
+    if (domSel && domSel.rangeCount > 0 && !domSel.isCollapsed) {
+      try {
+        const range = domSel.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          const top = rect.bottom + 6;
+          const popoverWidth = this.el.offsetWidth || 200;
+          const left = Math.max(8, Math.min(rect.left, window.innerWidth - popoverWidth - 8));
+          this.el.style.top = `${top}px`;
+          this.el.style.left = `${left}px`;
+          this.el.style.display = "flex";
+          return;
+        }
+      } catch {
+        // getRangeAt may throw in rare cross-origin frames; fall through
+      }
+    }
+
+    // Fallback: CM6 coordsAtPos (works for normal text and editing rows).
     const coordsEnd = view.coordsAtPos(to);
     const coordsStart = view.coordsAtPos(from);
     if (!coordsEnd && !coordsStart) return;

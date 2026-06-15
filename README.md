@@ -1,7 +1,7 @@
 # MultiAIEdit
 
 <p align="center">
-  <img src="logo.gif" width="128" height="128" alt="MultiAIEdit Logo">
+  <img src="img/logo.gif" width="128" height="128" alt="MultiAIEdit Logo">
 </p>
 
 > Obsidian 阅读标注与 AI 批阅插件。阅读时高亮记笔记，批阅时留下修改意见，一键交给外部 AI 执行修改。

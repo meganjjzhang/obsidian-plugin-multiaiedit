@@ -40,7 +40,7 @@ export const DEFAULT_SETTINGS: MultiAIEditSettings = {
   defaultMode: "reading",
   contextSpan: 50,
   sidecarDir: ".multiaiedit/annotations",
-  exportDir: ".multiaiedit/exports",
+  exportDir: "MultiAIEdit/exports",
   includeReadingNotesInExport: false,
   terminalApp: "Terminal",
   customCommandRules: [],

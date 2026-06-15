@@ -10,7 +10,7 @@ import math
 from pathlib import Path
 
 PROJECT = Path(__file__).resolve().parent.parent
-LOTTIE_PATH = PROJECT / "logo_lottie.json"
+LOTTIE_PATH = PROJECT / "img" / "logo_lottie.json"
 
 # Animation timing (matching logo.svg)
 FPS = 30

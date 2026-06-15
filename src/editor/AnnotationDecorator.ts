@@ -217,6 +217,27 @@ class TableAnnotationPlugin {
         injectHighlightInElement(lineEl, selectedText, cls);
       }
     }
+
+    // 5. Process rendered table widgets (LP mode: rows NOT being edited are
+    //    rendered as an HTML <table> inside .cm-table-widget). CM6 mark
+    //    decorations are silently dropped for these replace-decoration regions,
+    //    so we inject highlights directly into the rendered DOM.
+    const tableWidgets = view.dom.querySelectorAll<HTMLElement>(".cm-table-widget");
+    for (const widget of Array.from(tableWidgets)) {
+      const cells = widget.querySelectorAll<HTMLElement>("td, th");
+      for (const cell of Array.from(cells)) {
+        // Skip cells that host a nested CM6 editor (the row being edited).
+        if (cell.querySelector(".cm-editor")) continue;
+        // Skip cells already containing our injected highlights.
+        if (cell.querySelector(`.${TABLE_HL_CLASS}`)) continue;
+
+        const cellText = cell.textContent ?? "";
+        for (const { selectedText, cls } of located) {
+          if (!cellText.includes(selectedText)) continue;
+          injectHighlightInElement(cell, selectedText, cls);
+        }
+      }
+    }
   }
 }
 

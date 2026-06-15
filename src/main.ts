@@ -105,13 +105,13 @@ export default class MultiAIEditPlugin extends Plugin {
 
     // Load plugin logo as data URI for sidebar & settings
     try {
-      const svgContent = await this.app.vault.adapter.read(`${this.manifest.dir}/logo.svg`);
+      const svgContent = await this.app.vault.adapter.read(`${this.manifest.dir}/img/logo.svg`);
       this.logoUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgContent)))}`;
     } catch { /* logo optional */ }
 
     // Load empty state illustration as data URI
     try {
-      const svgContent = await this.app.vault.adapter.read(`${this.manifest.dir}/empty-state.svg`);
+      const svgContent = await this.app.vault.adapter.read(`${this.manifest.dir}/img/empty-state.svg`);
       this.emptyStateUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgContent)))}`;
     } catch { /* empty state optional */ }
 
@@ -250,6 +250,11 @@ export default class MultiAIEditPlugin extends Plugin {
 
   async loadSettings(): Promise<void> {
     this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    // Migration: auto-migrate from hidden .multiaiedit/exports to visible MultiAIEdit/exports
+    if (this.settings.exportDir === ".multiaiedit/exports") {
+      this.settings.exportDir = DEFAULT_SETTINGS.exportDir;
+      await this.saveSettings();
+    }
   }
 
   async saveSettings(): Promise<void> {
@@ -1208,7 +1213,8 @@ export default class MultiAIEditPlugin extends Plugin {
     }
     await this.store.flushAll();
     const data = await this.store.getFile(path);
-    if (data.annotations.filter((a) => a.type === "review").length === 0) {
+    const reviewCount = data.annotations.filter((a) => a.type === "review").length;
+    if (reviewCount === 0) {
       new Notice("当前文件没有批阅意见");
       return;
     }
@@ -1216,41 +1222,10 @@ export default class MultiAIEditPlugin extends Plugin {
       includeReadingNotes: this.settings.includeReadingNotesInExport,
     });
     if (target) {
-      this.openExportFolder();
-    }
-  }
-
-  /** Open export directory in Finder / Explorer after exporting. */
-  private openExportFolder(): void {
-    if (isMobile()) return;
-
-    const adapter = this.app.vault.adapter as any;
-    const exportDir: string | undefined = typeof adapter.getFullPath === "function"
-      ? adapter.getFullPath(this.settings.exportDir)
-      : typeof adapter.getBasePath === "function"
-        ? `${adapter.getBasePath()}/${this.settings.exportDir}`
-        : adapter.basePath
-          ? `${adapter.basePath}/${this.settings.exportDir}`
-          : undefined;
-
-    if (!exportDir) {
-      new Notice("无法获取导出目录路径");
-      return;
-    }
-
-    try {
-      const { exec } = require("child_process") as typeof import("child_process");
-      const quotedDir = `"${exportDir.replace(/(["\\$`])/g, "\\$1")}"`;
-      const cmd = process.platform === "darwin"
-        ? `open ${quotedDir}`
-        : process.platform === "win32"
-          ? `explorer ${quotedDir}`
-          : `xdg-open ${quotedDir}`;
-      exec(cmd, (err) => {
-        if (err) new Notice("无法打开导出文件夹");
-      });
-    } catch {
-      new Notice("无法打开导出文件夹");
+      const file = this.app.vault.getAbstractFileByPath(target);
+      if (file instanceof TFile) {
+        await this.app.workspace.getLeaf(false).openFile(file);
+      }
     }
   }
 

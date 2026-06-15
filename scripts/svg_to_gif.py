@@ -8,8 +8,8 @@ from pathlib import Path
 
 # --- Config ---
 PROJECT = Path(__file__).resolve().parent.parent
-SVG_PATH = PROJECT / "logo.svg"
-GIF_PATH = PROJECT / "logo.gif"
+SVG_PATH = PROJECT / "img" / "logo.svg"
+GIF_PATH = PROJECT / "img" / "logo.gif"
 DURATION = 6.0        # total seconds to capture
 FPS = 15              # frames per second
 SIZE = 256            # output GIF pixel size
