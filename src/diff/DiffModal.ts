@@ -1,10 +1,11 @@
-import { App, Modal } from "obsidian";
+import { App, Modal, setIcon } from "obsidian";
 import {
 	DiffBlock,
 	computeDiff,
 	countChangedLines,
 	applyPartialDiff,
 } from "./DiffCalculator";
+import { t } from "../i18n/i18n";
 
 export interface DiffModalResult {
 	action: "accept-all" | "accept-partial" | "reject";
@@ -97,20 +98,20 @@ export class DiffModal extends Modal {
 		const header = modalEl.createDiv({ cls: "prm-dm-header" });
 		const headerLeft = header.createDiv({ cls: "prm-dm-header-left" });
 		const iconWrap = headerLeft.createDiv({ cls: "prm-dm-icon" });
-		iconWrap.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="6" y1="20" x2="6" y2="4"/><line x1="18" y1="4" x2="12" y2="4"/><polyline points="12 4 9 7 12 10"/><line x1="6" y1="14" x2="12" y2="14"/><polyline points="12 14 15 11 12 8" transform="rotate(180 12 11)"/></svg>`;
+		setIcon(iconWrap, "git-compare-arrows");
 		const titleWrap = headerLeft.createDiv();
-		titleWrap.createDiv({ cls: "prm-dm-title", text: "Diff Preview" });
+		titleWrap.createDiv({ cls: "prm-dm-title", text: t("diff.title") });
 		titleWrap.createDiv({
 			cls: "prm-dm-subtitle",
-			text: `${this.fileName} — ${this.hunks.length} changes proposed`,
+			text: t("diff.subtitle", { file: this.fileName, n: this.hunks.length }),
 		});
 
 		const headerRight = header.createDiv({ cls: "prm-dm-header-right" });
 		const hunkBadge = headerRight.createSpan({ cls: "prm-dm-hunk-badge" });
-		hunkBadge.setText(`${this.hunks.length} hunks`);
+		hunkBadge.setText(`${this.hunks.length} ${t("diff.hunks")}`);
 
 		const closeBtn = headerRight.createEl("button", { cls: "prm-dm-close" });
-		closeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+		setIcon(closeBtn, "x");
 		closeBtn.onclick = () => {
 			this.result = { action: "reject" };
 			this.close();
@@ -120,7 +121,7 @@ export class DiffModal extends Modal {
 		const content = modalEl.createDiv({ cls: "prm-dm-content" });
 
 		if (this.hunks.length === 0) {
-			content.createDiv({ cls: "prm-dm-empty", text: "No changes detected." });
+			content.createDiv({ cls: "prm-dm-empty", text: t("diff.noChanges") });
 		} else {
 			this.hunks.forEach((hunk, idx) => {
 				this.renderHunk(content, hunk, idx);
@@ -131,21 +132,23 @@ export class DiffModal extends Modal {
 		const footer = modalEl.createDiv({ cls: "prm-dm-footer" });
 
 		const statsEl = footer.createDiv({ cls: "prm-dm-stats" });
-		statsEl.createSpan({ cls: "prm-dm-stat-label", text: "Changes: " });
+		statsEl.createSpan({ cls: "prm-dm-stat-label", text: t("diff.changesLabel") });
 		statsEl.createSpan({ cls: "prm-dm-stat-add", text: `+${added} lines` });
 		statsEl.createSpan({ cls: "prm-dm-stat-del", text: `-${removed} lines` });
 
 		const btns = footer.createDiv({ cls: "prm-dm-btns" });
 
 		const rollbackBtn = btns.createEl("button", { cls: "prm-dm-btn-rollback" });
-		rollbackBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-5h-2"/></svg> Rollback all`;
+		setIcon(rollbackBtn, "rotate-ccw");
+		rollbackBtn.createSpan({ text: t("diff.btn.rollbackAll") });
 		rollbackBtn.onclick = () => {
 			this.result = { action: "reject" };
 			this.close();
 		};
 
 		const applyBtn = btns.createEl("button", { cls: "prm-dm-btn-accept" });
-		applyBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Apply selected`;
+		setIcon(applyBtn, "check");
+		applyBtn.createSpan({ text: t("diff.btn.applySelected") });
 		applyBtn.onclick = () => {
 			this.result = this.buildResultFromAcceptMap();
 			this.close();
@@ -190,24 +193,26 @@ export class DiffModal extends Modal {
 
 		// Reject first, Accept second (right of Reject per design spec)
 		const rejectBtn = hunkActions.createEl("button", { cls: "prm-dm-hunk-btn reject" });
-		rejectBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg> Reject`;
+		setIcon(rejectBtn, "x");
+		rejectBtn.createSpan({ text: t("diff.btn.reject") });
 
 		const acceptBtn = hunkActions.createEl("button", { cls: "prm-dm-hunk-btn accept" });
-		acceptBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="9" height="9" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg> Accept`;
+		setIcon(acceptBtn, "check");
+		acceptBtn.createSpan({ text: t("diff.btn.accept") });
 
 		acceptBtn.onclick = () => {
 			hunk.changeIndices.forEach(i => this.acceptMap.set(i, true));
 			this.hunkDecisions.set(idx, true);
 			// Hide the hunk with a brief fade
 			wrap.addClass("prm-dm-hunk-decided");
-			setTimeout(() => wrap.remove(), 220);
+			window.setTimeout(() => wrap.remove(), 220);
 		};
 
 		rejectBtn.onclick = () => {
 			hunk.changeIndices.forEach(i => this.acceptMap.set(i, false));
 			this.hunkDecisions.set(idx, false);
 			wrap.addClass("prm-dm-hunk-decided");
-			setTimeout(() => wrap.remove(), 220);
+			window.setTimeout(() => wrap.remove(), 220);
 		};
 
 		// Diff lines

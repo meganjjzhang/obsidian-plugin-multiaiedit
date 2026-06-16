@@ -1,13 +1,12 @@
 import {
-  App,
   Editor,
   MarkdownView,
   Notice,
   Plugin,
   TFile,
-  WorkspaceLeaf,
 } from "obsidian";
 import { registerIcons } from "./utils/icons";
+import { t, initI18n } from "./i18n/i18n";
 
 // Inline SVG assets at build time via esbuild text loader
 import logoSvg from "../img/logo.svg";
@@ -24,7 +23,6 @@ import {
   computeLineHint,
   computeOccurrenceIndex,
   extractContext,
-  locate,
   fuzzyLocate,
 } from "./annotation/AnnotationLocator";
 import { reanchorAnnotations } from "./annotation/AnchorUpdater";
@@ -49,7 +47,7 @@ import {
 } from "./export/Exporters";
 import { newAnnotationId, sha256 } from "./utils/hash";
 import { isMobile } from "./utils/platform";
-import { openFolderInSystem, revealInFileManager } from "./utils/FolderOpener";
+import { revealInFileManager } from "./utils/FolderOpener";
 import { EditorView } from "@codemirror/view";
 
 // v0.2 Agent bridge imports
@@ -63,11 +61,10 @@ import { buildCommand, TemplateVars } from "./agent/CommandBuilder";
 import {
   launchInTerminal,
   FileChangeMonitor,
-  TerminalApp,
 } from "./agent/TerminalLauncher";
 import { CommandConfirmModal } from "./agent/CommandConfirmModal";
 import { AgentSelectModal } from "./agent/AgentSelectModal";
-import { DiffModal, DiffModalResult } from "./diff/DiffModal";
+import { DiffModal } from "./diff/DiffModal";
 
 // v0.4 API Key direct call
 import {
@@ -78,6 +75,11 @@ import {
 } from "./api/APIProvider";
 import { APIConfirmModal, APIProgressModal } from "./api/APIExecuteModal";
 import { buildReviewMarkdown, estimateTokens } from "./export/Exporters";
+
+/** UTF-8 safe base64 encoding (replaces deprecated unescape + btoa) */
+function utf8ToBase64(str: string): string {
+	return btoa(Array.from(new TextEncoder().encode(str), (b) => String.fromCodePoint(b)).join(""));
+}
 
 export default class PromptuaryPlugin extends Plugin {
   settings: PromptuarySettings = DEFAULT_SETTINGS;
@@ -94,16 +96,17 @@ export default class PromptuaryPlugin extends Plugin {
   private originalTextBeforeAgent: string | null = null;
 
   /** Logo SVG data URI (inlined at build time) */
-  logoUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(logoSvg)))}`;
+  logoUrl = `data:image/svg+xml;base64,${utf8ToBase64(logoSvg)}`;
 
   /** Empty state SVG data URI (inlined at build time) */
-  emptyStateUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(emptyStateSvg)))}`;
+  emptyStateUrl = `data:image/svg+xml;base64,${utf8ToBase64(emptyStateSvg)}`;
 
   /** Execution state visible to sidebar for status display */
   executionState: null | { type: "agent" | "api" } = null;
 
   async onload(): Promise<void> {
     await this.loadSettings();
+    initI18n(this.settings.language);
 
     // Register custom icons
     registerIcons();
@@ -123,11 +126,11 @@ export default class PromptuaryPlugin extends Plugin {
 
     // Sidebar view
     this.registerView(SIDEBAR_VIEW_TYPE, (leaf) => new SidebarView(leaf, this));
-    this.addRibbonIcon("highlighter", "Promptuary 侧边栏", () => this.openSidebar());
+    this.addRibbonIcon("highlighter", t("main.ribbonTooltip"), () => { void this.openSidebar(); });
     this.addCommand({
       id: "open-sidebar",
-      name: "打开 Promptuary 侧边栏",
-      callback: () => this.openSidebar(),
+      name: t("main.cmd.openSidebar"),
+      callback: () => { void this.openSidebar(); },
     });
 
     // Settings
@@ -141,8 +144,8 @@ export default class PromptuaryPlugin extends Plugin {
     }
 
     // Editor selection listener
-    this.registerDomEvent(document, "selectionchange", () => this.onSelectionChange());
-    this.registerDomEvent(document, "mousedown", (e) => {
+    this.registerDomEvent(activeDocument, "selectionchange", () => this.onSelectionChange());
+    this.registerDomEvent(activeDocument, "mousedown", (e) => {
       const target = e.target as HTMLElement | null;
       if (!target) return;
       if (target.closest(".promptuary-popover")) return;
@@ -151,7 +154,7 @@ export default class PromptuaryPlugin extends Plugin {
         this.popover?.hide();
       }
     });
-    this.registerDomEvent(document, "mouseup", () => {
+    this.registerDomEvent(activeDocument, "mouseup", () => {
       if (this.isDraggingSelection) {
         this.isDraggingSelection = false;
         window.setTimeout(() => this.onSelectionChange(), 0);
@@ -160,56 +163,56 @@ export default class PromptuaryPlugin extends Plugin {
 
     // Re-decorate when active leaf changes or annotations change
     this.registerEvent(
-      this.app.workspace.on("active-leaf-change", () => this.refreshDecorations()),
+      this.app.workspace.on("active-leaf-change", () => { void this.refreshDecorations(); }),
     );
     this.registerEvent(
-      this.app.workspace.on("file-open", () => this.refreshDecorations()),
+      this.app.workspace.on("file-open", () => { void this.refreshDecorations(); }),
     );
     this.store.on("change", (path: string) => {
       const md = this.app.workspace.getActiveViewOfType(MarkdownView);
-      if (md?.file?.path === path) this.refreshDecorations();
+      if (md?.file?.path === path) { void this.refreshDecorations(); }
     });
 
     // v0.1 commands
     this.addCommand({
       id: "highlight-yellow",
-      name: "高亮（黄）",
+      name: t("main.cmd.highlightYellow"),
       editorCheckCallback: (checking, _ed, view) => {
         if (!view.file) return false;
         if (checking) return true;
-        this.createHighlightFromSelection("yellow");
+        void this.createHighlightFromSelection("yellow");
         return true;
       },
     });
     this.addCommand({
       id: "create-note",
-      name: "添加笔记",
+      name: t("main.cmd.addNote"),
       editorCheckCallback: (checking, _ed, view) => {
         if (!view.file) return false;
         if (checking) return true;
-        this.openNoteModalForSelection();
+        void this.openNoteModalForSelection();
         return true;
       },
     });
     this.addCommand({
       id: "create-review",
-      name: "添加批阅意见",
+      name: t("main.cmd.addReview"),
       editorCheckCallback: (checking, _ed, view) => {
         if (!view.file) return false;
         if (checking) return true;
-        this.openReviewModalForSelection();
+        void this.openReviewModalForSelection();
         return true;
       },
     });
     this.addCommand({
       id: "export-review",
-      name: "导出批阅文件",
-      callback: () => this.runExport(),
+      name: t("main.cmd.exportReview"),
+      callback: () => { void this.runExport(); },
     });
     this.addCommand({
       id: "copy-prompt",
-      name: "复制 Prompt",
-      callback: () => this.runCopyPrompt(),
+      name: t("main.cmd.copyPrompt"),
+      callback: () => { void this.runCopyPrompt(); },
     });
 
     // v0.2: Agent commands
@@ -218,27 +221,27 @@ export default class PromptuaryPlugin extends Plugin {
     // v0.4: API command
     this.addCommand({
       id: "api-execute",
-      name: "API Key 直调执行",
-      callback: () => this.runAPIExecute(),
+      name: t("main.cmd.apiExecute"),
+      callback: () => { void this.runAPIExecute(); },
     });
 
     // Open sidebar on first install
     this.app.workspace.onLayoutReady(() => {
       if (this.app.workspace.getLeavesOfType(SIDEBAR_VIEW_TYPE).length === 0) {
-        this.openSidebar();
+        void this.openSidebar();
       } else {
-        this.refreshDecorations();
+        void this.refreshDecorations();
       }
     });
   }
 
-  async onunload(): Promise<void> {
-    await this.store.flushAll();
+  onunload(): void {
+    void this.store.flushAll();
     this.store.destroy();
     this.popover?.destroy();
     this.toolbar?.destroy();
     this.fileChangeMonitor?.cancel();
-    this.app.workspace.detachLeavesOfType(SIDEBAR_VIEW_TYPE);
+    // Note: intentionally NOT calling detachLeavesOfType — Obsidian handles leaf cleanup on plugin unload
   }
 
   async loadSettings(): Promise<void> {
@@ -267,15 +270,15 @@ export default class PromptuaryPlugin extends Plugin {
     for (const rule of PRESET_RULES) {
       this.addCommand({
         id: `agent-${rule.id}`,
-        name: `使用 ${rule.label} 执行`,
-        callback: () => this.runAgent(rule.id),
+        name: t("main.cmd.runAgent", { label: rule.label }),
+        callback: () => { void this.runAgent(rule.id); },
       });
     }
     // Register "copy command" as a universal fallback
     this.addCommand({
-      id: "agent-copy-command",
-      name: "复制 Agent 命令",
-      callback: () => this.runCopyAgentCommand(),
+      id: "copy-agent-command",
+      name: t("main.cmd.copyAgentCommand"),
+      callback: () => { void this.runCopyAgentCommand(); },
     });
   }
 
@@ -297,13 +300,13 @@ export default class PromptuaryPlugin extends Plugin {
   async runAPIExecute(): Promise<void> {
     const targetPath = this.resolveTargetMarkdownPath();
     if (!targetPath) {
-      new Notice("请先打开一个 Markdown 文件");
+      new Notice(t("main.notice.openMdFile"));
       return;
     }
 
     const apiSettings = this.settings.apiSettings;
     if (!apiSettings.apiKey) {
-      new Notice("请在设置面板中配置 API Key（设置 → API Key 直调）");
+      new Notice(t("main.notice.configureAPIKey"));
       return;
     }
 
@@ -311,13 +314,13 @@ export default class PromptuaryPlugin extends Plugin {
     const data = await this.store.getFile(targetPath);
     const reviews = data.annotations.filter((a) => a.type === "review");
     if (reviews.length === 0) {
-      new Notice("当前文件没有批阅意见");
+      new Notice(t("main.notice.noReviewAnnotations"));
       return;
     }
 
     const file = this.app.vault.getAbstractFileByPath(targetPath);
     if (!(file instanceof TFile)) {
-      new Notice("找不到原文件");
+      new Notice(t("export.notice.fileNotFound"));
       return;
     }
 
@@ -363,7 +366,7 @@ export default class PromptuaryPlugin extends Plugin {
     });
 
     if (!apiResult.success || !apiResult.text) {
-      progressModal.setState({ phase: "error", message: apiResult.error ?? "未知错误" });
+      progressModal.setState({ phase: "error", message: apiResult.error ?? t("common.error") });
       await resultPromise;
       return;
     }
@@ -375,7 +378,7 @@ export default class PromptuaryPlugin extends Plugin {
 
     // Diff flow (same as CLI)
     if (originalText === modifiedText) {
-      new Notice("API 返回内容与原文相同，无需修改");
+      new Notice(t("main.notice.noChangesNeeded"));
       return;
     }
 
@@ -390,19 +393,19 @@ export default class PromptuaryPlugin extends Plugin {
       case "accept-all": {
         await this.app.vault.modify(file, modifiedText);
         await this.reanchorAndConfirm(targetPath, originalText, modifiedText);
-        new Notice("已接受所有修改");
+        new Notice(t("main.notice.allAccepted"));
         break;
       }
       case "accept-partial": {
         if (diffResult.mergedText !== undefined) {
           await this.app.vault.modify(file, diffResult.mergedText);
           await this.reanchorAndConfirm(targetPath, originalText, diffResult.mergedText);
-          new Notice("已应用选中的修改");
+          new Notice(t("main.notice.selectedApplied"));
         }
         break;
       }
       case "reject": {
-        new Notice("已取消，文件未修改");
+        new Notice(t("main.notice.cancelledNoChange"));
         break;
       }
     }
@@ -419,19 +422,19 @@ export default class PromptuaryPlugin extends Plugin {
    */
   async runAgent(ruleId: string): Promise<void> {
     if (isMobile()) {
-      new Notice("移动端暂不支持 Agent 执行，请使用「复制 Prompt」");
+      new Notice(t("main.notice.mobileNoAgent"));
       return;
     }
 
     const rule = this.commandRuleStore.getById(ruleId);
     if (!rule) {
-      new Notice(`未找到规则: ${ruleId}`);
+      new Notice(t("main.notice.ruleNotFound", { id: ruleId }));
       return;
     }
 
     const targetPath = this.resolveTargetMarkdownPath();
     if (!targetPath) {
-      new Notice("请先打开一个 Markdown 文件");
+      new Notice(t("main.notice.openMdFile"));
       return;
     }
 
@@ -439,14 +442,14 @@ export default class PromptuaryPlugin extends Plugin {
     await this.store.flushAll();
     const data = await this.store.getFile(targetPath);
     if (data.annotations.filter((a) => a.type === "review").length === 0) {
-      new Notice("当前文件没有批阅意见");
+      new Notice(t("main.notice.noReviewAnnotations"));
       return;
     }
 
     // Generate instruction file
     const file = this.app.vault.getAbstractFileByPath(targetPath);
     if (!(file instanceof TFile)) {
-      new Notice("找不到原文件");
+      new Notice(t("export.notice.fileNotFound"));
       return;
     }
     const originalText = await this.app.vault.read(file);
@@ -514,7 +517,7 @@ export default class PromptuaryPlugin extends Plugin {
    */
   async runAgentWithSelect(): Promise<void> {
     if (isMobile()) {
-      new Notice("移动端暂不支持 Agent 执行，请使用「复制 Prompt」");
+      new Notice(t("main.notice.mobileNoAgent"));
       return;
     }
     const agents = this.getAgentInfo();
@@ -527,7 +530,7 @@ export default class PromptuaryPlugin extends Plugin {
   async runCopyAgentCommand(): Promise<void> {
     const targetPath = this.resolveTargetMarkdownPath();
     if (!targetPath) {
-      new Notice("请先打开一个 Markdown 文件");
+      new Notice(t("main.notice.openMdFile"));
       return;
     }
 
@@ -537,7 +540,7 @@ export default class PromptuaryPlugin extends Plugin {
     const installed = agents.filter((a) => a.installed);
 
     if (installed.length === 0) {
-      new Notice("未检测到已安装的 Agent CLI，请先安装 Claude Code / Codex / Aider / Gemini CLI");
+      new Notice(t("main.notice.noAgentCLI"));
       return;
     }
 
@@ -589,7 +592,7 @@ export default class PromptuaryPlugin extends Plugin {
     };
     const command = buildCommand(rule, templateVars);
     exportCopyToClipboard(command);
-    new Notice(`${rule.label} 命令已复制到剪贴板`);
+    new Notice(t("main.notice.commandCopied", { label: rule.label }));
   }
 
   /** Start monitoring a file for changes after CLI execution.
@@ -599,7 +602,7 @@ export default class PromptuaryPlugin extends Plugin {
     this.fileChangeMonitor?.cancel();
     this.fileChangeMonitor = new FileChangeMonitor();
 
-    new Notice("正在监听文件变更（5 分钟超时）…");
+    new Notice(t("main.notice.monitoringChanges"));
 
     const loop = async (): Promise<void> => {
       const monitor = new FileChangeMonitor();
@@ -607,12 +610,12 @@ export default class PromptuaryPlugin extends Plugin {
 
       const detected = await monitor.startMonitor(this.app, filePath);
       if (!detected) {
-        new Notice("监听超时，未检测到更多变更");
+        new Notice(t("main.notice.monitorTimeout"));
         this.fileChangeMonitor = null;
         return;
       }
 
-      new Notice("检测到文件变更，正在生成 Diff…");
+      new Notice(t("main.notice.changeDetected"));
       await this.showDiffForFile(filePath);
 
       // If user accepted/rejected and the agent might still be writing,
@@ -620,13 +623,13 @@ export default class PromptuaryPlugin extends Plugin {
       // (which signals the user chose "reject" / flow is done).
       if (this.originalTextBeforeAgent !== null) {
         // Still have a snapshot — continue monitoring for next batch
-        loop();
+        void loop();
       } else {
         this.fileChangeMonitor = null;
       }
     };
 
-    loop();
+    void loop();
   }
 
   /**
@@ -643,7 +646,7 @@ export default class PromptuaryPlugin extends Plugin {
 
     const original = this.originalTextBeforeAgent;
     if (!original) {
-      new Notice("没有保存的原文快照");
+      new Notice(t("main.notice.noOriginalSnapshot"));
       return;
     }
 
@@ -652,7 +655,7 @@ export default class PromptuaryPlugin extends Plugin {
 
     // Quick check: any changes?
     if (original === modified) {
-      new Notice("文件内容未发生变化");
+      new Notice(t("main.notice.noChangesDetected"));
       return;
     }
 
@@ -670,7 +673,7 @@ export default class PromptuaryPlugin extends Plugin {
         await this.reanchorAndConfirm(filePath, original, finalText);
         // Update snapshot to the accepted text for next batch diff
         this.originalTextBeforeAgent = finalText;
-        new Notice("已接受所有修改");
+        new Notice(t("main.notice.allAccepted"));
         break;
       }
       case "accept-partial": {
@@ -679,7 +682,7 @@ export default class PromptuaryPlugin extends Plugin {
           const finalText = result.mergedText;
           await this.reanchorAndConfirm(filePath, original, finalText);
           this.originalTextBeforeAgent = finalText;
-          new Notice("已应用选中的修改");
+          new Notice(t("main.notice.selectedApplied"));
         }
         break;
       }
@@ -687,8 +690,8 @@ export default class PromptuaryPlugin extends Plugin {
         // Restore original, clear snapshot to stop the monitor loop
         await this.app.vault.modify(file, original);
         this.originalTextBeforeAgent = null;
-        this.refreshDecorations();
-        new Notice("已回滚所有修改");
+        void this.refreshDecorations();
+        new Notice(t("main.notice.allRolledBack"));
         break;
       }
     }
@@ -817,13 +820,13 @@ export default class PromptuaryPlugin extends Plugin {
     await this.store.confirmBaseline(filePath, newHash);
 
     // Step 4: Refresh editor decorations
-    this.refreshDecorations();
+    void this.refreshDecorations();
 
     // Notify user
     const parts: string[] = [];
-    if (healed > 0) parts.push(`已自动修复 ${healed} 条批注位置`);
-    if (reviewRemoved > 0) parts.push(`${reviewRemoved} 条批阅意见已执行并自动移除`);
-    if (readingRemoved > 0) parts.push(`${readingRemoved} 条失效阅读批注已自动移除`);
+    if (healed > 0) parts.push(t("main.notice.autoHealed", { n: healed }));
+    if (reviewRemoved > 0) parts.push(t("main.notice.reviewExecuted", { n: reviewRemoved }));
+    if (readingRemoved > 0) parts.push(t("main.notice.invalidReadingRemoved", { n: readingRemoved }));
     if (parts.length > 0) new Notice(parts.join("，"));
   }
 
@@ -878,14 +881,14 @@ export default class PromptuaryPlugin extends Plugin {
         if (annotationId) {
           // Editing existing — only update color, preserve noteText
           const filePath = this.findAnnotationFilePath(annotationId);
-          if (filePath) this.store.updateAnnotation(filePath, annotationId, {
+          if (filePath) { void this.store.updateAnnotation(filePath, annotationId, {
             type: "highlight" as AnnotationType,
             highlightColor: color,
             reviewText: undefined,
             strike: undefined,
             // noteText intentionally omitted — preserve existing note
-          });
-          this.refreshDecorations();
+          }); }
+          void this.refreshDecorations();
           this.lastSelection = null;
           collapseSelection();
         } else {
@@ -899,14 +902,14 @@ export default class PromptuaryPlugin extends Plugin {
       onNote: (text: string, color: HighlightColor, annotationId?: string) => {
         if (annotationId) {
           const filePath = this.findAnnotationFilePath(annotationId);
-          if (filePath) this.store.updateAnnotation(filePath, annotationId, {
+          if (filePath) { void this.store.updateAnnotation(filePath, annotationId, {
             type: "note" as AnnotationType,
             noteText: text,
             highlightColor: color,
             reviewText: undefined,
             strike: undefined,
-          });
-          this.refreshDecorations();
+          }); }
+          void this.refreshDecorations();
           this.lastSelection = null;
           collapseSelection();
         } else {
@@ -928,9 +931,9 @@ export default class PromptuaryPlugin extends Plugin {
               highlightColor: undefined,
             };
             if (text) patch.reviewText = text;
-            this.store.updateAnnotation(filePath, annotationId, patch);
+            void this.store.updateAnnotation(filePath, annotationId, patch);
           }
-          this.refreshDecorations();
+          void this.refreshDecorations();
           this.lastSelection = null;
           collapseSelection();
         } else {
@@ -954,15 +957,15 @@ export default class PromptuaryPlugin extends Plugin {
           strike: true,
         };
         await this.store.addAnnotation(ctx.file.path, ann);
-        this.refreshDecorations();
+        void this.refreshDecorations();
         return ann.id;
       },
       onStrikeRemove: (annotationId: string) => {
         this.lastSelection = null;
         const filePath = this.findAnnotationFilePath(annotationId);
         if (filePath) {
-          this.store.removeAnnotation(filePath, annotationId);
-          this.refreshDecorations();
+          void this.store.removeAnnotation(filePath, annotationId);
+          void this.refreshDecorations();
         }
       },
       onModeSwitch: (mode: ViewMode) => {
@@ -1068,13 +1071,13 @@ export default class PromptuaryPlugin extends Plugin {
       highlightColor: color,
     };
     await this.store.addAnnotation(ctx.file.path, ann);
-    this.refreshDecorations();
+    void this.refreshDecorations();
   }
 
   async openNoteModalForSelection(): Promise<void> {
     const ctx = this.getActiveSelectionContext();
     if (!ctx) {
-      new Notice("请先选中要批注的文字");
+      new Notice(t("main.notice.selectTextFirst"));
       return;
     }
     const anchor = await this.buildAnchor(
@@ -1087,7 +1090,7 @@ export default class PromptuaryPlugin extends Plugin {
     new NoteModal(this.app, "", async (text) => {
       const ann: Annotation = { ...anchor, type: "note", noteText: text };
       await this.store.addAnnotation(ctx.file.path, ann);
-      this.refreshDecorations();
+      void this.refreshDecorations();
     }).open();
   }
 
@@ -1095,7 +1098,7 @@ export default class PromptuaryPlugin extends Plugin {
   async createNoteFromSelection(text: string, color: HighlightColor): Promise<void> {
     const ctx = this.getActiveSelectionContext();
     if (!ctx) {
-      new Notice("请先选中要批注的文字");
+      new Notice(t("main.notice.selectTextFirst"));
       return;
     }
     const anchor = await this.buildAnchor(
@@ -1107,13 +1110,13 @@ export default class PromptuaryPlugin extends Plugin {
     );
     const ann: Annotation = { ...anchor, type: "note", noteText: text, highlightColor: color };
     await this.store.addAnnotation(ctx.file.path, ann);
-    this.refreshDecorations();
+    void this.refreshDecorations();
   }
 
   async openReviewModalForSelection(): Promise<void> {
     const ctx = this.getActiveSelectionContext();
     if (!ctx) {
-      new Notice("请先选中要批阅的文字");
+      new Notice(t("main.notice.selectReviewTextFirst"));
       return;
     }
     const anchor = await this.buildAnchor(
@@ -1131,14 +1134,14 @@ export default class PromptuaryPlugin extends Plugin {
         strike,
       };
       await this.store.addAnnotation(ctx.file.path, ann);
-      this.refreshDecorations();
+      void this.refreshDecorations();
     }).open();
   }
 
   async createReviewFromSelection(text: string, strike: boolean): Promise<void> {
     const ctx = this.getActiveSelectionContext();
     if (!ctx) {
-      new Notice("请先选中要批阅的文字");
+      new Notice(t("main.notice.selectReviewTextFirst"));
       return;
     }
     const anchor = await this.buildAnchor(
@@ -1155,7 +1158,7 @@ export default class PromptuaryPlugin extends Plugin {
       strike,
     };
     await this.store.addAnnotation(ctx.file.path, ann);
-    this.refreshDecorations();
+    void this.refreshDecorations();
   }
 
   // ---------- annotation editing ----------
@@ -1185,7 +1188,7 @@ export default class PromptuaryPlugin extends Plugin {
 
   async deleteAnnotation(ann: Annotation): Promise<void> {
     await this.store.removeAnnotation(ann.filePath, ann.id);
-    this.refreshDecorations();
+    void this.refreshDecorations();
   }
 
   // ---------- decorations refresh ----------
@@ -1207,35 +1210,35 @@ export default class PromptuaryPlugin extends Plugin {
   async runExport(filePath?: string): Promise<void> {
     const path = filePath ?? this.resolveTargetMarkdownPath();
     if (!path) {
-      new Notice("请先打开一个 Markdown 文件");
+      new Notice(t("main.notice.openMdFile"));
       return;
     }
     await this.store.flushAll();
     const data = await this.store.getFile(path);
     const reviewCount = data.annotations.filter((a) => a.type === "review").length;
     if (reviewCount === 0) {
-      new Notice("当前文件没有批阅意见");
+      new Notice(t("main.notice.noReviewAnnotations"));
       return;
     }
     const target = await this.reviewExporter.exportToVault(path, data, {
       includeReadingNotes: this.settings.includeReadingNotesInExport,
     });
     if (target) {
-      new Notice(`导出成功，正在打开: ${target}`);
+      new Notice(t("main.notice.exportSuccess", { target }));
       // Reveal the exported file in Finder / Explorer
       const result = await revealInFileManager(this.app, target);
       if (!result.success) {
-        new Notice(`打开文件夹失败: ${result.error ?? "未知错误"}`);
+        new Notice(t("folder.notice.openFailed", { error: result.error ?? "" }));
       }
     } else {
-      new Notice("导出失败：未生成文件");
+      new Notice(t("main.notice.exportFailed"));
     }
   }
 
   async runCopyPrompt(filePath?: string): Promise<void> {
     const path = filePath ?? this.resolveTargetMarkdownPath();
     if (!path) {
-      new Notice("请先打开一个 Markdown 文件");
+      new Notice(t("main.notice.openMdFile"));
       return;
     }
     await this.store.flushAll();
@@ -1278,6 +1281,13 @@ export default class PromptuaryPlugin extends Plugin {
         leaf = right;
       }
     }
-    if (leaf) this.app.workspace.revealLeaf(leaf);
+    if (leaf) {
+      if (typeof this.app.workspace.revealLeaf === "function") {
+        this.app.workspace.revealLeaf(leaf);
+      } else {
+        // Fallback for older Obsidian versions
+        this.app.workspace.setActiveLeaf(leaf, { focus: true });
+      }
+    }
   }
 }

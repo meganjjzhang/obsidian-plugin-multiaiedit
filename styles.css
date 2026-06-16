@@ -3118,3 +3118,26 @@ button.prm-asm-close .svg-icon {
   width: 14px;
   height: 14px;
 }
+
+/* ============================================================
+ * Utility classes (replacing inline styles per Obsidian lint rules)
+ * ============================================================ */
+
+.prm-hidden { display: none !important; }
+
+.prm-input-full-width { width: 100%; }
+.prm-input-min-height { min-height: 120px; }
+
+.prm-clip-textarea { position: fixed; left: -9999px; }
+
+.prm-relative { position: relative; }
+
+/* Dynamic color classes — set --prm-color-bg / --prm-color-border / --prm-color-text
+ * via el.style.setProperty(), then add these classes. */
+.prm-dynamic-bg { background: var(--prm-color-bg); }
+.prm-dynamic-border-color { border-color: var(--prm-color-border); }
+.prm-dynamic-text-color { color: var(--prm-color-text); }
+
+/* Dynamic position classes — set --prm-pos-top / --prm-pos-left
+ * via el.style.setProperty(), then add these classes. */
+.prm-dynamic-position { top: var(--prm-pos-top); left: var(--prm-pos-left); }

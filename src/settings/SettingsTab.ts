@@ -6,6 +6,7 @@ import { detectAgents, AgentInfo } from "../agent/AgentDetector";
 import { TerminalApp } from "../agent/TerminalLauncher";
 import { APIProviderType, PROVIDER_DEFAULTS } from "../api/APIProvider";
 import { isMobile } from "../utils/platform";
+import { t, LanguageSetting, Locale, initI18n, setLocale } from "../i18n/i18n";
 
 export interface APISettings {
   provider: APIProviderType;
@@ -16,6 +17,7 @@ export interface APISettings {
 }
 
 export interface PromptuarySettings {
+  language: LanguageSetting;
   defaultMode: ViewMode;
   contextSpan: number;
   sidecarDir: string;
@@ -37,6 +39,7 @@ export const DEFAULT_API_SETTINGS: APISettings = {
 };
 
 export const DEFAULT_SETTINGS: PromptuarySettings = {
+  language: "auto",
   defaultMode: "reading",
   contextSpan: 50,
   sidecarDir: ".promptuary/annotations",
@@ -75,8 +78,8 @@ class AddRuleModal extends Modal {
     const icon = headerLeft.createDiv({ cls: "prm-arm-icon" });
     setIcon(icon, "zap");
     const titleWrap = headerLeft.createDiv({});
-    titleWrap.createDiv({ cls: "prm-arm-title", text: "添加命令规则" });
-    titleWrap.createDiv({ cls: "prm-arm-subtitle", text: "自定义 Agent CLI 命令模板" });
+    titleWrap.createDiv({ cls: "prm-arm-title", text: t("addrule.title") });
+    titleWrap.createDiv({ cls: "prm-arm-subtitle", text: t("addrule.subtitle") });
 
     // Form
     const form = contentEl.createDiv({ cls: "prm-arm-form" });
@@ -88,48 +91,48 @@ class AddRuleModal extends Modal {
     let newInstallHint = "";
 
     new Setting(form)
-      .setName("规则 ID")
-      .setDesc("唯一标识符，仅允许英文、数字、短横线")
-      .addText((t) =>
-        t.setPlaceholder("my-agent").onChange((v) => (newId = v.trim())),
+      .setName(t("addrule.id.name"))
+      .setDesc(t("addrule.id.desc"))
+      .addText((txt) =>
+        txt.setPlaceholder(t("addrule.id.placeholder")).onChange((v) => (newId = v.trim())),
       );
     new Setting(form)
-      .setName("显示名")
-      .setDesc("在侧边栏和命令面板中显示的名称")
-      .addText((t) =>
-        t.setPlaceholder("My Agent").onChange((v) => (newLabel = v.trim())),
+      .setName(t("addrule.label.name"))
+      .setDesc(t("addrule.label.desc"))
+      .addText((txt) =>
+        txt.setPlaceholder(t("addrule.label.placeholder")).onChange((v) => (newLabel = v.trim())),
       );
     new Setting(form)
-      .setName("检测命令")
-      .setDesc("用于判断该 Agent 是否已安装的 shell 命令")
-      .addText((t) =>
-        t.setPlaceholder("which my-agent").onChange((v) => (newDetectCmd = v.trim())),
+      .setName(t("addrule.detectCmd.name"))
+      .setDesc(t("addrule.detectCmd.desc"))
+      .addText((txt) =>
+        txt.setPlaceholder(t("addrule.detectCmd.placeholder")).onChange((v) => (newDetectCmd = v.trim())),
       );
     new Setting(form)
-      .setName("命令模板")
-      .setDesc("实际执行时的命令，支持模板变量")
-      .addTextArea((t) =>
-        t
-          .setPlaceholder('cd {{vaultPath}} && my-agent "读取 {{instructionFile}}"')
+      .setName(t("addrule.command.name"))
+      .setDesc(t("addrule.command.desc"))
+      .addTextArea((txt) =>
+        txt
+          .setPlaceholder(t("addrule.command.placeholder"))
           .onChange((v) => (newTemplate = v.trim())),
       );
     new Setting(form)
-      .setName("安装提示")
-      .setDesc("未安装时显示的安装命令（可选）")
-      .addText((t) =>
-        t.setPlaceholder("npm i -g my-agent").onChange((v) => (newInstallHint = v.trim())),
+      .setName(t("addrule.installHint.name"))
+      .setDesc(t("addrule.installHint.desc"))
+      .addText((txt) =>
+        txt.setPlaceholder(t("addrule.installHint.placeholder")).onChange((v) => (newInstallHint = v.trim())),
       );
 
     // Template variables reference
     const varRef = form.createDiv({ cls: "prm-arm-var-ref" });
-    varRef.createDiv({ cls: "prm-arm-var-title", text: "可用模板变量" });
+    varRef.createDiv({ cls: "prm-arm-var-title", text: t("addrule.varTitle") });
     const varGrid = varRef.createDiv({ cls: "prm-arm-var-grid" });
     const vars = [
-      ["{{vaultPath}}", "Vault 根目录"],
-      ["{{instructionFile}}", "指令文件路径"],
-      ["{{filePath}}", "文件相对路径"],
-      ["{{fileName}}", "文件名"],
-      ["{{prompt}}", "内联 Prompt"],
+      ["{{vaultPath}}", t("addrule.var.vaultPath")],
+      ["{{instructionFile}}", t("addrule.var.instructionFile")],
+      ["{{filePath}}", t("addrule.var.filePath")],
+      ["{{fileName}}", t("addrule.var.fileName")],
+      ["{{prompt}}", t("addrule.var.prompt")],
     ];
     for (const [v, desc] of vars) {
       const item = varGrid.createDiv({ cls: "prm-arm-var-item" });
@@ -141,21 +144,21 @@ class AddRuleModal extends Modal {
     const footer = contentEl.createDiv({ cls: "prm-arm-footer" });
     const cancelBtn = footer.createEl("button", {
       cls: "prm-arm-btn-cancel",
-      text: "取消",
+      text: t("addrule.btn.cancel"),
     });
     cancelBtn.onclick = () => this.close();
 
     const saveBtn = footer.createEl("button", {
       cls: "prm-arm-btn-save",
-      text: "添加规则",
+      text: t("addrule.btn.add"),
     });
     saveBtn.onclick = () => {
       if (!newId || !newLabel || !newTemplate || !newDetectCmd) {
-        new Notice("请填写所有必填字段");
+        new Notice(t("addrule.notice.requiredFields"));
         return;
       }
       if (this.existingIds.includes(newId)) {
-        new Notice(`规则 ID "${newId}" 已存在`);
+        new Notice(t("addrule.notice.idExists", { id: newId }));
         return;
       }
       try {
@@ -167,10 +170,10 @@ class AddRuleModal extends Modal {
           label: newLabel,
           detectCmd: newDetectCmd,
           template: newTemplate,
-          installHint: newInstallHint || "自定义安装方式",
+          installHint: newInstallHint || t("addrule.defaultInstallHint"),
         });
       } catch (err) {
-        new Notice(`验证失败: ${(err as Error).message}`);
+        new Notice(t("addrule.notice.validationFailed", { error: (err as Error).message }));
         return;
       }
       this.resolve?.({
@@ -178,7 +181,7 @@ class AddRuleModal extends Modal {
         label: newLabel,
         detectCmd: newDetectCmd,
         template: newTemplate,
-        installHint: newInstallHint || "自定义安装方式",
+        installHint: newInstallHint || t("addrule.defaultInstallHint"),
       });
       this.close();
     };
@@ -217,8 +220,8 @@ export class SettingsTab extends PluginSettingTab {
     // --- Section 1: Basic ---
     this.renderSection(containerEl, {
       icon: "file-text",
-      title: "基础设置",
-      desc: "批注存储、导出路径与默认模式",
+      title: t("settings.section.basic"),
+      desc: t("settings.section.basicDesc"),
       open: true,
       render: (el) => this.renderBasicSettings(el),
     });
@@ -227,16 +230,16 @@ export class SettingsTab extends PluginSettingTab {
     if (!isMobile()) {
       this.renderSection(containerEl, {
         icon: "bot",
-        title: "Agent 与终端",
-        desc: "CLI Agent 检测、命令规则与终端配置",
+        title: t("settings.section.agent"),
+        desc: t("settings.section.agentDesc"),
         open: true,
         render: (el) => this.renderAgentSettings(el),
       });
 
       this.renderSection(containerEl, {
         icon: "key-round",
-        title: "API 直调",
-        desc: "配置 API Key 后无需安装 CLI，直接在插件内调用模型",
+        title: t("settings.section.api"),
+        desc: t("settings.section.apiDesc"),
         open: !this.plugin.settings.apiSettings.apiKey, // open if no key yet
         render: (el) => this.renderAPISettings(el),
       });
@@ -287,14 +290,37 @@ export class SettingsTab extends PluginSettingTab {
   // ---------- Basic settings ----------
 
   private renderBasicSettings(containerEl: HTMLElement): void {
+    // Language selector
     new Setting(containerEl)
-      .setName("默认模式")
-      .setDesc("打开侧边栏时使用的初始模式")
+      .setName(t("settings.language.name"))
+      .setDesc(t("settings.language.desc"))
+      .addDropdown((d) => {
+        d.addOption("auto", t("settings.language.auto"))
+          .addOption("zh-CN", t("settings.language.zhCN"))
+          .addOption("en", t("settings.language.en"))
+          .setValue(this.plugin.settings.language)
+          .onChange(async (v) => {
+            this.plugin.settings.language = v as LanguageSetting;
+            await this.plugin.saveSettings();
+            initI18n(v as LanguageSetting);
+            // Reload plugin to apply language change
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const app = this.app as any;
+            if (app.plugins?.disablePlugin && app.plugins?.enablePlugin) {
+              await app.plugins.disablePlugin("promptuary");
+              await app.plugins.enablePlugin("promptuary");
+            }
+          });
+      });
+
+    new Setting(containerEl)
+      .setName(t("settings.defaultMode.name"))
+      .setDesc(t("settings.defaultMode.desc"))
       .addDropdown((d) =>
         d
-          .addOption("reading", "阅读")
-          .addOption("reviewing", "批阅")
-          .addOption("all", "全部")
+          .addOption("reading", t("settings.defaultMode.reading"))
+          .addOption("reviewing", t("settings.defaultMode.review"))
+          .addOption("all", t("sidebar.mode.all"))
           .setValue(this.plugin.settings.defaultMode)
           .onChange(async (v) => {
             this.plugin.settings.defaultMode = v as ViewMode;
@@ -303,10 +329,10 @@ export class SettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("上下文长度")
-      .setDesc("每条批注前后保存的字符数（用于锚点定位与导出快照）")
-      .addText((t) =>
-        t
+      .setName(t("settings.contextSpan.name"))
+      .setDesc(t("settings.contextSpan.desc"))
+      .addText((txt) =>
+        txt
           .setValue(String(this.plugin.settings.contextSpan))
           .onChange(async (v) => {
             const n = parseInt(v, 10);
@@ -318,10 +344,10 @@ export class SettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("Sidecar 目录")
-      .setDesc("批注 JSON 存储位置（vault 相对路径）")
-      .addText((t) =>
-        t
+      .setName(t("settings.sidecarDir.name"))
+      .setDesc(t("settings.sidecarDir.desc"))
+      .addText((txt) =>
+        txt
           .setValue(this.plugin.settings.sidecarDir)
           .onChange(async (v) => {
             this.plugin.settings.sidecarDir = v.trim() || DEFAULT_SETTINGS.sidecarDir;
@@ -330,10 +356,10 @@ export class SettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("导出目录")
-      .setDesc("导出批阅文件的保存位置（vault 相对路径）。默认隐藏目录，导出后自动在 Finder 中打开")
-      .addText((t) =>
-        t
+      .setName(t("settings.exportDir.name"))
+      .setDesc(t("settings.exportDir.desc"))
+      .addText((txt) =>
+        txt
           .setValue(this.plugin.settings.exportDir)
           .onChange(async (v) => {
             this.plugin.settings.exportDir = v.trim() || DEFAULT_SETTINGS.exportDir;
@@ -342,10 +368,10 @@ export class SettingsTab extends PluginSettingTab {
       );
 
     new Setting(containerEl)
-      .setName("导出时附带阅读笔记")
-      .setDesc("默认只导出批阅意见，开启后将笔记作为参考上下文一并导出")
-      .addToggle((t) =>
-        t
+      .setName(t("settings.includeReadingNotes.name"))
+      .setDesc(t("settings.includeReadingNotes.desc"))
+      .addToggle((toggle) =>
+        toggle
           .setValue(this.plugin.settings.includeReadingNotesInExport)
           .onChange(async (v) => {
             this.plugin.settings.includeReadingNotesInExport = v;
@@ -359,11 +385,11 @@ export class SettingsTab extends PluginSettingTab {
   private renderAgentSettings(containerEl: HTMLElement): void {
     // Terminal app selection
     new Setting(containerEl)
-      .setName("终端应用")
-      .setDesc("macOS 上用于执行 CLI 命令的终端应用")
+      .setName(t("settings.terminalApp.name"))
+      .setDesc(t("settings.terminalApp.desc"))
       .addDropdown((d) => {
-        d.addOption("Terminal", "Terminal（默认）")
-          .addOption("iTerm2", "iTerm2")
+        d.addOption("Terminal", t("settings.terminalApp.terminal") + t("settings.terminalApp.defaultSuffix"))
+          .addOption("iTerm2", t("settings.terminalApp.iterm"))
           .setValue(this.plugin.settings.terminalApp)
           .onChange(async (v) => {
             this.plugin.settings.terminalApp = v as TerminalApp;
@@ -388,9 +414,9 @@ export class SettingsTab extends PluginSettingTab {
       const infoEl = card.createDiv({ cls: "prm-agent-card-info" });
       const nameRow = infoEl.createDiv({ cls: "prm-agent-card-name-row" });
       nameRow.createDiv({ cls: "prm-agent-card-name", text: info.rule.label });
-      const badge = nameRow.createDiv({
+      const _badge = nameRow.createDiv({
         cls: `prm-agent-card-badge ${info.installed ? "installed" : "missing"}`,
-        text: info.installed ? "已安装" : "未安装",
+        text: info.installed ? t("settings.detectedAgents.installed") : t("agent.select.missing"),
       });
 
       if (info.rule.vendor) {
@@ -399,20 +425,20 @@ export class SettingsTab extends PluginSettingTab {
       if (!info.installed) {
         infoEl.createDiv({
           cls: "prm-agent-card-hint",
-          text: `安装：${info.rule.installHint}`,
+          text: `${t("settings.agentInstall")}${info.rule.installHint}`,
         });
       }
     }
 
     // Re-detect button
     new Setting(containerEl)
-      .setName("重新检测 Agent")
-      .setDesc("重新扫描已安装的 Agent CLI")
+      .setName(t("settings.redetectAgent.name"))
+      .setDesc(t("settings.redetectAgent.desc"))
       .addButton((b) =>
-        b.setButtonText("检测").onClick(() => {
+        b.setButtonText(t("settings.redetectAgent.btn")).onClick(() => {
           this.plugin.invalidateAgentCache();
           this.display();
-          new Notice("检测完成");
+          new Notice(t("settings.redetectAgent.done"));
         }),
       );
 
@@ -423,10 +449,10 @@ export class SettingsTab extends PluginSettingTab {
 
     // Sub-section header
     const ruleHeader = containerEl.createDiv({ cls: "prm-settings-sub-header" });
-    ruleHeader.createDiv({ cls: "prm-settings-sub-title", text: "自定义命令规则" });
+    ruleHeader.createDiv({ cls: "prm-settings-sub-title", text: t("settings.customRules.title") });
     const addBtn = ruleHeader.createEl("button", {
       cls: "prm-settings-sub-btn",
-      text: "+ 添加",
+      text: `+ ${t("common.add")}`,
     });
     addBtn.onclick = async () => {
       const allIds = ruleStore.allRules().map((r) => r.id);
@@ -440,9 +466,9 @@ export class SettingsTab extends PluginSettingTab {
           await this.plugin.saveSettings();
           this.plugin.invalidateAgentCache();
           this.display();
-          new Notice(`规则 "${result.label}" 已添加`);
+          new Notice(t("settings.customRules.added", { label: result.label }));
         } catch (err) {
-          new Notice(`添加失败: ${(err as Error).message}`);
+          new Notice(t("settings.customRules.addFailed", { error: (err as Error).message }));
         }
       }
     };
@@ -450,7 +476,7 @@ export class SettingsTab extends PluginSettingTab {
     if (customRules.length === 0) {
       containerEl.createDiv({
         cls: "prm-settings-empty",
-        text: "暂无自定义规则，点击上方「+ 添加」按钮创建。",
+        text: t("settings.customRules.empty"),
       });
     } else {
       const ruleCards = containerEl.createDiv({ cls: "prm-rule-cards" });
@@ -461,14 +487,14 @@ export class SettingsTab extends PluginSettingTab {
 
     // Available variables help
     const varDetails = containerEl.createEl("details", { cls: "prm-settings-var-details" });
-    varDetails.createEl("summary", { text: "可用模板变量参考" });
+    varDetails.createEl("summary", { text: t("settings.varRef.title") });
     const varTable = varDetails.createEl("table", { cls: "prm-settings-var-table" });
     const vars = [
-      ["{{vaultPath}}", "Vault 根目录绝对路径"],
-      ["{{instructionFile}}", "生成的批注指令文件路径"],
-      ["{{filePath}}", "当前文件相对路径"],
-      ["{{fileName}}", "当前文件名"],
-      ["{{prompt}}", "内联 prompt 文本"],
+      ["{{vaultPath}}", t("settings.varRef.vaultPath")],
+      ["{{instructionFile}}", t("settings.varRef.instructionFile")],
+      ["{{filePath}}", t("settings.varRef.filePath")],
+      ["{{fileName}}", t("settings.varRef.fileName")],
+      ["{{prompt}}", t("settings.varRef.prompt")],
     ];
     for (const [v, desc] of vars) {
       const tr = varTable.createEl("tr");
@@ -484,16 +510,16 @@ export class SettingsTab extends PluginSettingTab {
     const info = card.createDiv({ cls: "prm-rule-card-info" });
     info.createDiv({ cls: "prm-rule-card-label", text: rule.label });
     const meta = info.createDiv({ cls: "prm-rule-card-meta" });
-    meta.createSpan({ text: `检测: ${rule.detectCmd}` });
+    meta.createSpan({ text: `${t("settings.ruleCard.detect")}: ${rule.detectCmd}` });
     // Template preview (truncate)
     const tpl = rule.template.length > 60 ? rule.template.slice(0, 57) + "…" : rule.template;
     const tplSpan = meta.createSpan({ cls: "prm-rule-card-template" });
-    tplSpan.setText(`模板: ${tpl}`);
+    tplSpan.setText(`${t("settings.ruleCard.template")}: ${tpl}`);
 
     // Right: delete button
     const delBtn = card.createEl("button", {
       cls: "prm-rule-card-del",
-      text: "删除",
+      text: t("common.delete"),
     });
     delBtn.onclick = async () => {
       const store = new CommandRuleStore();
@@ -512,14 +538,14 @@ export class SettingsTab extends PluginSettingTab {
     const s = this.plugin.settings.apiSettings;
 
     new Setting(containerEl)
-      .setName("Provider")
+      .setName(t("settings.api.provider.name"))
       .addDropdown((d) =>
         d
           .addOption("anthropic", "Anthropic (Claude)")
           .addOption("openai", "OpenAI (GPT)")
           .addOption("deepseek", "DeepSeek")
           .addOption("gemini", "Google Gemini")
-          .addOption("custom", "自定义端点（OpenAI 兼容）")
+          .addOption("custom", t("settings.api.provider.custom"))
           .setValue(s.provider)
           .onChange(async (v) => {
             s.provider = v as APIProviderType;
@@ -531,22 +557,22 @@ export class SettingsTab extends PluginSettingTab {
 
     // API Key with toggle visibility
     new Setting(containerEl)
-      .setName("API Key")
-      .setDesc("密钥仅保存在本地，不上传至任何服务器")
-      .addText((t) => {
-        t.setPlaceholder("sk-…")
+      .setName(t("settings.api.key.name"))
+      .setDesc(t("settings.api.key.desc"))
+      .addText((txt) => {
+        txt.setPlaceholder(t("settings.api.key.placeholder"))
           .setValue(s.apiKey)
           .onChange(async (v) => {
             s.apiKey = v.trim();
             await this.plugin.saveSettings();
           });
-        t.inputEl.type = "password";
-        t.inputEl.addClass("prm-api-key-input");
+        txt.inputEl.type = "password";
+        txt.inputEl.addClass("prm-api-key-input");
 
         // Toggle visibility button
-        const inputParent = t.inputEl.parentElement;
+        const inputParent = txt.inputEl.parentElement;
         if (inputParent) {
-          inputParent.style.position = "relative";
+          inputParent.addClass("prm-relative");
         }
         const toggleBtn = inputParent?.createEl("button", {
           cls: "prm-api-key-toggle",
@@ -554,7 +580,7 @@ export class SettingsTab extends PluginSettingTab {
         if (toggleBtn) {
           setIcon(toggleBtn, "eye");
           toggleBtn.onclick = () => {
-            const input = t.inputEl;
+            const input = txt.inputEl;
             if (input.type === "password") {
               input.type = "text";
               setIcon(toggleBtn, "eye-off");
@@ -567,10 +593,10 @@ export class SettingsTab extends PluginSettingTab {
       });
 
     new Setting(containerEl)
-      .setName("模型")
-      .setDesc(`留空则使用默认：${PROVIDER_DEFAULTS[s.provider].model}`)
-      .addText((t) =>
-        t
+      .setName(t("settings.api.model.name"))
+      .setDesc(t("settings.api.model.desc", { model: PROVIDER_DEFAULTS[s.provider].model }))
+      .addText((txt) =>
+        txt
           .setPlaceholder(PROVIDER_DEFAULTS[s.provider].model)
           .setValue(s.model)
           .onChange(async (v) => {
@@ -581,11 +607,11 @@ export class SettingsTab extends PluginSettingTab {
 
     if (s.provider === "custom") {
       new Setting(containerEl)
-        .setName("自定义端点 URL")
-        .setDesc("OpenAI 兼容格式，如 https://your-proxy.com/v1/chat/completions")
-        .addText((t) =>
-          t
-            .setPlaceholder("https://…/v1/chat/completions")
+        .setName(t("settings.api.customEndpoint.name"))
+        .setDesc(t("settings.api.customEndpoint.desc"))
+        .addText((txt) =>
+          txt
+            .setPlaceholder(t("settings.api.customEndpoint.placeholder"))
             .setValue(s.customEndpoint)
             .onChange(async (v) => {
               s.customEndpoint = v.trim();
@@ -595,10 +621,10 @@ export class SettingsTab extends PluginSettingTab {
     }
 
     new Setting(containerEl)
-      .setName("最大输出 Token")
-      .setDesc("默认 4096")
-      .addText((t) =>
-        t
+      .setName(t("settings.api.maxTokens.name"))
+      .setDesc(t("settings.api.maxTokens.desc"))
+      .addText((txt) =>
+        txt
           .setValue(String(s.maxTokens))
           .onChange(async (v) => {
             const n = parseInt(v, 10);
@@ -611,30 +637,30 @@ export class SettingsTab extends PluginSettingTab {
 
     // Test connection with status indicator
     const testSetting = new Setting(containerEl)
-      .setName("测试连接")
-      .setDesc("发送最小请求验证 API Key 是否有效");
+      .setName(t("settings.api.test.name"))
+      .setDesc(t("settings.api.test.desc"));
 
-    let lastTestResult: "success" | "fail" | null = null;
+    let _lastTestResult: "success" | "fail" | null = null;
 
     testSetting.addButton((b) => {
-      b.setButtonText("测试").onClick(async () => {
+      b.setButtonText(t("settings.api.test.btn")).onClick(async () => {
         if (!s.apiKey) {
-          new Notice("请先填写 API Key");
+          new Notice(t("settings.api.test.noKey"));
           return;
         }
-        b.setButtonText("测试中…").setDisabled(true);
+        b.setButtonText(t("settings.api.test.running")).setDisabled(true);
         const { callAPI, API_SYSTEM_PROMPT } = await import("../api/APIProvider");
         const result = await callAPI(
           { ...s, model: s.model || PROVIDER_DEFAULTS[s.provider].model },
           { systemPrompt: API_SYSTEM_PROMPT, userMessage: '请回复"连接成功"，仅此四字。' },
         );
-        b.setButtonText("测试").setDisabled(false);
+        b.setButtonText(t("settings.api.test.btn")).setDisabled(false);
         if (result.success) {
-          lastTestResult = "success";
-          new Notice(`连接成功：${result.text?.slice(0, 30)}`);
+          _lastTestResult = "success";
+          new Notice(t("settings.api.test.success", { text: result.text?.slice(0, 30) ?? "" }));
         } else {
-          lastTestResult = "fail";
-          new Notice(`连接失败：${result.error}`);
+          _lastTestResult = "fail";
+          new Notice(t("settings.api.test.failed", { error: result.error ?? "" }));
         }
         this.display();
       });

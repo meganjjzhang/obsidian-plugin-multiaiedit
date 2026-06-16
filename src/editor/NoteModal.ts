@@ -1,4 +1,5 @@
 import { App, MarkdownView, Modal, Setting } from "obsidian";
+import { t } from "../i18n/i18n";
 
 /** Lightweight modal for note input — used by the desktop popover and the
  * mobile bottom toolbar alike. */
@@ -13,13 +14,13 @@ export class NoteModal extends Modal {
 
   onOpen(): void {
     const { contentEl } = this;
-    contentEl.createEl("h3", { text: "记录笔记" });
-    new Setting(contentEl).setName("内容").addTextArea((t) => {
+    contentEl.createEl("h3", { text: t("notemodal.note.title") });
+    new Setting(contentEl).setName(t("notemodal.note.content")).addTextArea((t) => {
       t.setValue(this.value).onChange((v) => {
         this.value = v;
       });
-      t.inputEl.style.width = "100%";
-      t.inputEl.style.minHeight = "120px";
+      t.inputEl.addClass("prm-input-full-width");
+      t.inputEl.addClass("prm-input-min-height");
       // Enter to submit when not holding shift
       t.inputEl.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
@@ -27,11 +28,11 @@ export class NoteModal extends Modal {
           this.submit();
         }
       });
-      setTimeout(() => t.inputEl.focus(), 50);
+      window.setTimeout(() => t.inputEl.focus(), 50);
     });
     new Setting(contentEl)
-      .addButton((b) => b.setButtonText("取消").onClick(() => this.close()))
-      .addButton((b) => b.setButtonText("保存").setCta().onClick(() => this.submit()));
+      .addButton((b) => b.setButtonText(t("common.cancel")).onClick(() => this.close()))
+      .addButton((b) => b.setButtonText(t("common.save")).setCta().onClick(() => this.submit()));
   }
 
   private submit(): void {
@@ -71,28 +72,28 @@ export class ReviewModal extends Modal {
 
   onOpen(): void {
     const { contentEl } = this;
-    contentEl.createEl("h3", { text: "添加批阅意见" });
-    new Setting(contentEl).setName("意见").addTextArea((t) => {
+    contentEl.createEl("h3", { text: t("notemodal.review.title") });
+    new Setting(contentEl).setName(t("notemodal.review.content")).addTextArea((t) => {
       t.setValue(this.value).onChange((v) => {
         this.value = v;
       });
-      t.inputEl.style.width = "100%";
-      t.inputEl.style.minHeight = "120px";
+      t.inputEl.addClass("prm-input-full-width");
+      t.inputEl.addClass("prm-input-min-height");
       t.inputEl.addEventListener("keydown", (e) => {
         if (e.key === "Enter" && !e.shiftKey) {
           e.preventDefault();
           this.submit();
         }
       });
-      setTimeout(() => t.inputEl.focus(), 50);
+      window.setTimeout(() => t.inputEl.focus(), 50);
     });
     new Setting(contentEl)
-      .setName("标记为删除线")
-      .setDesc("表达强删除/合并意图，最终由 AI 结合上下文判断。")
+      .setName(t("notemodal.review.strikethrough"))
+      .setDesc(t("notemodal.review.strikethroughDesc"))
       .addToggle((t) => t.setValue(this.strike).onChange((v) => (this.strike = v)));
     new Setting(contentEl)
-      .addButton((b) => b.setButtonText("取消").onClick(() => this.close()))
-      .addButton((b) => b.setButtonText("保存").setCta().onClick(() => this.submit()));
+      .addButton((b) => b.setButtonText(t("common.cancel")).onClick(() => this.close()))
+      .addButton((b) => b.setButtonText(t("common.save")).setCta().onClick(() => this.submit()));
   }
 
   private submit(): void {

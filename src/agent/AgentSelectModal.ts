@@ -1,6 +1,7 @@
 import { App, Modal, setIcon } from "obsidian";
 import { CommandRule } from "./CommandRuleStore";
 import { AgentInfo } from "./AgentDetector";
+import { t } from "../i18n/i18n";
 
 export interface AgentSelectResult {
 	rule: CommandRule | null; // null = cancelled
@@ -53,11 +54,11 @@ export class AgentSelectModal extends Modal {
 		const iconWrap = headerLeft.createDiv({ cls: "prm-asm-icon" });
 		setIcon(iconWrap, "bot");
 		const titleWrap = headerLeft.createDiv();
-		titleWrap.createDiv({ cls: "prm-asm-title", text: "Select Agent" });
-		titleWrap.createDiv({ cls: "prm-asm-subtitle", text: "Choose an AI agent to execute edits" });
+		titleWrap.createDiv({ cls: "prm-asm-title", text: t("agent.select.title") });
+		titleWrap.createDiv({ cls: "prm-asm-subtitle", text: t("agent.select.subtitle") });
 
 		const closeBtn = header.createEl("button", { cls: "prm-asm-close" });
-		closeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+		setIcon(closeBtn, "x");
 		closeBtn.onclick = () => {
 			this.resolve?.({ rule: null });
 			this.close();
@@ -84,18 +85,21 @@ export class AgentSelectModal extends Modal {
 
 			// Avatar
 			const avatar = row.createDiv({ cls: "prm-asm-avatar" });
-			avatar.style.background = col.bg;
-			avatar.style.borderColor = col.border;
+			avatar.style.setProperty('--prm-color-bg', col.bg);
+			avatar.style.setProperty('--prm-color-border', col.border);
+			avatar.addClass('prm-dynamic-bg');
+			avatar.addClass('prm-dynamic-border-color');
 			avatar.createSpan({ cls: "prm-asm-avatar-char", text: rule.label[0] });
-			(avatar.querySelector(".prm-asm-avatar-char") as HTMLElement).style.color = col.text;
+			(avatar.querySelector(".prm-asm-avatar-char") as HTMLElement).style.setProperty('--prm-color-text', col.text);
+			(avatar.querySelector(".prm-asm-avatar-char") as HTMLElement).addClass('prm-dynamic-text-color');
 
 			// Info
 			const info2 = row.createDiv({ cls: "prm-asm-info" });
 			const nameRow = info2.createDiv({ cls: "prm-asm-name-row" });
 			nameRow.createSpan({ cls: "prm-asm-name", text: rule.label });
-			const badge = nameRow.createSpan({
+			const _badge = nameRow.createSpan({
 				cls: "prm-asm-badge " + (installed ? "installed" : "missing"),
-				text: installed ? "installed" : "missing",
+				text: installed ? t("agent.select.installed") : t("agent.select.missing"),
 			});
 
 			info2.createDiv({
@@ -111,7 +115,7 @@ export class AgentSelectModal extends Modal {
 				row.onclick = () => {
 					this.selected = rule;
 					// Update all rows
-					for (const [id, el] of rowEls) {
+					for (const [_id, el] of rowEls) {
 						el.removeClass("active");
 						const r = el.querySelector(".prm-asm-radio");
 						r?.removeClass("selected");
@@ -129,15 +133,17 @@ export class AgentSelectModal extends Modal {
 		// ── Footer ──
 		const footer = modalEl.createDiv({ cls: "prm-asm-footer" });
 
-		const configBtn = footer.createEl("button", { cls: "prm-asm-config-btn", text: "+ Configure custom agent" });
+		const configBtn = footer.createEl("button", { cls: "prm-asm-config-btn", text: t("agent.select.addCustom") });
 		configBtn.onclick = () => {
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian internal API, no public type available
 			(this.app as any).setting?.open();
+			// eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian internal API, no public type available
 			(this.app as any).setting?.openTabById?.("promptuary");
 			this.resolve?.({ rule: null });
 			this.close();
 		};
 
-		const confirmBtn = footer.createEl("button", { cls: "prm-asm-confirm-btn", text: "Confirm" });
+		const confirmBtn = footer.createEl("button", { cls: "prm-asm-confirm-btn", text: t("agent.select.btn.confirm") });
 		confirmBtn.onclick = () => {
 			this.resolve?.({ rule: this.selected });
 			this.close();

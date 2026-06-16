@@ -5,6 +5,7 @@ import { locate, fuzzyLocate, computeLineHint, computeOccurrenceIndex } from "..
 import type PromptuaryPlugin from "../main";
 import { isMobile } from "../utils/platform";
 import { EditorView } from "@codemirror/view";
+import { t } from "../i18n/i18n";
 
 export const SIDEBAR_VIEW_TYPE = "promptuary-sidebar";
 
@@ -156,7 +157,7 @@ export class SidebarView extends ItemView {
       this.contentEl2.empty();
       this.actionBarEl.empty();
       this.renderHeader(this.headerEl);
-      this.renderEmptyState(this.contentEl2, "请打开一个 Markdown 文件");
+      this.renderEmptyState(this.contentEl2, t("sidebar.empty.openFile"));
       return;
     }
     const data = await this.plugin.store.getFile(this.currentFilePath);
@@ -250,17 +251,17 @@ export class SidebarView extends ItemView {
           if (myToken !== this.refreshSeq) return;
           this.baselineMismatch = false;
           const parts: string[] = [];
-          if (affected.autoHealed > 0) parts.push(`已自动修复 ${affected.autoHealed} 条批注位置`);
-          if (affected.reviewRemoved > 0) parts.push(`${affected.reviewRemoved} 条批阅意见已自动移除`);
-          if (affected.readingRemoved > 0) parts.push(`${affected.readingRemoved} 条失效阅读批注已自动移除`);
+          if (affected.autoHealed > 0) parts.push(t("sidebar.notice.autoHealed", { n: affected.autoHealed }));
+          if (affected.reviewRemoved > 0) parts.push(t("sidebar.notice.reviewAutoRemoved", { n: affected.reviewRemoved }));
+          if (affected.readingRemoved > 0) parts.push(t("sidebar.notice.invalidReadingRemoved", { n: affected.readingRemoved }));
           if (parts.length > 0) new Notice(parts.join("，"));
         } else {
           this.baselineMismatch = true;
           const parts: string[] = [];
-          if (affected.autoHealed > 0) parts.push(`已自动修复 ${affected.autoHealed} 条批注位置`);
-          if (affected.reviewRemoved > 0) parts.push(`${affected.reviewRemoved} 条批阅意见已自动移除`);
-          if (affected.readingRemoved > 0) parts.push(`${affected.readingRemoved} 条失效阅读批注已自动移除`);
-          if (remainingIssues > 0) parts.push(`${remainingIssues} 条位置存在歧义，需检查`);
+          if (affected.autoHealed > 0) parts.push(t("sidebar.notice.autoHealed", { n: affected.autoHealed }));
+          if (affected.reviewRemoved > 0) parts.push(t("sidebar.notice.reviewAutoRemoved", { n: affected.reviewRemoved }));
+          if (affected.readingRemoved > 0) parts.push(t("sidebar.notice.invalidReadingRemoved", { n: affected.readingRemoved }));
+          if (remainingIssues > 0) parts.push(t("sidebar.notice.ambiguousCheck", { n: remainingIssues }));
           if (parts.length > 0) new Notice(parts.join("，"));
         }
       } else {
@@ -325,16 +326,18 @@ export class SidebarView extends ItemView {
     setIcon(settingsBtn, "settings");
     settingsBtn.onclick = () => {
       // Open plugin settings
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian internal API, no public type available
       (this.app as any).setting?.open();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian internal API, no public type available
       (this.app as any).setting?.openTabById?.("promptuary");
     };
 
     // Mode capsule (inside header, below title row)
     const capsule = parent.createDiv({ cls: "prm-mode-capsule" });
     const modes: Array<[ViewMode, string]> = [
-      ["reading", "阅读"],
-      ["reviewing", "批阅"],
-      ["all", "全部"],
+      ["reading", t("sidebar.mode.reading")],
+      ["reviewing", t("sidebar.mode.review")],
+      ["all", t("sidebar.mode.all")],
     ];
     for (const [m, label] of modes) {
       const btn = capsule.createEl("button", { text: label });
@@ -353,18 +356,18 @@ export class SidebarView extends ItemView {
     if (!isMobile()) {
       const execBtn = parent.createEl("button", { cls: "prm-action-execute" });
       setIcon(execBtn, "sparkles");
-      execBtn.title = "选择 Agent CLI 执行批阅修改";
+      execBtn.title = t("sidebar.action.agentTitle");
       const isAgentExecuting = isExecuting && executing.type === "agent";
       if (isAgentExecuting) {
-        execBtn.createSpan({ text: "Agent 批阅中…" });
+        execBtn.createSpan({ text: t("sidebar.status.agentRunning") });
       } else {
-        execBtn.createSpan({ text: "Agent 批阅" });
+        execBtn.createSpan({ text: t("sidebar.action.agentReview") });
       }
       execBtn.disabled = !hasReviews || isExecuting;
       if (isAgentExecuting) execBtn.addClass("prm-executing");
       execBtn.onclick = async () => {
         if (!hasReviews || isExecuting) return;
-        if (!hasReviews) { new Notice("当前文件没有批阅意见"); return; }
+        if (!hasReviews) { new Notice(t("main.notice.noReviewAnnotations")); return; }
         this.plugin.executionState = { type: "agent" };
         this.reRenderActionBar();
         try {
@@ -386,12 +389,12 @@ export class SidebarView extends ItemView {
     setIcon(apiBtn, "zap");
     if (isApiExecuting) {
       apiBtn.createSpan({ cls: "prm-action-short", text: "API" });
-      apiBtn.createSpan({ cls: "prm-action-long", text: " 批阅中…" });
+      apiBtn.createSpan({ cls: "prm-action-long", text: ` ${t("sidebar.mode.review")}…` });
     } else {
       apiBtn.createSpan({ cls: "prm-action-short", text: "API" });
-      apiBtn.createSpan({ cls: "prm-action-long", text: " 批阅" });
+      apiBtn.createSpan({ cls: "prm-action-long", text: ` ${t("sidebar.mode.review")}` });
     }
-    apiBtn.title = hasApiKey ? "通过 API 直调执行批阅修改" : "请先在设置中配置 API Key";
+    apiBtn.title = hasApiKey ? t("sidebar.action.apiTitle") : t("sidebar.action.noApiKey");
     apiBtn.disabled = !hasApiKey || isExecuting;
     if (isApiExecuting) apiBtn.addClass("prm-executing");
     apiBtn.onclick = async () => {
@@ -410,8 +413,8 @@ export class SidebarView extends ItemView {
     const copyBtn = row2.createEl("button", { cls: "prm-action-btn" });
     setIcon(copyBtn, "clipboard-copy");
     copyBtn.createSpan({ cls: "prm-action-short", text: "Prompt" });
-    copyBtn.createSpan({ cls: "prm-action-long", text: " 复制" });
-    copyBtn.title = "复制批阅 Prompt 到剪贴板";
+    copyBtn.createSpan({ cls: "prm-action-long", text: ` ${t("sidebar.action.copy")}` });
+    copyBtn.title = t("sidebar.action.copyTitle");
     copyBtn.disabled = !hasReviews || isExecuting;
     copyBtn.onclick = () => {
       if (this.currentFilePath) this.plugin.runCopyPrompt(this.currentFilePath);
@@ -421,13 +424,13 @@ export class SidebarView extends ItemView {
     // … 按钮（下拉菜单：导出批注文件）
     const moreBtn = row2.createEl("button", { cls: "prm-action-btn prm-more-btn" });
     setIcon(moreBtn, "more-horizontal");
-    moreBtn.title = "导出批注文件";
+    moreBtn.title = t("sidebar.action.exportTitle");
     moreBtn.disabled = !hasReviews || isExecuting;
     moreBtn.onclick = () => {
       if (!hasReviews || isExecuting) return;
       const menu = new Menu();
       menu.addItem((item) => {
-        item.setTitle("导出批注文件")
+        item.setTitle(t("sidebar.action.exportFile"))
           .setIcon("file-text")
           .onClick(async () => {
             if (this.currentFilePath) await this.plugin.runExport(this.currentFilePath);
@@ -435,6 +438,7 @@ export class SidebarView extends ItemView {
           });
       });
       const rect = moreBtn.getBoundingClientRect();
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- Obsidian Menu.showAtPosition accepts {x,y} but types require MouseEvt
       menu.showAtPosition({ x: rect.left, y: rect.top - 4 } as any);
     };
 
@@ -442,10 +446,10 @@ export class SidebarView extends ItemView {
     const status = parent.createDiv({ cls: "prm-action-status" });
     if (isExecuting) {
       status.createSpan({ cls: "prm-status-dot prm-status-dot-executing" });
-      status.createSpan({ text: executing.type === "agent" ? "Agent 批阅中…" : "API 批阅中…" });
+      status.createSpan({ text: executing.type === "agent" ? t("sidebar.status.agentRunning") : t("sidebar.status.apiRunning") });
     } else {
       status.createSpan({ cls: "prm-status-dot" });
-      status.createSpan({ text: `${reviewCount} 条批阅待执行` });
+      status.createSpan({ text: t("sidebar.status.pendingReview", { n: reviewCount }) });
     }
   }
 
@@ -461,18 +465,18 @@ export class SidebarView extends ItemView {
   private renderBannerIn(parent: HTMLElement, affected: { fuzzy: number; drifted: number }): void {
     const banner = parent.createDiv({ cls: "prm-banner" });
     const parts: string[] = [];
-    if (affected.drifted > 0) parts.push(`${affected.drifted} 条已漂移`);
-    if (affected.fuzzy > 0) parts.push(`${affected.fuzzy} 条位置存在歧义`);
+    if (affected.drifted > 0) parts.push(t("sidebar.banner.drifted", { n: affected.drifted }));
+    if (affected.fuzzy > 0) parts.push(t("sidebar.banner.ambiguous", { n: affected.fuzzy }));
     const msg = parts.length > 0
-      ? `原文变更后有 ${parts.join("、")}，请检查后确认`
-      : "原文已变更，请检查批注";
+      ? `${t("sidebar.banner.changed")} ${parts.join("、")}，${t("sidebar.banner.changedFull")}`
+      : t("sidebar.banner.changedFull");
     banner.createSpan({ text: msg });
-    const btn = banner.createEl("button", { text: "全部确认" });
+    const btn = banner.createEl("button", { text: t("sidebar.banner.confirmAll") });
     btn.onclick = async () => {
       if (!this.currentFilePath || !this.currentHash) return;
       await this.plugin.store.confirmBaseline(this.currentFilePath, this.currentHash);
       this.refresh();
-      new Notice("baseline 已更新");
+      new Notice(t("sidebar.banner.baselineUpdated"));
     };
   }
 
@@ -521,13 +525,13 @@ export class SidebarView extends ItemView {
     const tagClass = tagColorClassFor(ann);
     meta.createSpan({ cls: `prm-tag ${tagClass}`, text: tagLabelFor(ann) });
     // 漂移状态
-    if (r?.status === "fuzzy")       { const s = meta.createSpan({ cls: "prm-card-status-inline" }); setIcon(s, "alert-triangle"); s.createSpan({ text: " 位置歧义" }); }
-    if (r?.status === "auto-healed") { const s = meta.createSpan({ cls: "prm-card-status-inline" }); setIcon(s, "wrench"); s.createSpan({ text: " 已自动修复" }); }
-    if (r?.status === "drifted")     { const s = meta.createSpan({ cls: "prm-card-status-inline" }); setIcon(s, "alert-triangle"); s.createSpan({ text: " 已漂移" }); }
+    if (r?.status === "fuzzy")       { const s = meta.createSpan({ cls: "prm-card-status-inline" }); setIcon(s, "alert-triangle"); s.createSpan({ text: ` ${t("sidebar.card.ambiguous")}` }); }
+    if (r?.status === "auto-healed") { const s = meta.createSpan({ cls: "prm-card-status-inline" }); setIcon(s, "wrench"); s.createSpan({ text: ` ${t("sidebar.card.autoHealed")}` }); }
+    if (r?.status === "drifted")     { const s = meta.createSpan({ cls: "prm-card-status-inline" }); setIcon(s, "alert-triangle"); s.createSpan({ text: ` ${t("sidebar.card.drifted")}` }); }
     // 删除按钮（右推）
     const spacer = meta.createDiv({ cls: "prm-card-meta-spacer" });
     void spacer;
-    const delBtn = meta.createEl("button", { cls: "prm-card-del-btn", text: "删除" });
+    const delBtn = meta.createEl("button", { cls: "prm-card-del-btn", text: t("sidebar.card.delete") });
     delBtn.onclick = (e) => {
       e.stopPropagation();
       this.plugin.deleteAnnotation(ann);
@@ -581,7 +585,7 @@ export class SidebarView extends ItemView {
     const doc = view.editor.getValue();
     const r = locate(doc, ann);
     if (r.status === "drifted" || r.from === undefined || r.to === undefined) {
-      new Notice("无法定位该批注，可能已漂移");
+      new Notice(t("sidebar.notice.cannotLocate"));
       return;
     }
     const fromPos = view.editor.offsetToPos(r.from);
@@ -593,7 +597,7 @@ export class SidebarView extends ItemView {
     const cm: EditorView | undefined = (view.editor as unknown as { cm?: EditorView }).cm;
     if (cm && this.plugin.popover) {
       // Small delay to let scroll settle before positioning
-      requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
         this.plugin.popover!.showForAnnotation(cm, r.from!, r.to!, ann);
       });
     }
@@ -601,9 +605,9 @@ export class SidebarView extends ItemView {
 }
 
 function emptyText(mode: ViewMode): string {
-  if (mode === "reading") return "还没有阅读标注。\n选中文字后选择高亮颜色或添加笔记。";
-  if (mode === "reviewing") return "还没有批阅意见。\n切到批阅模式后选中文字写一句意见。";
-  return "这个文档还没有任何标注。";
+  if (mode === "reading") return t("sidebar.empty.reading");
+  if (mode === "reviewing") return t("sidebar.empty.review");
+  return t("sidebar.empty.all");
 }
 
 /** 卡片左侧色条的 class（与 .prm-card.color-* 配套）。 */
@@ -630,9 +634,9 @@ function tagColorClassFor(ann: Annotation): string {
 
 /** 卡片元信息 chip 的中文文案。 */
 function tagLabelFor(ann: Annotation): string {
-  if (ann.type === "highlight") return "高亮";
-  if (ann.type === "note") return "笔记";
-  if (ann.type === "review") return ann.strike ? "删除" : "批阅";
+  if (ann.type === "highlight") return t("sidebar.tag.highlight");
+  if (ann.type === "note") return t("sidebar.tag.note");
+  if (ann.type === "review") return ann.strike ? t("sidebar.tag.delete") : t("sidebar.tag.review");
   return "";
 }
 

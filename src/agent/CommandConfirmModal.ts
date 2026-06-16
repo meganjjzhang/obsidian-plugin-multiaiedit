@@ -1,6 +1,7 @@
 import { App, Modal, setIcon, Notice } from "obsidian";
 import { copyToClipboard } from "../export/Exporters";
 import { CommandRule } from "./CommandRuleStore";
+import { t } from "../i18n/i18n";
 
 /** Initial char → accent color bucket (same as AgentSelectModal) */
 const AGENT_COLORS: Record<string, { bg: string; border: string; text: string }> = {
@@ -58,14 +59,14 @@ export class CommandConfirmModal extends Modal {
 		const iconWrap = headerLeft.createDiv({ cls: "prm-ccm-icon" });
 		setIcon(iconWrap, "terminal");
 		const titleWrap = headerLeft.createDiv();
-		titleWrap.createDiv({ cls: "prm-ccm-title", text: "Confirm Execution" });
+		titleWrap.createDiv({ cls: "prm-ccm-title", text: t("agent.confirm.title") });
 		titleWrap.createDiv({
 			cls: "prm-ccm-subtitle",
-			text: `${this.rule.label} · about to run in Terminal`,
+			text: t("agent.confirm.subtitle", { label: this.rule.label }),
 		});
 
 		const closeBtn = header.createEl("button", { cls: "prm-ccm-close" });
-		closeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+		setIcon(closeBtn, "x");
 		closeBtn.onclick = () => {
 			this.resolve?.(false);
 			this.close();
@@ -74,16 +75,19 @@ export class CommandConfirmModal extends Modal {
 		// ── Agent badge row ──
 		const badgeRow = modalEl.createDiv({ cls: "prm-ccm-agent-row" });
 		const agentAvatar = badgeRow.createDiv({ cls: "prm-ccm-agent-avatar" });
-		agentAvatar.style.background = col.bg;
-		agentAvatar.style.borderColor = col.border;
+		agentAvatar.style.setProperty('--prm-color-bg', col.bg);
+		agentAvatar.style.setProperty('--prm-color-border', col.border);
+		agentAvatar.addClass('prm-dynamic-bg');
+		agentAvatar.addClass('prm-dynamic-border-color');
 		const avatarSpan = agentAvatar.createSpan({ cls: "prm-ccm-agent-char", text: this.rule.label[0] });
-		avatarSpan.style.color = col.text;
+		avatarSpan.style.setProperty('--prm-color-text', col.text);
+		avatarSpan.addClass('prm-dynamic-text-color');
 
 		badgeRow.createSpan({ cls: "prm-ccm-agent-name", text: this.rule.label });
 
 		const badge = badgeRow.createSpan({
 			cls: "prm-ccm-agent-badge installed",
-			text: "installed",
+			text: t("agent.confirm.installed"),
 		});
 
 		if (this.rule.vendor) {
@@ -97,7 +101,7 @@ export class CommandConfirmModal extends Modal {
 		const cmdWrap = modalEl.createDiv({ cls: "prm-ccm-cmd-wrap" });
 		const cmdBox = cmdWrap.createDiv({ cls: "prm-ccm-cmd-box" });
 		const cmdHeader = cmdBox.createDiv({ cls: "prm-ccm-cmd-header" });
-		cmdHeader.createSpan({ cls: "prm-ccm-cmd-label", text: "COMMAND" });
+		cmdHeader.createSpan({ cls: "prm-ccm-cmd-label", text: t("agent.confirm.commandLabel") });
 		cmdBox.createEl("code", { cls: "prm-ccm-code", text: this.command });
 
 		// ── Warning ──
@@ -106,7 +110,7 @@ export class CommandConfirmModal extends Modal {
 		setIcon(warnIcon, "alert-triangle");
 		warnBox.createEl("p", {
 			cls: "prm-ccm-warning-text",
-			text: "请仔细检查命令内容，确认后将在终端中执行。Agent 将直接修改磁盘上的文件。",
+			text: t("agent.confirm.warning"),
 		});
 
 		// ── Instruction file hint (optional) ──
@@ -116,7 +120,7 @@ export class CommandConfirmModal extends Modal {
 			setIcon(hintIcon, "file-text");
 			hintRow.createSpan({
 				cls: "prm-ccm-hint-text",
-				text: `指令文件: ${this.instructionFile}`,
+				text: t("agent.confirm.instructionFile", { path: this.instructionFile }),
 			});
 		}
 
@@ -127,7 +131,7 @@ export class CommandConfirmModal extends Modal {
 		const cancelInner = cancelBtn.createSpan({ cls: "prm-ccm-btn-inner" });
 		const cancelIcon = cancelInner.createSpan({ cls: "prm-ccm-btn-icon" });
 		setIcon(cancelIcon, "x");
-		cancelInner.createSpan({ text: "Cancel" });
+		cancelInner.createSpan({ text: t("agent.confirm.btn.cancel") });
 		cancelBtn.onclick = () => {
 			this.resolve?.(false);
 			this.close();
@@ -138,10 +142,10 @@ export class CommandConfirmModal extends Modal {
 		const copyInner = copyBtn.createSpan({ cls: "prm-ccm-btn-inner" });
 		const copyIcon = copyInner.createSpan({ cls: "prm-ccm-btn-icon" });
 		setIcon(copyIcon, "copy");
-		copyInner.createSpan({ text: "Copy Command" });
+		copyInner.createSpan({ text: t("agent.confirm.btn.copyCommand") });
 		copyBtn.onclick = () => {
 			copyToClipboard(this.command);
-			new Notice("命令已复制到剪贴板");
+			new Notice(t("agent.confirm.notice.copied"));
 			this.resolve?.(false);
 			this.close();
 		};
@@ -150,7 +154,7 @@ export class CommandConfirmModal extends Modal {
 		const execInner = execBtn.createSpan({ cls: "prm-ccm-btn-inner" });
 		const execIcon = execInner.createSpan({ cls: "prm-ccm-btn-icon" });
 		setIcon(execIcon, "play");
-		execInner.createSpan({ text: "Execute" });
+		execInner.createSpan({ text: t("agent.confirm.btn.execute") });
 		execBtn.onclick = () => {
 			this.resolve?.(true);
 			this.close();

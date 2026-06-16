@@ -1,3 +1,5 @@
+import { requestUrl } from "obsidian";
+
 /**
  * API Provider definitions and request logic for API Key direct call (P2).
  *
@@ -54,7 +56,7 @@ export interface APICallResult {
 
 /**
  * Call the selected provider and return the model's text response.
- * Uses fetch() which is available in Obsidian's Electron context.
+ * Uses Obsidian's requestUrl() for network requests.
  */
 export async function callAPI(
 	config: APIProviderConfig,
@@ -91,32 +93,32 @@ async function callAnthropic(
 		messages: [{ role: "user", content: req.userMessage }],
 	});
 
-	const res = await fetch(endpoint, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-			"x-api-key": config.apiKey,
-			"anthropic-version": "2023-06-01",
-		},
-		body,
-	});
+	try {
+		const res = await requestUrl({
+			url: endpoint,
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				"x-api-key": config.apiKey,
+				"anthropic-version": "2023-06-01",
+			},
+			body,
+		});
 
-	if (!res.ok) {
-		const errText = await res.text().catch(() => res.statusText);
-		return { success: false, error: `${res.status} ${errText}` };
+		const json = res.json as {
+			content?: Array<{ type: string; text?: string }>;
+			error?: { message?: string };
+		};
+
+		if (json.error) {
+			return { success: false, error: json.error.message ?? "Anthropic error" };
+		}
+
+		const text = json.content?.find((c) => c.type === "text")?.text ?? "";
+		return { success: true, text };
+	} catch (err) {
+		return { success: false, error: String(err) };
 	}
-
-	const json = await res.json() as {
-		content?: Array<{ type: string; text?: string }>;
-		error?: { message?: string };
-	};
-
-	if (json.error) {
-		return { success: false, error: json.error.message ?? "Anthropic error" };
-	}
-
-	const text = json.content?.find((c) => c.type === "text")?.text ?? "";
-	return { success: true, text };
 }
 
 // ---------- OpenAI / Custom (OpenAI-compat) ----------
@@ -143,31 +145,31 @@ async function callOpenAICompat(
 		],
 	});
 
-	const res = await fetch(endpoint, {
-		method: "POST",
-		headers: {
-			"Content-Type": "application/json",
-			Authorization: `Bearer ${config.apiKey}`,
-		},
-		body,
-	});
+	try {
+		const res = await requestUrl({
+			url: endpoint,
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${config.apiKey}`,
+			},
+			body,
+		});
 
-	if (!res.ok) {
-		const errText = await res.text().catch(() => res.statusText);
-		return { success: false, error: `${res.status} ${errText}` };
+		const json = res.json as {
+			choices?: Array<{ message?: { content?: string } }>;
+			error?: { message?: string };
+		};
+
+		if (json.error) {
+			return { success: false, error: json.error.message ?? "OpenAI error" };
+		}
+
+		const text = json.choices?.[0]?.message?.content ?? "";
+		return { success: true, text };
+	} catch (err) {
+		return { success: false, error: String(err) };
 	}
-
-	const json = await res.json() as {
-		choices?: Array<{ message?: { content?: string } }>;
-		error?: { message?: string };
-	};
-
-	if (json.error) {
-		return { success: false, error: json.error.message ?? "OpenAI error" };
-	}
-
-	const text = json.choices?.[0]?.message?.content ?? "";
-	return { success: true, text };
 }
 
 // ---------- Gemini ----------
@@ -186,30 +188,30 @@ async function callGemini(
 		generationConfig: { maxOutputTokens: config.maxTokens },
 	});
 
-	const res = await fetch(url, {
-		method: "POST",
-		headers: { "Content-Type": "application/json" },
-		body,
-	});
+	try {
+		const res = await requestUrl({
+			url,
+			method: "POST",
+			headers: { "Content-Type": "application/json" },
+			body,
+		});
 
-	if (!res.ok) {
-		const errText = await res.text().catch(() => res.statusText);
-		return { success: false, error: `${res.status} ${errText}` };
+		const json = res.json as {
+			candidates?: Array<{
+				content?: { parts?: Array<{ text?: string }> };
+			}>;
+			error?: { message?: string };
+		};
+
+		if (json.error) {
+			return { success: false, error: json.error.message ?? "Gemini error" };
+		}
+
+		const text = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
+		return { success: true, text };
+	} catch (err) {
+		return { success: false, error: String(err) };
 	}
-
-	const json = await res.json() as {
-		candidates?: Array<{
-			content?: { parts?: Array<{ text?: string }> };
-		}>;
-		error?: { message?: string };
-	};
-
-	if (json.error) {
-		return { success: false, error: json.error.message ?? "Gemini error" };
-	}
-
-	const text = json.candidates?.[0]?.content?.parts?.[0]?.text ?? "";
-	return { success: true, text };
 }
 
 // ---------- Prompt builder ----------

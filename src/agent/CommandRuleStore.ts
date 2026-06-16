@@ -1,4 +1,5 @@
 import { validateTemplate, extractVariables } from "../utils/shellescape";
+import { t } from "../i18n/i18n";
 
 // ---------- types ----------
 
@@ -100,7 +101,7 @@ export class CommandRuleStore {
 		validateTemplate(rule.template);
 		extractVariables(rule.template);
 		if (this.allRules().some((r) => r.id === rule.id)) {
-			throw new Error(`规则 ID "${rule.id}" 已存在`);
+			throw new Error(t("cmdrule.error.idExists", { id: rule.id }));
 		}
 		this.customRules.push({ ...rule, isPreset: false });
 	}
@@ -108,10 +109,10 @@ export class CommandRuleStore {
 	/** Update an existing custom rule. Presets cannot be edited. */
 	update(id: string, patch: Partial<Omit<CommandRule, "id" | "isPreset">>): void {
 		if (PRESET_RULES.some((r) => r.id === id)) {
-			throw new Error("预设规则不可编辑");
+			throw new Error(t("cmdrule.error.presetNotEditable"));
 		}
 		const idx = this.customRules.findIndex((r) => r.id === id);
-		if (idx === -1) throw new Error(`自定义规则 "${id}" 不存在`);
+		if (idx === -1) throw new Error(t("cmdrule.error.notFound", { id }));
 		const merged = { ...this.customRules[idx], ...patch };
 		if (patch.template) {
 			validateTemplate(merged.template);
@@ -123,7 +124,7 @@ export class CommandRuleStore {
 	/** Remove a custom rule by id */
 	remove(id: string): void {
 		if (PRESET_RULES.some((r) => r.id === id)) {
-			throw new Error("预设规则不可删除");
+			throw new Error(t("cmdrule.error.presetNotDeletable"));
 		}
 		this.customRules = this.customRules.filter((r) => r.id !== id);
 	}

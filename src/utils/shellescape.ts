@@ -5,6 +5,7 @@
  * All variable values inserted into command templates MUST pass through
  * shellEscape() to prevent injection.
  */
+import { t } from "../i18n/i18n";
 
 /**
  * Wrap a string in single quotes, escaping any embedded single quotes
@@ -33,10 +34,7 @@ export function validateTemplate(tpl: string): void {
 	const literal = tpl.replace(/\{\{[a-zA-Z]+\}\}/g, "");
 	const match = literal.match(FORBIDDEN_SHELL_CHARS);
 	if (match) {
-		throw new Error(
-			`命令模板包含禁用字符 "${match[0]}"。` +
-			`模板字面值中不允许使用 | & ; > < \` $ ( ) { } 等控制字符。`
-		);
+		throw new Error(t("shell.error.forbiddenChar", { chars: match[0] }));
 	}
 }
 
@@ -65,10 +63,7 @@ export function extractVariables(tpl: string): string[] {
 	while ((m = re.exec(tpl)) !== null) {
 		const name = m[1];
 		if (!ALLOWED_VARIABLES.has(name)) {
-			throw new Error(
-				`未知模板变量 "{{${name}}}"。` +
-				`可用变量: ${[...ALLOWED_VARIABLES].join(", ")}`
-			);
+			throw new Error(t("shell.error.unknownVariable", { var: name }));
 		}
 		if (!vars.includes(name)) vars.push(name);
 	}

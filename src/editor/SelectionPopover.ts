@@ -1,6 +1,7 @@
 import { EditorView } from "@codemirror/view";
 import { App } from "obsidian";
 import { HighlightColor, ViewMode } from "../annotation/AnnotationModel";
+import { t } from "../i18n/i18n";
 
 export interface PopoverCallbacks {
   onHighlight: (color: HighlightColor, annotationId?: string) => void;
@@ -52,10 +53,10 @@ export class SelectionPopover {
   isEditing = false;
 
   constructor(private app: App, private cb: PopoverCallbacks) {
-    this.el = document.createElement("div");
+    this.el = activeDocument.createElement("div");
     this.el.className = "promptuary-popover";
-    this.el.style.display = "none";
-    document.body.appendChild(this.el);
+    this.el.addClass("prm-hidden");
+    activeDocument.body.appendChild(this.el);
   }
 
   destroy(): void {
@@ -132,7 +133,7 @@ export class SelectionPopover {
   }
 
   hide(): void {
-    this.el.style.display = "none";
+    this.el.addClass("prm-hidden");
     this.current = null;
     this.noteExpanded = false;
     this.strikePending = false;
@@ -165,9 +166,10 @@ export class SelectionPopover {
           const top = rect.bottom + 6;
           const popoverWidth = this.el.offsetWidth || 200;
           const left = Math.max(8, Math.min(rect.left, window.innerWidth - popoverWidth - 8));
-          this.el.style.top = `${top}px`;
-          this.el.style.left = `${left}px`;
-          this.el.style.display = "flex";
+          this.el.style.setProperty('--prm-pos-top', `${top}px`);
+          this.el.style.setProperty('--prm-pos-left', `${left}px`);
+          this.el.addClass('prm-dynamic-position');
+          this.el.removeClass('prm-hidden');
           return;
         }
       } catch {
@@ -188,9 +190,10 @@ export class SelectionPopover {
     const popoverWidth = this.el.offsetWidth || 200;
     const maxLeft = window.innerWidth - popoverWidth - 8;
     const left = Math.max(8, Math.min(startLeft, maxLeft));
-    this.el.style.top = `${top}px`;
-    this.el.style.left = `${left}px`;
-    this.el.style.display = "flex";
+    this.el.style.setProperty('--prm-pos-top', `${top}px`);
+    this.el.style.setProperty('--prm-pos-left', `${left}px`);
+    this.el.addClass('prm-dynamic-position');
+    this.el.removeClass('prm-hidden');
   }
 
   private render(): void {
@@ -217,7 +220,7 @@ export class SelectionPopover {
     const row = this.el.createDiv({ cls: "prm-popover-title-row" });
     const title = row.createSpan({
       cls: "prm-popover-title",
-      text: this.editingAnnotationId ? "编辑记录" : "添加记录",
+      text: this.editingAnnotationId ? t("popover.title.edit") : t("popover.title.add"),
     });
     void title;
     this.buildModeCapsule(row);
@@ -227,8 +230,8 @@ export class SelectionPopover {
   private buildModeCapsule(parent: HTMLElement): void {
     const wrap = parent.createDiv({ cls: "prm-popover-capsule" });
     const modes: Array<[ViewMode, string]> = [
-      ["reading", "阅读"],
-      ["reviewing", "批阅"],
+      ["reading", t("popover.mode.reading")],
+      ["reviewing", t("popover.mode.review")],
     ];
     for (const [m, label] of modes) {
       const btn = wrap.createEl("button", { text: label });
@@ -249,7 +252,7 @@ export class SelectionPopover {
     for (const color of colors) {
       const dot = row.createDiv({ cls: `prm-color ${color}` });
       if (color === this.selectedColor) dot.addClass("active");
-      dot.title = `${color} 高亮`;
+      dot.title = t("popover.color.highlight", { color: t(`color.${color}`) });
       dot.onmousedown = (e) => {
         e.preventDefault();
         // Update active state on all dots
@@ -269,8 +272,8 @@ export class SelectionPopover {
     }
     // Vertical divider
     row.createDiv({ cls: "prm-divider" });
-    const noteBtn = row.createEl("button", { cls: "prm-note-btn", text: "Add Note" });
-    noteBtn.title = "添加笔记";
+    const noteBtn = row.createEl("button", { cls: "prm-note-btn", text: t("popover.btn.addNote") });
+    noteBtn.title = t("popover.btn.addNoteTitle");
     noteBtn.onmousedown = (e) => {
       e.preventDefault();
       this.toggleNoteArea();
@@ -282,8 +285,8 @@ export class SelectionPopover {
     const row = this.el.createDiv({ cls: "prm-popover-actions" });
 
     // Delete button (toggle — marks selection as strikethrough)
-    const deleteBtn = row.createEl("button", { cls: "prm-delete-btn", text: "Delete" });
-    deleteBtn.title = "标记为删除";
+    const deleteBtn = row.createEl("button", { cls: "prm-delete-btn", text: t("popover.btn.delete") });
+    deleteBtn.title = t("popover.btn.deleteTitle");
     deleteBtn.onmousedown = (e) => {
       e.preventDefault();
       this.strikePending = !this.strikePending;
@@ -307,8 +310,8 @@ export class SelectionPopover {
     };
 
     // Note button
-    const noteBtn = row.createEl("button", { cls: "prm-note-btn", text: "Add Note" });
-    noteBtn.title = "添加批阅意见";
+    const noteBtn = row.createEl("button", { cls: "prm-note-btn", text: t("popover.btn.reviewNote") });
+    noteBtn.title = t("popover.btn.reviewNoteTitle");
     noteBtn.onmousedown = (e) => {
       e.preventDefault();
       this.toggleNoteArea();
@@ -316,8 +319,8 @@ export class SelectionPopover {
 
     // Confirm button — visible only when Delete is on and Note is NOT expanded
     const confirmBtn = row.createEl("button", { cls: "prm-review-confirm-btn", text: "✓" });
-    confirmBtn.title = "确认删除";
-    confirmBtn.style.display = "none";
+    confirmBtn.title = t("popover.btn.confirmDelete");
+    confirmBtn.addClass("prm-hidden");
     confirmBtn.onmousedown = (e) => {
       e.preventDefault();
       if (this.editingAnnotationId) {
@@ -334,7 +337,7 @@ export class SelectionPopover {
   private updateReviewConfirmState(): void {
     const confirmBtn = this.el.querySelector(".prm-review-confirm-btn") as HTMLElement;
     if (confirmBtn) {
-      confirmBtn.style.display = (this.strikePending && !this.noteExpanded) ? "" : "none";
+      confirmBtn.toggleClass("prm-hidden", !(this.strikePending && !this.noteExpanded));
     }
   }
 
@@ -357,7 +360,7 @@ export class SelectionPopover {
     const input = this.el.querySelector(".prm-popover-note-input") as HTMLInputElement;
     if (input) {
       input.value = text;
-      requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => {
         input.focus();
         input.select();
       });
@@ -392,12 +395,12 @@ export class SelectionPopover {
       cls: "prm-popover-note-input",
     });
     input.placeholder = this.mode === "reviewing"
-      ? "输入批阅意见，AI 会推断要怎么改…"
-      : "为这段高亮添加笔记…";
+      ? t("popover.placeholder.review")
+      : t("popover.placeholder.note");
 
     // Footer row: Save button
     const footer = area.createDiv({ cls: "prm-popover-note-footer" });
-    const saveBtn = footer.createEl("button", { cls: "prm-popover-note-save", text: "Save" });
+    const saveBtn = footer.createEl("button", { cls: "prm-popover-note-save", text: t("popover.btn.save") });
 
     // Wire events
     input.onkeydown = (e) => {
@@ -424,7 +427,7 @@ export class SelectionPopover {
     if (this.current) this.position(this.current.view, this.current.from, this.current.to);
 
     // Auto-focus the input after a tick (mousedown → mouseup → focus)
-    requestAnimationFrame(() => input.focus());
+    window.requestAnimationFrame(() => input.focus());
   }
 
   /** Save a note from the expanded input area */

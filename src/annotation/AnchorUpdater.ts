@@ -15,7 +15,7 @@
  * 5. Return updated annotation fields (or mark as drifted if unmappable).
  */
 
-import { Annotation, LocateResult } from "./AnnotationModel";
+import { Annotation } from "./AnnotationModel";
 
 export interface AnchorUpdate {
   id: string;
@@ -398,7 +398,7 @@ export function reanchorAnnotations(
     // Find the annotation's position in oldText using locate
     // We need to find where selectedText was in oldText.
     // Since the annotation was created in oldText, we can search for it.
-    const oldFrom = oldText.indexOf(ann.selectedText,
+    const _oldFrom = oldText.indexOf(ann.selectedText,
       ann.lineHint > 0 ? Math.max(0, oldText.indexOf("\n", 0)) : 0);
 
     // More robust: use the context to find the position

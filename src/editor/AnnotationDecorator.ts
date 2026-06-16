@@ -180,8 +180,8 @@ class TableAnnotationPlugin {
   }
 
   private scheduleApply(): void {
-    if (this.rafId !== null) cancelAnimationFrame(this.rafId);
-    this.rafId = requestAnimationFrame(() => {
+    if (this.rafId !== null) window.cancelAnimationFrame(this.rafId);
+    this.rafId = window.requestAnimationFrame(() => {
       this.rafId = null;
       this.applyTableHighlights(this.view);
     });
@@ -197,7 +197,7 @@ class TableAnnotationPlugin {
 
   destroy(): void {
     if (this.rafId !== null) {
-      cancelAnimationFrame(this.rafId);
+      window.cancelAnimationFrame(this.rafId);
       this.rafId = null;
     }
     this.observer?.disconnect();
@@ -285,7 +285,7 @@ class TableAnnotationPlugin {
  * and wrap it in a <span> with the given CSS classes.
  */
 function injectHighlightInElement(root: HTMLElement, needle: string, cls: string): void {
-  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+  const walker = activeDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       // Skip text already inside one of our injected spans.
       if ((node.parentElement as HTMLElement | null)?.closest(`.${TABLE_HL_CLASS}`)) {
@@ -306,13 +306,13 @@ function injectHighlightInElement(root: HTMLElement, needle: string, cls: string
     const after = content.slice(idx + needle.length);
     const parent = textNode.parentNode!;
 
-    const span = document.createElement("span");
+    const span = activeDocument.createElement("span");
     span.className = `${cls} ${TABLE_HL_CLASS}`;
     span.textContent = needle;
 
-    if (before) parent.insertBefore(document.createTextNode(before), textNode);
+    if (before) parent.insertBefore(activeDocument.createTextNode(before), textNode);
     parent.insertBefore(span, textNode);
-    if (after) parent.insertBefore(document.createTextNode(after), textNode);
+    if (after) parent.insertBefore(activeDocument.createTextNode(after), textNode);
     parent.removeChild(textNode);
 
     // One match per annotation per line is enough.

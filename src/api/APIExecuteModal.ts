@@ -1,5 +1,6 @@
 import { App, Modal, setIcon, Notice } from "obsidian";
 import { APIProviderConfig, APIProviderType, PROVIDER_DEFAULTS } from "./APIProvider";
+import { t } from "../i18n/i18n";
 
 export interface APIExecuteResult {
 	action: "execute" | "cancel";
@@ -19,7 +20,7 @@ const PROVIDER_LABEL: Record<APIProviderType, string> = {
 	openai: "OpenAI (GPT)",
 	deepseek: "DeepSeek",
 	gemini: "Google Gemini",
-	custom: "自定义端点",
+	custom: t("settings.api.provider.custom"),
 };
 
 function colorFor(provider: APIProviderType) {
@@ -65,14 +66,14 @@ export class APIConfirmModal extends Modal {
 		const iconWrap = headerLeft.createDiv({ cls: "prm-apm-icon" });
 		setIcon(iconWrap, "zap");
 		const titleWrap = headerLeft.createDiv();
-		titleWrap.createDiv({ cls: "prm-apm-title", text: "API 批阅确认" });
+		titleWrap.createDiv({ cls: "prm-apm-title", text: t("api.execute.title") });
 		titleWrap.createDiv({
 			cls: "prm-apm-subtitle",
-			text: `${providerName} · 即将发送至 API`,
+			text: `${providerName} · ${t("api.execute.subtitle")}`,
 		});
 
 		const closeBtn = header.createEl("button", { cls: "prm-apm-close" });
-		closeBtn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`;
+		setIcon(closeBtn, "x");
 		closeBtn.onclick = () => {
 			this.resolve?.({ action: "cancel" });
 			this.close();
@@ -81,15 +82,21 @@ export class APIConfirmModal extends Modal {
 		// ── Provider badge row ──
 		const badgeRow = modalEl.createDiv({ cls: "prm-apm-provider-row" });
 		const providerAvatar = badgeRow.createDiv({ cls: "prm-apm-provider-avatar" });
-		providerAvatar.style.background = col.bg;
-		providerAvatar.style.borderColor = col.border;
+		providerAvatar.style.setProperty('--prm-color-bg', col.bg);
+		providerAvatar.style.setProperty('--prm-color-border', col.border);
+		providerAvatar.addClass('prm-dynamic-bg');
+		providerAvatar.addClass('prm-dynamic-border-color');
 		const avatarChar = providerAvatar.createSpan({ cls: "prm-apm-provider-char", text: providerName[0] });
-		avatarChar.style.color = col.text;
+		avatarChar.style.setProperty('--prm-color-text', col.text);
+		avatarChar.addClass('prm-dynamic-text-color');
 		badgeRow.createSpan({ cls: "prm-apm-provider-name", text: providerName });
-		const badge = badgeRow.createSpan({ cls: "prm-apm-provider-badge", text: "provider" });
-		badge.style.background = col.bg;
-		badge.style.borderColor = col.border;
-		badge.style.color = col.text;
+		const badge = badgeRow.createSpan({ cls: "prm-apm-provider-badge", text: t("api.execute.provider") });
+		badge.style.setProperty('--prm-color-bg', col.bg);
+		badge.style.setProperty('--prm-color-border', col.border);
+		badge.style.setProperty('--prm-color-text', col.text);
+		badge.addClass('prm-dynamic-bg');
+		badge.addClass('prm-dynamic-border-color');
+		badge.addClass('prm-dynamic-text-color');
 
 		// ── Info table ──
 		const infoWrap = modalEl.createDiv({ cls: "prm-apm-info-wrap" });
@@ -102,9 +109,9 @@ export class APIConfirmModal extends Modal {
 			return val;
 		};
 
-		addRow("Model", modelName);
-		addRow("Reviews", `${this.reviewCount} 条批阅`);
-		addRow("Tokens", `~${this.estimatedTokens.toLocaleString()}`, this.estimatedTokens > 50_000);
+		addRow(t("api.execute.model"), modelName);
+		addRow(t("api.execute.reviews"), t("api.execute.reviewCount", { n: this.reviewCount }));
+		addRow(t("api.execute.tokens"), `~${this.estimatedTokens.toLocaleString()}`, this.estimatedTokens > 50_000);
 
 		// ── Warning ──
 		const warnBox = modalEl.createDiv({ cls: "prm-apm-warning" });
@@ -112,7 +119,7 @@ export class APIConfirmModal extends Modal {
 		setIcon(warnIcon, "alert-triangle");
 		warnBox.createEl("p", {
 			cls: "prm-apm-warning-text",
-			text: "原文与批阅意见将发送至所选 Provider，请确认不含敏感信息。数据将离开本地 Vault。",
+			text: t("api.execute.warning"),
 		});
 
 		// ── Footer ──
@@ -121,7 +128,7 @@ export class APIConfirmModal extends Modal {
 		const cancelInner = cancelBtn.createSpan({ cls: "prm-apm-btn-inner" });
 		const cancelIcon = cancelInner.createSpan({ cls: "prm-apm-btn-icon" });
 		setIcon(cancelIcon, "x");
-		cancelInner.createSpan({ text: "取消" });
+		cancelInner.createSpan({ text: t("api.execute.btn.cancel") });
 		cancelBtn.onclick = () => {
 			this.resolve?.({ action: "cancel" });
 			this.close();
@@ -131,7 +138,7 @@ export class APIConfirmModal extends Modal {
 		const execInner = execBtn.createSpan({ cls: "prm-apm-btn-inner" });
 		const execIcon = execInner.createSpan({ cls: "prm-apm-btn-icon" });
 		setIcon(execIcon, "send");
-		execInner.createSpan({ text: "确认执行" });
+		execInner.createSpan({ text: t("api.execute.btn.confirm") });
 		execBtn.onclick = () => {
 			this.resolve?.({ action: "execute" });
 			this.close();
@@ -188,8 +195,8 @@ export class APIProgressModal extends Modal {
 		const iconWrap = headerLeft.createDiv({ cls: "prm-ppm-icon" });
 		setIcon(iconWrap, "zap");
 		const titleWrap = headerLeft.createDiv();
-		titleWrap.createDiv({ cls: "prm-ppm-title", text: "API 批阅中…" });
-		titleWrap.createDiv({ cls: "prm-ppm-subtitle", text: "正在调用 API" });
+		titleWrap.createDiv({ cls: "prm-ppm-title", text: t("api.progress.title") });
+		titleWrap.createDiv({ cls: "prm-ppm-subtitle", text: t("api.progress.subtitle") });
 
 		// ── Content area (re-rendered by setState) ──
 		this.contentArea = modalEl.createDiv({ cls: "prm-ppm-content" });
@@ -199,23 +206,23 @@ export class APIProgressModal extends Modal {
 		const closeBtnWrap = footer.createDiv({ cls: "prm-ppm-footer-right" });
 		const closeBtn = closeBtnWrap.createEl("button", { cls: "prm-ppm-btn prm-ppm-btn-close" });
 		const closeInner = closeBtn.createSpan({ cls: "prm-ppm-btn-inner" });
-		closeInner.createSpan({ text: "关闭" });
+		closeInner.createSpan({ text: t("api.progress.btn.close") });
 		closeBtn.onclick = () => {
 			this.resolve?.(null);
 			this.close();
 		};
-		closeBtn.style.display = "none"; // hidden during calling
+		closeBtn.addClass("prm-hidden"); // hidden during calling
 
 		const diffBtn = closeBtnWrap.createEl("button", { cls: "prm-ppm-btn prm-ppm-btn-diff" });
 		const diffInner = diffBtn.createSpan({ cls: "prm-ppm-btn-inner" });
 		const diffIcon = diffInner.createSpan({ cls: "prm-ppm-btn-icon" });
 		setIcon(diffIcon, "git-compare");
-		diffInner.createSpan({ text: "查看 Diff" });
+		diffInner.createSpan({ text: t("api.progress.btn.viewDiff") });
 		diffBtn.onclick = () => {
 			this.resolve?.(this.state.phase === "done" ? this.state.text : null);
 			this.close();
 		};
-		diffBtn.style.display = "none";
+		diffBtn.addClass("prm-hidden");
 
 		this.render();
 	}
@@ -233,12 +240,12 @@ export class APIProgressModal extends Modal {
 		const footerRight = this.modalEl.querySelector(".prm-ppm-footer-right") as HTMLElement;
 		const closeBtn = footerRight?.querySelector(".prm-ppm-btn-close") as HTMLElement;
 		const diffBtn = footerRight?.querySelector(".prm-ppm-btn-diff") as HTMLElement;
-		if (closeBtn) closeBtn.style.display = "none";
-		if (diffBtn) diffBtn.style.display = "none";
+		if (closeBtn) closeBtn.addClass("prm-hidden");
+		if (diffBtn) diffBtn.addClass("prm-hidden");
 
 		if (this.state.phase === "calling") {
 			area.createDiv({ cls: "prm-ppm-spinner" });
-			area.createEl("p", { cls: "prm-ppm-calling-text", text: "正在调用 API，请稍候…" });
+			area.createEl("p", { cls: "prm-ppm-calling-text", text: t("api.progress.calling") });
 			return;
 		}
 
@@ -246,8 +253,8 @@ export class APIProgressModal extends Modal {
 			const errBox = area.createDiv({ cls: "prm-ppm-error" });
 			const errIcon = errBox.createDiv({ cls: "prm-ppm-error-icon" });
 			setIcon(errIcon, "x-circle");
-			errBox.createEl("p", { cls: "prm-ppm-error-text", text: `调用失败：${this.state.message}` });
-			if (closeBtn) closeBtn.style.display = "";
+			errBox.createEl("p", { cls: "prm-ppm-error-text", text: t("api.progress.failed", { error: this.state.message }) });
+			if (closeBtn) closeBtn.removeClass("prm-hidden");
 			return;
 		}
 
@@ -255,13 +262,13 @@ export class APIProgressModal extends Modal {
 		const doneBox = area.createDiv({ cls: "prm-ppm-success" });
 		const doneIcon = doneBox.createDiv({ cls: "prm-ppm-success-icon" });
 		setIcon(doneIcon, "check-circle");
-		doneBox.createEl("p", { cls: "prm-ppm-success-text", text: "API 返回成功，即将打开 Diff 预览" });
-		if (diffBtn) diffBtn.style.display = "";
+		doneBox.createEl("p", { cls: "prm-ppm-success-text", text: t("api.progress.success") });
+		if (diffBtn) diffBtn.removeClass("prm-hidden");
 	}
 
 	onClose(): void {
 		if (this.state.phase === "calling") {
-			new Notice("API 调用已取消");
+			new Notice(t("api.progress.cancelled"));
 		}
 		this.resolve?.(null);
 		this.resolve = null;

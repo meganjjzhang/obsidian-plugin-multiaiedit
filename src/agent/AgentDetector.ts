@@ -39,7 +39,7 @@ export function detectAgents(rules: CommandRule[]): AgentInfo[] {
 	if (isMobile()) return [];
 
 	// Lazy-import to avoid bundling child_process on mobile
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	// eslint-disable-next-line @typescript-eslint/no-var-requires -- Node.js builtin lazy import for desktop-only feature
 	const { execSync } = require("child_process") as typeof import("child_process");
 	const env = augmentedEnv();
 
@@ -65,7 +65,7 @@ export function detectAgents(rules: CommandRule[]): AgentInfo[] {
  */
 export function isAgentInstalled(rule: CommandRule): boolean {
 	if (isMobile()) return false;
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	// eslint-disable-next-line @typescript-eslint/no-var-requires -- Node.js builtin lazy import for desktop-only feature
 	const { execSync } = require("child_process") as typeof import("child_process");
 	try {
 		execSync(rule.detectCmd, {

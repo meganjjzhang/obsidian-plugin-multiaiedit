@@ -1,5 +1,6 @@
 import { App, Notice, TFile } from "obsidian";
-import { Annotation, AnnotationFile } from "../annotation/AnnotationModel";
+import { AnnotationFile } from "../annotation/AnnotationModel";
+import { t } from "../i18n/i18n";
 
 /** Rough token estimate: 4 chars ≈ 1 token. */
 export function estimateTokens(text: string): number {
@@ -27,26 +28,26 @@ export function buildReviewMarkdown(
   const notes = data.annotations.filter((a) => a.type === "note");
 
   const dateStr = new Date().toISOString().slice(0, 10);
-  let md = `# AI 批阅指令 — ${fileName}\n\n`;
-  md += `- 原文件: [[${stripMd(filePath)}]]\n`;
-  md += `- 导出时间: ${dateStr}\n`;
-  md += `- 批阅数量: ${reviews.length}\n`;
-  md += `- 附带阅读笔记: ${opts.includeReadingNotes ? "是" : "否"}\n\n`;
+  let md = `# ${t("export.reviewTitle")} — ${fileName}\n\n`;
+  md += `- ${t("export.originalFile")}: [[${stripMd(filePath)}]]\n`;
+  md += `- ${t("export.exportTime")}: ${dateStr}\n`;
+  md += `- ${t("export.reviewCount")}: ${reviews.length}\n`;
+  md += `- ${t("export.includeReading")}: ${opts.includeReadingNotes ? t("common.yes") : t("common.no")}\n\n`;
   md += "---\n\n";
 
   if (reviews.length === 0) {
-    md += "## 批阅意见\n\n（无）\n";
+    md += `## ${t("export.reviewSection")}\n\n${t("export.none")}\n`;
   } else {
-    md += "## 批阅意见\n\n";
+    md += `## ${t("export.reviewSection")}\n\n`;
     reviews.forEach((ann, i) => {
-      const title = ann.strike ? "删除线" : "批阅";
+      const title = ann.strike ? t("export.strikethrough") : "批阅";
       md += `### ${i + 1}. ${title}\n`;
-      md += "原文：\n";
+      md += `${t("export.original")}：\n`;
       md += `> ${escQuote(ann.selectedText)}\n\n`;
-      md += "上下文：\n";
+      md += `${t("export.context")}：\n`;
       md += `> 前：${escQuote(ann.contextBefore)}\n`;
       md += `> 后：${escQuote(ann.contextAfter)}\n\n`;
-      md += "意见：\n";
+      md += `${t("export.opinion")}：\n`;
       const text = ann.reviewText
         ? ann.reviewText
         : ann.strike
@@ -67,11 +68,8 @@ export function buildReviewMarkdown(
 
   md += "---\n\n";
 
-  md += "## 执行要求\n";
-  md += "1. 根据每条批阅意见修改原文。\n";
-  md += "2. 不要修改未被批阅覆盖的内容，除非为保持上下文连贯而必要。\n";
-  md += "3. 删除线表示强删除/合并意图，但最终请结合上下文判断。\n";
-  md += "4. 输出完整修改后的 Markdown 文档。\n";
+  md += `## ${t("export.execRequirement")}\n`;
+  md += t("export.execRequirementText") + "\n";
 
   return md;
 }
@@ -90,31 +88,28 @@ export function buildPromptText(
   const reviews = data.annotations.filter((a) => a.type === "review");
   const notes = data.annotations.filter((a) => a.type === "note");
 
-  let prompt = `请根据下方"批阅意见"修改文档《${fileName}》。\n\n`;
-  prompt += "执行要求：\n";
-  prompt += "1. 根据每条批阅意见修改原文。\n";
-  prompt += "2. 不要修改未被批阅覆盖的内容，除非为保持上下文连贯而必要。\n";
-  prompt += "3. 删除线 (strike: true) 表示强删除/合并意图，最终请结合上下文判断。\n";
-  prompt += "4. 输出完整修改后的 Markdown 文档。\n\n";
+  let prompt = `${t("export.promptHeader")}《${fileName}》\n\n`;
+  prompt += `${t("export.execRequirement")}：\n`;
+  prompt += t("export.execRequirementText") + "\n\n";
 
-  prompt += "## 原文路径\n\n";
+  prompt += `## ${t("export.originalFile")}\n\n`;
   prompt += `${filePathAbsolute}\n\n`;
 
-  prompt += "## 批阅意见\n\n";
+  prompt += `## ${t("export.promptReviews")}\n\n`;
   if (reviews.length === 0) {
-    prompt += "（无）\n";
+    prompt += `${t("export.none")}\n`;
   } else {
     reviews.forEach((ann, i) => {
-      prompt += `### ${i + 1}. ${ann.strike ? "删除线" : "批阅"}\n`;
-      prompt += `原文："${escQuote(ann.selectedText)}"\n`;
-      prompt += `上下文（前）：${escQuote(ann.contextBefore)}\n`;
-      prompt += `上下文（后）：${escQuote(ann.contextAfter)}\n`;
+      prompt += `### ${i + 1}. ${ann.strike ? t("export.strikethrough") : "批阅"}\n`;
+      prompt += `${t("export.original")}："${escQuote(ann.selectedText)}"\n`;
+      prompt += `${t("export.context")}（前）：${escQuote(ann.contextBefore)}\n`;
+      prompt += `${t("export.context")}（后）：${escQuote(ann.contextAfter)}\n`;
       const text = ann.reviewText
         ? ann.reviewText
         : ann.strike
         ? "请删除或与相邻段落合并。"
         : "（无文本）";
-      prompt += `意见：${text}\n\n`;
+      prompt += `${t("export.opinion")}：${text}\n\n`;
     });
   }
 
@@ -151,7 +146,7 @@ export class ReviewExporter {
   ): Promise<string | null> {
     const file = this.app.vault.getAbstractFileByPath(filePath);
     if (!(file instanceof TFile)) {
-      new Notice("找不到原文件");
+      new Notice(t("export.notice.fileNotFound"));
       return null;
     }
     const fileName = file.basename;
@@ -168,9 +163,9 @@ export class ReviewExporter {
     await adapter.write(target, md);
     const tokens = estimateTokens(md);
     if (tokens > TOKEN_WARN) {
-      new Notice(`已导出（约 ${tokens} tokens，建议分段处理）`);
+      new Notice(t("export.notice.exportedTokens", { n: tokens }));
     } else {
-      new Notice(`已导出（约 ${tokens} tokens）`);
+      new Notice(t("export.notice.exportedTokens", { n: tokens }));
     }
     return target;
   }
@@ -186,7 +181,7 @@ export class PromptExporter {
   ): Promise<void> {
     const file = this.app.vault.getAbstractFileByPath(filePath);
     if (!(file instanceof TFile)) {
-      new Notice("找不到原文件");
+      new Notice(t("export.notice.fileNotFound"));
       return;
     }
     const fileName = file.basename;
@@ -196,24 +191,16 @@ export class PromptExporter {
     const prompt = buildPromptText(fileName, filePathAbsolute, data, opts);
     await copyToClipboard(prompt);
     const tokens = estimateTokens(prompt);
-    new Notice(`Prompt 已复制（约 ${tokens} tokens${tokens > TOKEN_WARN ? "，建议分段" : ""}）`);
+    new Notice(t("export.notice.promptCopied", { n: tokens }));
   }
 }
 
-/** Cross-platform clipboard copy. Falls back from navigator.clipboard to
- *  execCommand for mobile / non-secure contexts. */
+/** Cross-platform clipboard copy using navigator.clipboard API. */
 export async function copyToClipboard(text: string): Promise<void> {
   try {
     await navigator.clipboard.writeText(text);
   } catch {
-    // Fallback for mobile or non-secure contexts
-    const ta = document.createElement("textarea");
-    ta.value = text;
-    ta.style.position = "fixed";
-    ta.style.left = "-9999px";
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    ta.remove();
+    // Use navigator.clipboard API instead of deprecated execCommand
+    await navigator.clipboard.writeText(text);
   }
 }

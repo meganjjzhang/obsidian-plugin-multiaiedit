@@ -1,6 +1,7 @@
 import { App, Notice } from "obsidian";
 import { isMobile } from "../utils/platform";
 import { copyToClipboard } from "../export/Exporters";
+import { t } from "../i18n/i18n";
 
 export type TerminalApp = "Terminal" | "iTerm2";
 
@@ -21,14 +22,10 @@ export interface LaunchOptions {
 export function launchInTerminal(opts: LaunchOptions): void {
 	if (isMobile()) {
 		copyToClipboard(opts.command);
-		new Notice("命令已复制到剪贴板");
+		new Notice(t("terminal.notice.copied"));
 		opts.onCopied?.();
 		return;
 	}
-
-	// Lazy-import to avoid bundling child_process on mobile
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
-	const { execSync } = require("child_process") as typeof import("child_process");
 
 	// Detect platform
 	const isMac = process.platform === "darwin";
@@ -39,24 +36,24 @@ export function launchInTerminal(opts: LaunchOptions): void {
 	} else if (isWindows) {
 		// Windows: just copy the command
 		copyToClipboard(opts.command);
-		new Notice("命令已复制到剪贴板（Windows 暂不支持一键执行）");
+		new Notice(t("terminal.notice.copiedWin"));
 		opts.onCopied?.();
 	} else {
 		// Linux: just copy the command
 		copyToClipboard(opts.command);
-		new Notice("命令已复制到剪贴板（Linux 暂不支持一键执行）");
+		new Notice(t("terminal.notice.copiedLinux"));
 		opts.onCopied?.();
 	}
 }
 
 function launchMacOS(opts: LaunchOptions): void {
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	// eslint-disable-next-line @typescript-eslint/no-var-requires -- Node.js builtin lazy import for desktop-only feature
 	const { execSync } = require("child_process") as typeof import("child_process");
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	// eslint-disable-next-line @typescript-eslint/no-var-requires -- Node.js builtin lazy import for desktop-only feature
 	const fs = require("fs") as typeof import("fs");
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	// eslint-disable-next-line @typescript-eslint/no-var-requires -- Node.js builtin lazy import for desktop-only feature
 	const os = require("os") as typeof import("os");
-	// eslint-disable-next-line @typescript-eslint/no-var-requires
+	// eslint-disable-next-line @typescript-eslint/no-var-requires -- Node.js builtin lazy import for desktop-only feature
 	const nodePath = require("path") as typeof import("path");
 
 	// Write the command to a temp shell script to avoid all AppleScript quoting issues.
@@ -65,7 +62,7 @@ function launchMacOS(opts: LaunchOptions): void {
 	fs.writeFileSync(tmpScript, `#!/bin/bash\n${opts.command}\n`, { mode: 0o755 });
 
 	// Schedule cleanup after 60 s (well after execution starts)
-	setTimeout(() => { try { fs.unlinkSync(tmpScript); } catch { /* ignore */ } }, 60_000);
+	window.setTimeout(() => { try { fs.unlinkSync(tmpScript); } catch { /* ignore */ } }, 60_000);
 
 	let appleScript: string;
 
@@ -81,11 +78,11 @@ function launchMacOS(opts: LaunchOptions): void {
 			timeout: 10_000,
 			stdio: "pipe",
 		});
-		new Notice(`已通过 ${opts.terminalApp} 执行命令`);
+		new Notice(t("terminal.notice.launched", { app: opts.terminalApp }));
 		opts.onLaunched?.();
-	} catch (err) {
+	} catch (_err) {
 		copyToClipboard(opts.command);
-		new Notice("终端启动失败，命令已复制到剪贴板");
+		new Notice(t("terminal.notice.launchFailed"));
 		opts.onCopied?.();
 	}
 }
@@ -96,7 +93,7 @@ export type ChangeStatus = "idle" | "running" | "detected" | "timeout";
 
 export class FileChangeMonitor {
 	private status: ChangeStatus = "idle";
-	private timer: ReturnType<typeof setTimeout> | null = null;
+	private timer: number | null = null;
 	private resolve: ((detected: boolean) => void) | null = null;
 	private watchedAbsPath: string | null = null;
 
@@ -129,7 +126,7 @@ export class FileChangeMonitor {
 			this.resolve = resolve;
 
 			// Timeout guard
-			this.timer = setTimeout(() => {
+			this.timer = window.setTimeout(() => {
 				this.cleanup();
 				this.status = "timeout";
 				resolve(false);
@@ -170,7 +167,7 @@ export class FileChangeMonitor {
 
 	private cleanup = (): void => {
 		if (this.timer) {
-			clearTimeout(this.timer);
+			window.clearTimeout(this.timer);
 			this.timer = null;
 		}
 	};

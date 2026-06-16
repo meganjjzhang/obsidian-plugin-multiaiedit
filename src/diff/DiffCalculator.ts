@@ -91,7 +91,7 @@ export function applyPartialDiff(
 ): string {
 	// Group blocks into hunks: a removed section followed by an added section
 	// forms a single hunk. For each hunk, apply accepted changes.
-	const changes = Diff.diffLines(original, "");
+	const _changes = Diff.diffLines(original, "");
 	// Actually, let's use a simpler approach: rebuild from blocks
 
 	const result: string[] = [];

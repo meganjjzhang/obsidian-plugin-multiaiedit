@@ -1,6 +1,7 @@
 import { App } from "obsidian";
 import { HighlightColor, ViewMode } from "../annotation/AnnotationModel";
 import { PopoverCallbacks } from "./SelectionPopover";
+import { t } from "../i18n/i18n";
 
 /**
  * Mobile bottom toolbar — a thin alternative to SelectionPopover that
@@ -26,10 +27,10 @@ export class BottomToolbar {
   private pendingStrikeId: string | null = null;
 
   constructor(private app: App, private cb: PopoverCallbacks) {
-    this.el = document.createElement("div");
+    this.el = activeDocument.createElement("div");
     this.el.className = "promptuary-bottom-toolbar";
-    this.el.style.display = "none";
-    document.body.appendChild(this.el);
+    this.el.addClass("prm-hidden");
+    activeDocument.body.appendChild(this.el);
   }
 
   destroy(): void {
@@ -48,7 +49,7 @@ export class BottomToolbar {
   show(): void {
     this.active = true;
     this.render();
-    this.el.style.display = "flex";
+    this.el.removeClass("prm-hidden");
   }
 
   hide(): void {
@@ -56,7 +57,7 @@ export class BottomToolbar {
     this.noteExpanded = false;
     this.strikePending = false;
     this.pendingStrikeId = null;
-    this.el.style.display = "none";
+    this.el.addClass("prm-hidden");
   }
 
   private render(): void {
@@ -79,8 +80,8 @@ export class BottomToolbar {
   private renderModeCapsule(): void {
     const wrap = this.el.createDiv({ cls: "prm-popover-capsule" });
     const modes: Array<[ViewMode, string]> = [
-      ["reading", "阅读"],
-      ["reviewing", "批阅"],
+      ["reading", t("toolbar.mode.reading")],
+      ["reviewing", t("toolbar.mode.review")],
     ];
     for (const [m, label] of modes) {
       const btn = wrap.createEl("button", { text: label });
@@ -98,7 +99,7 @@ export class BottomToolbar {
     const colors: HighlightColor[] = ["yellow", "blue", "green", "purple"];
     for (const color of colors) {
       const dot = row.createDiv({ cls: `prm-color ${color}` });
-      dot.title = `${color} 高亮`;
+      dot.title = t("toolbar.color.highlight", { color: t(`color.${color}`) });
       dot.onclick = () => {
         this.selectedColor = color;
         if (this.noteExpanded) {
@@ -109,7 +110,7 @@ export class BottomToolbar {
         }
       };
     }
-    const noteBtn = row.createEl("button", { text: "Add Note" });
+    const noteBtn = row.createEl("button", { text: t("toolbar.btn.addNote") });
     noteBtn.onclick = () => {
       this.toggleNoteArea();
     };
@@ -121,8 +122,8 @@ export class BottomToolbar {
     const row = this.el.createDiv({ cls: "prm-popover-actions" });
 
     // Delete button (toggle)
-    const deleteBtn = row.createEl("button", { cls: "prm-delete-btn", text: "Delete" });
-    deleteBtn.title = "标记为删除";
+    const deleteBtn = row.createEl("button", { cls: "prm-delete-btn", text: t("toolbar.btn.delete") });
+    deleteBtn.title = t("toolbar.btn.deleteTitle");
     deleteBtn.onclick = () => {
       this.strikePending = !this.strikePending;
       deleteBtn.toggleClass("active", this.strikePending);
@@ -143,17 +144,17 @@ export class BottomToolbar {
     };
 
     // Note button
-    const noteBtn = row.createEl("button", { cls: "prm-note-btn", text: "Add Note" });
-    noteBtn.title = "添加批阅意见";
+    const noteBtn = row.createEl("button", { cls: "prm-note-btn", text: t("toolbar.btn.reviewNote") });
+    noteBtn.title = t("toolbar.btn.reviewNoteTitle");
     noteBtn.onclick = () => {
       this.toggleNoteArea();
     };
 
     // Confirm button
     const confirmBtn = row.createEl("button", { cls: "prm-review-confirm-btn", text: "✓" });
-    confirmBtn.title = "确认删除";
-    confirmBtn.style.display = "none";
-    confirmBtn.onclick = () => {
+    confirmBtn.title = t("toolbar.btn.confirmDelete");
+      confirmBtn.addClass("prm-hidden");
+      confirmBtn.onclick = () => {
       // Annotation already created by onStrikeCreate, just hide
       this.pendingStrikeId = null;
       this.hide();
@@ -166,7 +167,7 @@ export class BottomToolbar {
   private updateReviewConfirmState(): void {
     const confirmBtn = this.el.querySelector(".prm-review-confirm-btn") as HTMLElement;
     if (confirmBtn) {
-      confirmBtn.style.display = (this.strikePending && !this.noteExpanded) ? "" : "none";
+      confirmBtn.toggleClass("prm-hidden", !(this.strikePending && !this.noteExpanded));
     }
   }
 
@@ -178,7 +179,7 @@ export class BottomToolbar {
     let indicator = header.querySelector(".prm-strike-indicator") as HTMLElement;
     if (this.strikePending) {
       if (!indicator) {
-        indicator = header.createSpan({ cls: "prm-strike-indicator", text: "删除" });
+        indicator = header.createSpan({ cls: "prm-strike-indicator", text: t("toolbar.label.delete") });
       }
     } else {
       if (indicator) indicator.remove();
@@ -217,14 +218,14 @@ export class BottomToolbar {
     if (this.mode === "reviewing") {
       header.createDiv({ cls: "prm-note-dot orange" });
       header.createDiv({ cls: "prm-divider" });
-      header.createSpan({ cls: "prm-note-label orange", text: "批阅" });
+      header.createSpan({ cls: "prm-note-label orange", text: t("toolbar.label.review") });
       if (this.strikePending) {
-        header.createSpan({ cls: "prm-strike-indicator", text: "删除" });
+        header.createSpan({ cls: "prm-strike-indicator", text: t("toolbar.label.delete") });
       }
     } else {
       header.createDiv({ cls: `prm-note-dot ${this.selectedColor}` });
       header.createDiv({ cls: "prm-divider" });
-      header.createSpan({ cls: `prm-note-label ${this.selectedColor}`, text: "笔记" });
+      header.createSpan({ cls: `prm-note-label ${this.selectedColor}`, text: t("toolbar.label.note") });
     }
 
     // Input wrapper
@@ -234,12 +235,12 @@ export class BottomToolbar {
       cls: "prm-popover-note-input",
     });
     input.placeholder = this.mode === "reviewing"
-      ? "输入批阅意见…"
-      : "为这段高亮添加笔记…";
+      ? t("toolbar.placeholder.review")
+      : t("toolbar.placeholder.note");
 
     // Footer row
     const footer = area.createDiv({ cls: "prm-popover-note-footer" });
-    const saveBtn = footer.createEl("button", { cls: "prm-popover-note-save", text: "Save" });
+    const saveBtn = footer.createEl("button", { cls: "prm-popover-note-save", text: t("toolbar.btn.save") });
 
     input.onkeydown = (e) => {
       if (e.key === "Enter") {
@@ -255,7 +256,7 @@ export class BottomToolbar {
       if (text) this.saveNote(text);
     };
 
-    requestAnimationFrame(() => input.focus());
+    window.requestAnimationFrame(() => input.focus());
   }
 
   private saveNote(text: string): void {

@@ -7,6 +7,7 @@
  */
 import { App, Notice, FileSystemAdapter } from "obsidian";
 import { isMobile } from "./platform";
+import { t } from "../i18n/i18n";
 
 // ---------- helpers ----------
 
@@ -52,18 +53,18 @@ export async function revealInFileManager(
 	relPath: string,
 ): Promise<OpenResult> {
 	if (isMobile()) {
-		new Notice("移动端不支持打开本地文件夹");
+		new Notice(t("folder.notice.mobileNotSupported"));
 		return { success: false, path: "", error: "mobile" };
 	}
 
 	const absPath = getAbsolutePath(app, relPath);
 	if (!absPath) {
-		new Notice("无法解析文件绝对路径");
+		new Notice(t("folder.notice.cannotResolveFile"));
 		return { success: false, path: relPath, error: "no-abs-path" };
 	}
 
 	try {
-		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		// eslint-disable-next-line @typescript-eslint/no-require-imports -- Node.js builtin lazy import for desktop-only feature
 		const { exec } = require("child_process") as {
 			exec: (cmd: string, cb: (err: Error | null) => void) => void;
 		};
@@ -90,7 +91,7 @@ export async function revealInFileManager(
 		return { success: true, path: absPath };
 	} catch (e) {
 		const msg = e instanceof Error ? e.message : String(e);
-		new Notice(`打开文件夹失败: ${msg}`);
+		new Notice(t("folder.notice.openFailed", { error: msg }));
 		return { success: false, path: absPath, error: msg };
 	}
 }
@@ -108,7 +109,7 @@ export async function openFolderInSystem(
 	opts?: { ensureExists?: boolean },
 ): Promise<OpenResult> {
 	if (isMobile()) {
-		new Notice("移动端不支持打开本地文件夹");
+		new Notice(t("folder.notice.mobileNotSupported"));
 		return { success: false, path: "", error: "mobile" };
 	}
 
@@ -118,12 +119,12 @@ export async function openFolderInSystem(
 
 	const absPath = getAbsolutePath(app, relDir);
 	if (!absPath) {
-		new Notice("无法解析文件夹绝对路径");
+		new Notice(t("folder.notice.cannotResolveFolder"));
 		return { success: false, path: relDir, error: "no-abs-path" };
 	}
 
 	try {
-		// eslint-disable-next-line @typescript-eslint/no-require-imports
+		// eslint-disable-next-line @typescript-eslint/no-require-imports -- Node.js builtin lazy import for desktop-only feature
 		const { exec } = require("child_process") as {
 			exec: (cmd: string, cb: (err: Error | null) => void) => void;
 		};
@@ -143,7 +144,7 @@ export async function openFolderInSystem(
 		return { success: true, path: absPath };
 	} catch (e) {
 		const msg = e instanceof Error ? e.message : String(e);
-		new Notice(`打开文件夹失败: ${msg}`);
+		new Notice(t("folder.notice.openFailed", { error: msg }));
 		return { success: false, path: absPath, error: msg };
 	}
 }
