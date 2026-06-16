@@ -1,7 +1,7 @@
 {
   "id": "promptuary",
   "name": "Promptuary",
-  "version": "1.0.3",
+  "version": "1.0.4",
   "minAppVersion": "1.4.0",
   "description": "Highlight or take notes while reading. While reviewing, quickly leave revision comments and click one button to export multiple revision comments for external AI or Agent to perform the revisions.",
   "author": "MeganZhang",

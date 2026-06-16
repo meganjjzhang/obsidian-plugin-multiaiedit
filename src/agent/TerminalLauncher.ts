@@ -131,7 +131,7 @@ export class FileChangeMonitor {
 			fs.watchFile(absPath, { persistent: false, interval: 1000 }, listener);
 
 			// Override cleanup to also stop the watcher
-			const origCleanup = this.cleanup.bind(this);
+			const origCleanup: () => void = this.cleanup;
 			this.cleanup = () => {
 				origCleanup();
 				try { fs.unwatchFile(absPath, listener); } catch { /* ignore */ }

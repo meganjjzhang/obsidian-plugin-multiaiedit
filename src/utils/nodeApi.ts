@@ -11,7 +11,7 @@
  */
 
 /** Type-safe wrapper around window.require for Node.js builtins. */
-// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports
+// eslint-disable-next-line @typescript-eslint/no-unsafe-assignment, @typescript-eslint/no-require-imports -- window.require is the only way to access Node.js builtins in Obsidian's renderer process
 const nodeRequire = (window as unknown as { require?: NodeRequire }).require ?? require;
 
 export const { execSync, exec } = nodeRequire("child_process") as typeof import("child_process");

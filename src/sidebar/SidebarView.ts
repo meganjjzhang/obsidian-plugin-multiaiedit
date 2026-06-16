@@ -60,10 +60,12 @@ export class SidebarView extends ItemView {
         if (file.path === this.currentFilePath) {
           // Debounce: don't refresh on every keystroke, wait 300ms of silence.
           if (this.modifyDebounceTimer !== null) window.clearTimeout(this.modifyDebounceTimer);
-          this.modifyDebounceTimer = window.setTimeout(async () => {
+          this.modifyDebounceTimer = window.setTimeout(() => {
             this.modifyDebounceTimer = null;
-            this.currentHash = await this.plugin.store.fileHash(file.path);
-            await this.refresh();
+            void (async () => {
+              this.currentHash = await this.plugin.store.fileHash(file.path);
+              await this.refresh();
+            })();
           }, 300);
         }
       }),
