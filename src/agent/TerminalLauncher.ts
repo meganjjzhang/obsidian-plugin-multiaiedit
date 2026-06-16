@@ -2,6 +2,7 @@ import { App, Notice } from "obsidian";
 import { isMobile } from "../utils/platform";
 import { copyToClipboard } from "../export/Exporters";
 import { t } from "../i18n/i18n";
+import { execSync, fs, os, nodePath } from "../utils/nodeApi";
 
 export type TerminalApp = "Terminal" | "iTerm2";
 
@@ -21,7 +22,7 @@ export interface LaunchOptions {
  */
 export function launchInTerminal(opts: LaunchOptions): void {
 	if (isMobile()) {
-		copyToClipboard(opts.command);
+		void copyToClipboard(opts.command);
 		new Notice(t("terminal.notice.copied"));
 		opts.onCopied?.();
 		return;
@@ -35,27 +36,18 @@ export function launchInTerminal(opts: LaunchOptions): void {
 		launchMacOS(opts);
 	} else if (isWindows) {
 		// Windows: just copy the command
-		copyToClipboard(opts.command);
+		void copyToClipboard(opts.command);
 		new Notice(t("terminal.notice.copiedWin"));
 		opts.onCopied?.();
 	} else {
 		// Linux: just copy the command
-		copyToClipboard(opts.command);
+		void copyToClipboard(opts.command);
 		new Notice(t("terminal.notice.copiedLinux"));
 		opts.onCopied?.();
 	}
 }
 
 function launchMacOS(opts: LaunchOptions): void {
-	// eslint-disable-next-line @typescript-eslint/no-var-requires -- Node.js builtin lazy import for desktop-only feature
-	const { execSync } = require("child_process") as typeof import("child_process");
-	// eslint-disable-next-line @typescript-eslint/no-var-requires -- Node.js builtin lazy import for desktop-only feature
-	const fs = require("fs") as typeof import("fs");
-	// eslint-disable-next-line @typescript-eslint/no-var-requires -- Node.js builtin lazy import for desktop-only feature
-	const os = require("os") as typeof import("os");
-	// eslint-disable-next-line @typescript-eslint/no-var-requires -- Node.js builtin lazy import for desktop-only feature
-	const nodePath = require("path") as typeof import("path");
-
 	// Write the command to a temp shell script to avoid all AppleScript quoting issues.
 	// The script path is safe ASCII — no special chars to escape.
 	const tmpScript = nodePath.join(os.tmpdir(), `prm-agent-${Date.now()}.sh`);
@@ -81,7 +73,7 @@ function launchMacOS(opts: LaunchOptions): void {
 		new Notice(t("terminal.notice.launched", { app: opts.terminalApp }));
 		opts.onLaunched?.();
 	} catch (_err) {
-		copyToClipboard(opts.command);
+		void copyToClipboard(opts.command);
 		new Notice(t("terminal.notice.launchFailed"));
 		opts.onCopied?.();
 	}
@@ -112,11 +104,6 @@ export class FileChangeMonitor {
 		timeoutMs = 5 * 60 * 1000,
 	): Promise<boolean> {
 		this.status = "running";
-
-		// eslint-disable-next-line @typescript-eslint/no-var-requires -- Node.js built-in, not available as ESM import in Obsidian plugin
-		const fs = require("fs") as typeof import("fs");
-		// eslint-disable-next-line @typescript-eslint/no-var-requires -- Node.js built-in, not available as ESM import in Obsidian plugin
-		const nodePath = require("path") as typeof import("path");
 
 		const vaultPath = (app.vault.adapter as unknown as { basePath?: string }).basePath ?? "";
 		const absPath = nodePath.join(vaultPath, filePath);

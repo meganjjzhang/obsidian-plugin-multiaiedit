@@ -91,7 +91,7 @@ function mergeRanges(
     const classes = new Set<string>();
     const dataIds: string[] = [];
     for (const c of covering) {
-      const spec = c.deco.spec;
+      const spec = c.deco.spec as { class?: string; attributes?: Record<string, string> };
       if (spec.class) spec.class.split(/\s+/).forEach((cls: string) => classes.add(cls));
       if (spec.attributes?.["data-prm-id"]) dataIds.push(spec.attributes["data-prm-id"]);
     }
@@ -288,7 +288,7 @@ function injectHighlightInElement(root: HTMLElement, needle: string, cls: string
   const walker = activeDocument.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
     acceptNode(node) {
       // Skip text already inside one of our injected spans.
-      if ((node.parentElement as HTMLElement | null)?.closest(`.${TABLE_HL_CLASS}`)) {
+      if (node.parentElement?.closest(`.${TABLE_HL_CLASS}`)) {
         return NodeFilter.FILTER_REJECT;
       }
       return NodeFilter.FILTER_ACCEPT;

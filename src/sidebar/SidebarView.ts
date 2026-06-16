@@ -70,7 +70,7 @@ export class SidebarView extends ItemView {
     );
     this.registerEvent(
       this.plugin.store.on("change", (path: string) => {
-        if (path === this.currentFilePath) this.refresh();
+        if (path === this.currentFilePath) void this.refresh();
       }),
     );
     await this.onActiveLeafChange();
@@ -79,7 +79,7 @@ export class SidebarView extends ItemView {
   setMode(mode: ViewMode): void {
     this.mode = mode;
     this.plugin.onModeChange(mode);
-    this.refresh();
+    void this.refresh();
   }
 
   /** Update mode from external source (e.g. popover capsule) without
@@ -87,7 +87,7 @@ export class SidebarView extends ItemView {
   setModeExternal(mode: ViewMode): void {
     if (this.mode === mode) return;
     this.mode = mode;
-    this.refresh();
+    void this.refresh();
   }
 
   getMode(): ViewMode {
@@ -372,7 +372,7 @@ export class SidebarView extends ItemView {
           await this.plugin.runAgentWithSelect();
         } finally {
           this.plugin.executionState = null;
-          this.refresh();
+          void this.refresh();
         }
       };
     }
@@ -403,7 +403,7 @@ export class SidebarView extends ItemView {
         await this.plugin.runAPIExecute();
       } finally {
         this.plugin.executionState = null;
-        this.refresh();
+        void this.refresh();
       }
     };
 
@@ -415,8 +415,8 @@ export class SidebarView extends ItemView {
     copyBtn.title = t("sidebar.action.copyTitle");
     copyBtn.disabled = !hasReviews || isExecuting;
     copyBtn.onclick = () => {
-      if (this.currentFilePath) this.plugin.runCopyPrompt(this.currentFilePath);
-      else this.plugin.runCopyPrompt();
+      if (this.currentFilePath) void this.plugin.runCopyPrompt(this.currentFilePath);
+      else void this.plugin.runCopyPrompt();
     };
 
     // … 按钮（下拉菜单：导出批注文件）
@@ -472,7 +472,7 @@ export class SidebarView extends ItemView {
     btn.onclick = async () => {
       if (!this.currentFilePath || !this.currentHash) return;
       await this.plugin.store.confirmBaseline(this.currentFilePath, this.currentHash);
-      this.refresh();
+      void this.refresh();
       new Notice(t("sidebar.banner.baselineUpdated"));
     };
   }
@@ -531,7 +531,7 @@ export class SidebarView extends ItemView {
     const delBtn = meta.createEl("button", { cls: "prm-card-del-btn", text: t("sidebar.card.delete") });
     delBtn.onclick = (e) => {
       e.stopPropagation();
-      this.plugin.deleteAnnotation(ann);
+      void this.plugin.deleteAnnotation(ann);
     };
 
     // ── 卡片内容 ──

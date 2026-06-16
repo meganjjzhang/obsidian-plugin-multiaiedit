@@ -195,7 +195,7 @@ function computeLCSDP(a: string[], b: string[]): string[] {
   // Re-compute for backtracking (small enough since we already validated)
   const dp: number[][] = [];
   for (let x = 0; x <= m; x++) {
-    dp[x] = new Array(n + 1).fill(0);
+    dp[x] = new Array<number>(n + 1).fill(0);
   }
   for (let x = 1; x <= m; x++) {
     for (let y = 1; y <= n; y++) {
@@ -224,7 +224,7 @@ function computeLCSDP(a: string[], b: string[]): string[] {
 function longestIncreasingSubsequence(arr: number[]): number[] {
   if (arr.length === 0) return [];
   const tails: number[] = [];
-  const prev: number[] = new Array(arr.length).fill(-1);
+  const prev: number[] = new Array<number>(arr.length).fill(-1);
   const indices: number[] = [];
 
   for (let i = 0; i < arr.length; i++) {

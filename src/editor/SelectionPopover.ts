@@ -69,7 +69,7 @@ export class SelectionPopover {
     if (mode === this.mode) return;
     // Preserve any text the user has typed into the note input before re-rendering
     const savedNoteText = this.noteExpanded
-      ? (this.el.querySelector(".prm-popover-note-input") as HTMLInputElement | null)?.value ?? ""
+      ? (this.el.querySelector<HTMLInputElement>(".prm-popover-note-input"))?.value ?? ""
       : "";
     this.mode = mode;
     // Mode changed → DOM is stale, force re-render on the next show().
@@ -296,7 +296,7 @@ export class SelectionPopover {
         this.cb.onReview("", this.strikePending, this.editingAnnotationId);
       } else if (this.strikePending) {
         if (!this.pendingStrikeId) {
-          this.cb.onStrikeCreate().then(id => { this.pendingStrikeId = id; });
+          void this.cb.onStrikeCreate().then(id => { this.pendingStrikeId = id; });
         }
       } else {
         if (this.pendingStrikeId) {

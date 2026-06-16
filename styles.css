@@ -26,48 +26,48 @@
   padding: 0;
   border-bottom: 1px solid transparent;
 }
-.cm-promptuary-highlight-yellow {
-  background-color: rgba(250, 204, 21, 0.18) !important;
+.cm-line .cm-promptuary-highlight-yellow {
+  background-color: rgba(250, 204, 21, 0.18);
   border-bottom-color: rgba(250, 204, 21, 0.40);
 }
-.cm-promptuary-highlight-blue {
-  background-color: rgba(96, 165, 250, 0.18) !important;
+.cm-line .cm-promptuary-highlight-blue {
+  background-color: rgba(96, 165, 250, 0.18);
   border-bottom-color: rgba(96, 165, 250, 0.40);
 }
-.cm-promptuary-highlight-green {
-  background-color: rgba(74, 222, 128, 0.18) !important;
+.cm-line .cm-promptuary-highlight-green {
+  background-color: rgba(74, 222, 128, 0.18);
   border-bottom-color: rgba(74, 222, 128, 0.40);
 }
-.cm-promptuary-highlight-purple {
-  background-color: rgba(192, 132, 252, 0.18) !important;
+.cm-line .cm-promptuary-highlight-purple {
+  background-color: rgba(192, 132, 252, 0.18);
   border-bottom-color: rgba(192, 132, 252, 0.40);
 }
 
-.theme-dark .cm-promptuary-highlight-yellow {
-  background-color: rgba(250, 204, 21, 0.15) !important;
+.theme-dark .cm-line .cm-promptuary-highlight-yellow {
+  background-color: rgba(250, 204, 21, 0.15);
   border-bottom-color: rgba(250, 204, 21, 0.30);
 }
-.theme-dark .cm-promptuary-highlight-blue {
-  background-color: rgba(96, 165, 250, 0.15) !important;
+.theme-dark .cm-line .cm-promptuary-highlight-blue {
+  background-color: rgba(96, 165, 250, 0.15);
   border-bottom-color: rgba(96, 165, 250, 0.30);
 }
-.theme-dark .cm-promptuary-highlight-green {
-  background-color: rgba(74, 222, 128, 0.15) !important;
+.theme-dark .cm-line .cm-promptuary-highlight-green {
+  background-color: rgba(74, 222, 128, 0.15);
   border-bottom-color: rgba(74, 222, 128, 0.30);
 }
-.theme-dark .cm-promptuary-highlight-purple {
-  background-color: rgba(192, 132, 252, 0.15) !important;
+.theme-dark .cm-line .cm-promptuary-highlight-purple {
+  background-color: rgba(192, 132, 252, 0.15);
   border-bottom-color: rgba(192, 132, 252, 0.30);
 }
 
 /* 批阅：橙色（设计稿 .hl-review） */
-.cm-promptuary-review {
-  background-color: rgba(251, 146, 60, 0.18) !important;
+.cm-line .cm-promptuary-review {
+  background-color: rgba(251, 146, 60, 0.18);
   border-bottom: 1px solid rgba(251, 146, 60, 0.40);
   border-radius: 2px;
 }
-.theme-dark .cm-promptuary-review {
-  background-color: rgba(251, 146, 60, 0.15) !important;
+.theme-dark .cm-line .cm-promptuary-review {
+  background-color: rgba(251, 146, 60, 0.15);
   border-bottom-color: rgba(251, 146, 60, 0.30);
 }
 
@@ -251,8 +251,9 @@
 .prm-popover-capsule button:hover {
   color: var(--text-normal);
 }
+.prm-popover-capsule button.prm-capsule-active,
 .prm-popover-capsule button.active {
-  background: var(--background-primary) !important;
+  background: var(--background-primary);
   color: var(--text-normal);
   font-weight: 600;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.06);
@@ -610,10 +611,10 @@
   color: var(--text-normal);
 }
 .prm-mode-capsule button.active {
-  background: var(--background-primary) !important;
+  background: var(--background-primary);
   color: var(--text-normal);
   font-weight: 600;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08) !important;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 .theme-dark .prm-mode-capsule button.active {
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.30);
@@ -694,10 +695,10 @@
 }
 /* "…" more button — icon only, fixed small width */
 .prm-more-btn {
-  flex: 0 0 auto !important;
+  flex: 0 0 auto;
   min-width: 36px;
   max-width: 36px;
-  padding: 10px 6px !important;
+  padding: 10px 6px;
 }
 .prm-action-btn.secondary {
   background: var(--background-primary);
@@ -1158,27 +1159,27 @@
   font-family: var(--font-monospace);
 }
 .prm-agent-btn {
-  background: var(--background-secondary) !important;
-  color: var(--text-normal) !important;
-  border: 1px solid var(--background-modifier-border) !important;
-  border-radius: 6px !important;
-  padding: 4px 10px !important;
+  background: var(--background-secondary);
+  color: var(--text-normal);
+  border: 1px solid var(--background-modifier-border);
+  border-radius: 6px;
+  padding: 4px 10px;
   cursor: pointer;
-  font-size: 11px !important;
+  font-size: 11px;
   white-space: nowrap;
   transition: all 0.15s;
 }
 .prm-agent-btn:hover {
-  background: var(--background-modifier-hover) !important;
-  border-color: rgba(167, 139, 250, 0.40) !important;
+  background: var(--background-modifier-hover);
+  border-color: rgba(167, 139, 250, 0.40);
 }
 .prm-agent-btn.not-installed {
   opacity: 0.4;
   cursor: not-allowed;
 }
 .prm-agent-btn.secondary {
-  background: transparent !important;
-  border: 1px dashed var(--background-modifier-border) !important;
+  background: transparent;
+  border: 1px dashed var(--background-modifier-border);
 }
 
 /* ============================================================
@@ -2171,20 +2172,20 @@
 
 /* --- API Key visibility toggle --- */
 .prm-api-key-input {
-  padding-right: 36px !important;
+  padding-right: 36px;
 }
 .prm-api-key-toggle {
   position: absolute;
   right: 4px;
   top: 50%;
   transform: translateY(-50%);
-  background: transparent !important;
-  border: none !important;
+  background: transparent;
+  border: none;
   cursor: pointer;
   font-size: 13px;
   padding: 2px 6px;
   color: var(--text-muted);
-  box-shadow: none !important;
+  box-shadow: none;
   line-height: 1;
 }
 .prm-api-key-toggle:hover {
@@ -2465,8 +2466,8 @@ body:not(.theme-dark) .promptuary-popover .prm-submit-btn:hover {
 }
 
 /* Agent 按钮 hover 边框：深紫 */
-body:not(.theme-dark) .prm-agent-btn:hover {
-  border-color: rgba(109, 90, 205, 0.40) !important;
+body:not(.theme-dark) .prm-sidebar .prm-agent-btn:hover {
+  border-color: rgba(109, 90, 205, 0.40);
 }
 
 
@@ -2733,7 +2734,7 @@ body:not(.theme-dark) .prm-arm-btn-save:hover {
   display: flex; align-items: center; gap: 6px;
 }
 .prm-apm-btn-icon svg, .prm-apm-btn-icon .svg-icon {
-  width: 12px !important; height: 12px !important;
+  width: 12px; height: 12px;
 }
 
 /* Cancel */
@@ -2938,7 +2939,7 @@ body:not(.theme-dark) .prm-arm-btn-save:hover {
   display: flex; align-items: center; gap: 6px;
 }
 .prm-ppm-btn-icon svg, .prm-ppm-btn-icon .svg-icon {
-  width: 12px !important; height: 12px !important;
+  width: 12px; height: 12px;
 }
 
 /* Close button */
@@ -3051,17 +3052,17 @@ button.prm-dm-close,
 button.prm-asm-close {
   appearance: none;
   -webkit-appearance: none;
-  box-shadow: none !important;
-  border: 0 !important;
+  box-shadow: none;
+  border: 0;
   outline: none;
-  padding: 0 !important;
+  padding: 0;
   margin: 0;
-  min-width: 28px !important;
-  width: 28px !important;
-  min-height: 28px !important;
-  height: 28px !important;
+  min-width: 28px;
+  width: 28px;
+  min-height: 28px;
+  height: 28px;
   border-radius: 6px;
-  background: transparent !important;
+  background: transparent;
   color: var(--text-muted);
   display: inline-flex;
   align-items: center;
@@ -3073,13 +3074,13 @@ button.prm-asm-close {
 button.prm-ccm-close:hover,
 button.prm-dm-close:hover,
 button.prm-asm-close:hover {
-  background: var(--background-modifier-hover) !important;
+  background: var(--background-modifier-hover);
   color: var(--text-normal);
 }
 button.prm-ccm-close:focus-visible,
 button.prm-dm-close:focus-visible,
 button.prm-asm-close:focus-visible {
-  box-shadow: 0 0 0 2px rgba(167,139,250,0.35) !important;
+  box-shadow: 0 0 0 2px rgba(167,139,250,0.35);
 }
 button.prm-ccm-close svg,
 button.prm-dm-close svg,
@@ -3088,8 +3089,8 @@ button.prm-ccm-close .svg-icon,
 button.prm-dm-close .svg-icon,
 button.prm-asm-close .svg-icon {
   display: block;
-  width: 14px !important;
-  height: 14px !important;
+  width: 14px;
+  height: 14px;
   flex-shrink: 0;
 }
 
@@ -3123,7 +3124,9 @@ button.prm-asm-close .svg-icon {
  * Utility classes (replacing inline styles per Obsidian lint rules)
  * ============================================================ */
 
-.prm-hidden { display: none !important; }
+.promptuary-popover.prm-hidden,
+.promptuary-bottom-toolbar.prm-hidden,
+.prm-hidden { display: none; }
 
 .prm-input-full-width { width: 100%; }
 .prm-input-min-height { min-height: 120px; }

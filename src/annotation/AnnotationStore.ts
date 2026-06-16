@@ -104,7 +104,7 @@ export class AnnotationStore extends Events {
     this.pendingFlush.add(filePath);
     const old = this.writeTimers.get(filePath);
     if (old) window.clearTimeout(old);
-    const t = window.setTimeout(() => this.flush(filePath), WRITE_DEBOUNCE_MS);
+    const t = window.setTimeout(() => { void this.flush(filePath); }, WRITE_DEBOUNCE_MS);
     this.writeTimers.set(filePath, t);
   }
 

@@ -8,6 +8,7 @@
 import { App, Notice, FileSystemAdapter } from "obsidian";
 import { isMobile } from "./platform";
 import { t } from "../i18n/i18n";
+import { exec } from "./nodeApi";
 
 // ---------- helpers ----------
 
@@ -64,11 +65,6 @@ export async function revealInFileManager(
 	}
 
 	try {
-		// eslint-disable-next-line @typescript-eslint/no-require-imports -- Node.js builtin lazy import for desktop-only feature
-		const { exec } = require("child_process") as {
-			exec: (cmd: string, cb: (err: Error | null) => void) => void;
-		};
-
 		let cmd: string;
 		if (process.platform === "darwin") {
 			// macOS: open -R reveals & selects the file in Finder
@@ -124,11 +120,6 @@ export async function openFolderInSystem(
 	}
 
 	try {
-		// eslint-disable-next-line @typescript-eslint/no-require-imports -- Node.js builtin lazy import for desktop-only feature
-		const { exec } = require("child_process") as {
-			exec: (cmd: string, cb: (err: Error | null) => void) => void;
-		};
-
 		const cmd = process.platform === "win32"
 			? `explorer "${absPath}"`
 			: process.platform === "darwin"

@@ -245,7 +245,7 @@ export default class PromptuaryPlugin extends Plugin {
   }
 
   async loadSettings(): Promise<void> {
-    this.settings = Object.assign({}, DEFAULT_SETTINGS, await this.loadData());
+    this.settings = Object.assign({}, DEFAULT_SETTINGS, (await this.loadData()) as Partial<PromptuarySettings>);
     // Migration: auto-migrate from visible export dirs to hidden .promptuary/exports
     const legacyExportDirs = ["Promptuary/exports", "MultiAIEdit/exports", ".multiaiedit/exports"];
     if (legacyExportDirs.includes(this.settings.exportDir)) {
@@ -276,7 +276,7 @@ export default class PromptuaryPlugin extends Plugin {
     }
     // Register "copy command" as a universal fallback
     this.addCommand({
-      id: "copy-agent-command",
+      id: "copy-agent",
       name: t("main.cmd.copyAgentCommand"),
       callback: () => { void this.runCopyAgentCommand(); },
     });
@@ -591,7 +591,7 @@ export default class PromptuaryPlugin extends Plugin {
       prompt: instructionContent,
     };
     const command = buildCommand(rule, templateVars);
-    exportCopyToClipboard(command);
+    void exportCopyToClipboard(command);
     new Notice(t("main.notice.commandCopied", { label: rule.label }));
   }
 
@@ -893,7 +893,7 @@ export default class PromptuaryPlugin extends Plugin {
           collapseSelection();
         } else {
           // New: use current CM selection FIRST, then collapse
-          this.createHighlightFromSelection(color).then(() => {
+          void this.createHighlightFromSelection(color).then(() => {
             this.lastSelection = null;
             collapseSelection();
           });
@@ -914,7 +914,7 @@ export default class PromptuaryPlugin extends Plugin {
           collapseSelection();
         } else {
           // New: create with live selection first, then collapse
-          this.createNoteFromSelection(text, color).then(() => {
+          void this.createNoteFromSelection(text, color).then(() => {
             this.lastSelection = null;
             collapseSelection();
           });
@@ -937,7 +937,7 @@ export default class PromptuaryPlugin extends Plugin {
           this.lastSelection = null;
           collapseSelection();
         } else {
-          this.createReviewFromSelection(text, strike).then(() => {
+          void this.createReviewFromSelection(text, strike).then(() => {
             this.lastSelection = null;
             collapseSelection();
           });
@@ -1087,10 +1087,9 @@ export default class PromptuaryPlugin extends Plugin {
       ctx.to,
       ctx.selectedText,
     );
-    new NoteModal(this.app, "", async (text) => {
+    new NoteModal(this.app, "", (text) => {
       const ann: Annotation = { ...anchor, type: "note", noteText: text };
-      await this.store.addAnnotation(ctx.file.path, ann);
-      void this.refreshDecorations();
+      void this.store.addAnnotation(ctx.file.path, ann).then(() => this.refreshDecorations());
     }).open();
   }
 
@@ -1126,15 +1125,14 @@ export default class PromptuaryPlugin extends Plugin {
       ctx.to,
       ctx.selectedText,
     );
-    new ReviewModal(this.app, {}, async (text, strike) => {
+    new ReviewModal(this.app, {}, (text, strike) => {
       const ann: Annotation = {
         ...anchor,
         type: "review",
         reviewText: text || undefined,
         strike,
       };
-      await this.store.addAnnotation(ctx.file.path, ann);
-      void this.refreshDecorations();
+      void this.store.addAnnotation(ctx.file.path, ann).then(() => this.refreshDecorations());
     }).open();
   }
 
@@ -1165,15 +1163,15 @@ export default class PromptuaryPlugin extends Plugin {
 
   async editAnnotation(ann: Annotation): Promise<void> {
     if (ann.type === "note") {
-      new NoteModal(this.app, ann.noteText ?? "", async (text) => {
-        await this.store.updateAnnotation(ann.filePath, ann.id, { noteText: text });
+      new NoteModal(this.app, ann.noteText ?? "", (text) => {
+        void this.store.updateAnnotation(ann.filePath, ann.id, { noteText: text });
       }).open();
     } else if (ann.type === "review") {
       new ReviewModal(
         this.app,
         { text: ann.reviewText ?? "", strike: ann.strike, isEdit: true },
-        async (text, strike) => {
-          await this.store.updateAnnotation(ann.filePath, ann.id, {
+        (text, strike) => {
+          void this.store.updateAnnotation(ann.filePath, ann.id, {
             reviewText: text || undefined,
             strike,
           });

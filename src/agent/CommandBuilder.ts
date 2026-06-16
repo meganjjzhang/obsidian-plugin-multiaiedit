@@ -23,7 +23,7 @@ export interface TemplateVars {
  */
 export function buildCommand(rule: CommandRule, vars: TemplateVars): string {
 	let cmd = rule.template;
-	for (const [key, value] of Object.entries(vars)) {
+	for (const [key, value] of Object.entries(vars) as Array<[string, string]>) {
 		const token = `{{${key}}}`;
 		if (cmd.includes(token)) {
 			cmd = cmd.split(token).join(shellEscape(value));

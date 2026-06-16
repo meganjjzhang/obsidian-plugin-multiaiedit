@@ -144,7 +144,7 @@ export class CommandConfirmModal extends Modal {
 		setIcon(copyIcon, "copy");
 		copyInner.createSpan({ text: t("agent.confirm.btn.copyCommand") });
 		copyBtn.onclick = () => {
-			copyToClipboard(this.command);
+			void copyToClipboard(this.command);
 			new Notice(t("agent.confirm.notice.copied"));
 			this.resolve?.(false);
 			this.close();

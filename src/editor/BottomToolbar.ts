@@ -130,7 +130,7 @@ export class BottomToolbar {
 
       if (this.strikePending) {
         if (!this.pendingStrikeId) {
-          this.cb.onStrikeCreate().then(id => { this.pendingStrikeId = id; });
+          void this.cb.onStrikeCreate().then(id => { this.pendingStrikeId = id; });
         }
       } else {
         if (this.pendingStrikeId) {
