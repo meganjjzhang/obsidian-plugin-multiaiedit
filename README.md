@@ -1,7 +1,7 @@
-# MultiAIEdit
+# Promptuary
 
 <p align="center">
-  <img src="img/logo.gif" width="128" height="128" alt="MultiAIEdit Logo">
+  <img src="img/logo.gif" width="128" height="128" alt="Promptuary Logo">
 </p>
 
 > An Obsidian plugin for reading annotations and AI-powered batch review. Highlight and take notes while reading, leave review comments, then hand them off to external AI agents for execution — all in one click.
@@ -76,20 +76,20 @@ After confirmation, annotation positions are automatically re-anchored:
 **Manual install:**
 
 ```bash
-git clone https://github.com/your-repo/obsidian-plugin-multiaiedit
-cd obsidian-plugin-multiaiedit
+git clone https://github.com/your-repo/obsidian-promptuary
+cd obsidian-promptuary
 npm install
 npm run build
 ```
 
-Copy `main.js`, `manifest.json`, and `styles.css` to your Vault's `.obsidian/plugins/multiaiedit/` directory, then restart Obsidian and enable the plugin under **Settings → Community plugins**.
+Copy `main.js`, `manifest.json`, and `styles.css` to your Vault's `.obsidian/plugins/promptuary/` directory, then restart Obsidian and enable the plugin under **Settings → Community plugins**.
 
 ---
 
 ### 2. Reading Annotations
 
 1. Open any Markdown file
-2. Click the highlighter icon in the left Ribbon, or search "Open MultiAIEdit Sidebar" in the Command Palette
+2. Click the highlighter icon in the left Ribbon, or search "Open Promptuary Sidebar" in the Command Palette
 3. Select the **Reading** capsule at the top
 4. Select text → floating toolbar appears with mode capsule + color buttons → click a color to highlight
 5. Click **Note** to expand the input area, add text notes, then click Save
@@ -159,8 +159,8 @@ After confirmation, annotations are automatically re-anchored and executed revie
 |---------|-------------|---------|
 | Default mode | Sidebar initial state (Reading / Review / All) | Reading |
 | Context length | Characters saved before and after annotation, used for anchor positioning | 50 |
-| Sidecar directory | Annotation JSON storage location | `.multiaiedit/annotations` |
-| Export directory | Review file save location | `.multiaiedit/exports` |
+| Sidecar directory | Annotation JSON storage location | `.promptuary/annotations` |
+| Export directory | Review file save location | `.promptuary/exports` |
 | Include reading notes on export | Export reading notes as reference context alongside review comments | No |
 
 ### Agent & Terminal (Desktop)
@@ -234,11 +234,11 @@ Available template variables: `{{vaultPath}}` `{{instructionFile}}` `{{filePath}
 
 ## Data Storage
 
-Annotations are stored as **sidecar JSON** in the `.multiaiedit/annotations/` directory — original Markdown files are never modified.
+Annotations are stored as **sidecar JSON** in the `.promptuary/annotations/` directory — original Markdown files are never modified.
 
 ```
 vault/
-├── .multiaiedit/
+├── .promptuary/
 │   ├── annotations/    # Annotation data (one JSON per file)
 │   └── exports/         # Exported review instruction files
 ├── your-doc.md         # Original file is untouched
@@ -301,7 +301,7 @@ Annotations do not store offsets (from/to); positions are computed dynamically a
 
 | Command | Description |
 |---------|-------------|
-| Open MultiAIEdit Sidebar | Open the right sidebar |
+| Open Promptuary Sidebar | Open the right sidebar |
 | Highlight (Yellow) | Quick yellow highlight for selected text |
 | Add Note | Add a reading note for selected text |
 | Add Review Comment | Add a review comment for selected text |

@@ -16,8 +16,11 @@ node_modules
 # WorkBuddy project config
 .workbuddy/
 
+# Personal docs
+docs/
+
 # Compiled main.js is included for Obsidian plugin distribution
-# (users clone the repo to .obsidian/plugins/multiaiedit/)
+# (users clone the repo to .obsidian/plugins/promptuary/)
 
 # build files
 *.js.map
